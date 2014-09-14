@@ -53,6 +53,15 @@ pub struct MultiPoint {
     coordinates: Vec<Position>,
 }
 
+impl ToJson for MultiPoint {
+    fn to_json(&self) -> json::Json {
+        let mut d = TreeMap::new();
+        d.insert("type".to_string(), json::String("MultiPoint".to_string()));
+        d.insert("coordinates".to_string(), self.coordinates.to_json());
+        d.to_json()
+    }
+}
+
 
 fn main() {
     let point = Point {
