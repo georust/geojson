@@ -37,7 +37,7 @@ pub struct Point {
 impl ToJson for Point {
     fn to_json(&self) -> json::Json {
         let mut d = TreeMap::new();
-        d.insert("type".to_string(), json::String("Point".to_string()));
+        d.insert("type".to_string(), "Point".to_string().to_json());
         d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
     }
@@ -56,7 +56,7 @@ pub struct MultiPoint {
 impl ToJson for MultiPoint {
     fn to_json(&self) -> json::Json {
         let mut d = TreeMap::new();
-        d.insert("type".to_string(), json::String("MultiPoint".to_string()));
+        d.insert("type".to_string(), "MultiPoint".to_string().to_json());
         d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
     }
