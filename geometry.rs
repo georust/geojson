@@ -50,14 +50,14 @@ impl ToJson for Point {
  * http://geojson.org/geojson-spec.html#multipoint
  */
 pub struct MultiPoint {
-    coordinates: Vec<Position>,
+    points: Vec<Point>,
 }
 
 impl ToJson for MultiPoint {
     fn to_json(&self) -> json::Json {
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiPoint".to_string().to_json());
-        d.insert("coordinates".to_string(), self.coordinates.to_json());
+        d.insert("coordinates".to_string(), self.points.to_json());
         d.to_json()
     }
 }
