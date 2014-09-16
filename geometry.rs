@@ -63,6 +63,24 @@ impl ToJson for MultiPoint {
 }
 
 
+/*
+ * LineString
+ * GeoJSON Format Specification § 2.1.4
+ * http://geojson.org/geojson-spec.html#linestring
+ */
+pub struct LineString {
+    coordinates: Vec<Position>,
+}
+
+impl ToJson for LineString {
+    fn to_json(&self) -> json::Json {
+        let mut d = TreeMap::new();
+        d.insert("type".to_string(), "LineString".to_string().to_json());
+        d.insert("coordinates".to_string(), self.coordinates.to_json());
+        d.to_json()
+    }
+}
+
 fn main() {
     let point = Point {
         coordinates: Position(vec![1., 2., 3.]),
