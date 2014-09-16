@@ -24,6 +24,13 @@ impl ToJson for Position {
     }
 }
 
+impl Clone for Position {
+    fn clone(&self) -> Position {
+        let &Position(ref nums) = self;
+        Position(nums.clone())
+    }
+}
+
 
 /*
  * Point
@@ -97,6 +104,30 @@ impl ToJson for MultiLineString {
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiLineString".to_string().to_json());
         d.insert("coordinates".to_string(), self.line_strings.to_json());
+        d.to_json()
+    }
+}
+
+
+/*
+ * Polygon
+ * GeoJSON Format Specification § 2.1.6
+ * http://geojson.org/geojson-spec.html#polygon
+ */
+
+pub struct Polygon {
+    exterior: Vec<Position>,
+    holes: Vec<Vec<Position>>,
+}
+
+impl ToJson for Polygon {
+    fn to_json(&self) -> json::Json {
+        let mut coordinates = self.holes.clone();
+        coordinates.unshift(self.exterior.clone());
+
+        let mut d = TreeMap::new();
+        d.insert("type".to_string(), "Polygon".to_string().to_json());
+        d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
     }
 }
