@@ -10,11 +10,9 @@ use serialize::json::ToJson;
 use serialize::json;
 
 
-/*
- * Position
- * GeoJSON Format Specification § 2.1.1
- * http://geojson.org/geojson-spec.html#positions
- */
+/// Position
+///
+/// [GeoJSON Format Specification § 2.1.1](http://geojson.org/geojson-spec.html#positions)
 pub struct Position(Vec<f64>);
 
 impl ToJson for Position {
@@ -32,11 +30,9 @@ impl Clone for Position {
 }
 
 
-/*
- * Point
- * GeoJSON Format Specification § 2.1.2
- * http://geojson.org/geojson-spec.html#point
- */
+/// Point
+///
+/// [GeoJSON Format Specification § 2.1.2](http://geojson.org/geojson-spec.html#point)
 pub struct Point {
     coordinates: Position,
 }
@@ -51,11 +47,9 @@ impl ToJson for Point {
 }
 
 
-/*
- * MultiPoint
- * GeoJSON Format Specification § 2.1.3
- * http://geojson.org/geojson-spec.html#multipoint
- */
+/// MultiPoint
+///
+/// [GeoJSON Format Specification § 2.1.3](http://geojson.org/geojson-spec.html#multipoint)
 pub struct MultiPoint {
     points: Vec<Point>,
 }
@@ -70,11 +64,9 @@ impl ToJson for MultiPoint {
 }
 
 
-/*
- * LineString
- * GeoJSON Format Specification § 2.1.4
- * http://geojson.org/geojson-spec.html#linestring
- */
+/// LineString
+///
+/// [GeoJSON Format Specification § 2.1.4](http://geojson.org/geojson-spec.html#linestring)
 pub struct LineString {
     coordinates: Vec<Position>,
 }
@@ -89,12 +81,9 @@ impl ToJson for LineString {
 }
 
 
-/*
- * MultiLineString
- * GeoJSON Format Specification § 2.1.5
- * http://geojson.org/geojson-spec.html#multilinestring
- */
-
+/// MultiLineString
+///
+/// [GeoJSON Format Specification § 2.1.5](http://geojson.org/geojson-spec.html#multilinestring)
 pub struct MultiLineString {
     line_strings: Vec<LineString>,
 }
@@ -109,12 +98,9 @@ impl ToJson for MultiLineString {
 }
 
 
-/*
- * Polygon
- * GeoJSON Format Specification § 2.1.6
- * http://geojson.org/geojson-spec.html#polygon
- */
-
+/// Polygon
+///
+/// [GeoJSON Format Specification § 2.1.6](http://geojson.org/geojson-spec.html#polygon)
 pub struct Polygon {
     exterior: Vec<Position>,
     holes: Vec<Vec<Position>>,
@@ -133,12 +119,9 @@ impl ToJson for Polygon {
 }
 
 
-/*
- * MultiPolygon
- * GeoJSON Format Specification § 2.1.7
- * http://geojson.org/geojson-spec.html#multipolygon
- */
-
+/// MultiPolygon
+///
+/// [GeoJSON Format Specification § 2.1.7](http://geojson.org/geojson-spec.html#multipolygon)
 pub struct MultiPolygon {
     polygons: Vec<Polygon>,
 }
