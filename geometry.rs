@@ -135,6 +135,50 @@ impl ToJson for MultiPolygon {
     }
 }
 
+
+/// Geometry
+pub enum Geometry {
+    Point(Point),
+    MultiPoint(MultiPoint),
+    LineString(LineString),
+    MultiLineString(MultiLineString),
+    Polygon(Polygon),
+    MultiPolygon(MultiPolygon),
+}
+
+impl ToJson for Geometry {
+    fn to_json(&self) -> json::Json {
+        match *self {
+            // TODO: is there a better way of doing this?
+            Point(ref geom) => geom.to_json(),
+            MultiPoint(ref geom) => geom.to_json(),
+            LineString(ref geom) => geom.to_json(),
+            MultiLineString(ref geom) => geom.to_json(),
+            Polygon(ref geom) => geom.to_json(),
+            MultiPolygon(ref geom) => geom.to_json(),
+        }
+    }
+}
+
+
+/// GeometryCollection
+///
+/// [GeoJSON Format Specification § 2.1.8](http://geojson.org/geojson-spec.html#geometry-collection)
+pub struct GeometryCollection {
+    geometries: Vec<Geometry>,
+}
+
+
+impl ToJson for GeometryCollection {
+    fn to_json(&self) -> json::Json {
+        let mut d = TreeMap::new();
+        d.insert("type".to_string(), "GeometryCollection".to_string().to_json());
+        d.insert("coordinates".to_string(), self.geometries.to_json());
+        d.to_json()
+    }
+}
+
+
 fn main() {
     let point = Point {
         coordinates: Position(vec![1., 2., 3.]),
