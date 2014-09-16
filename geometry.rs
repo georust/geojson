@@ -132,6 +132,26 @@ impl ToJson for Polygon {
     }
 }
 
+
+/*
+ * MultiPolygon
+ * GeoJSON Format Specification § 2.1.7
+ * http://geojson.org/geojson-spec.html#multipolygon
+ */
+
+pub struct MultiPolygon {
+    polygons: Vec<Polygon>,
+}
+
+impl ToJson for MultiPolygon {
+    fn to_json(&self) -> json::Json {
+        let mut d = TreeMap::new();
+        d.insert("type".to_string(), "MultiPolygon".to_string().to_json());
+        d.insert("coordinates".to_string(), self.polygons.to_json());
+        d.to_json()
+    }
+}
+
 fn main() {
     let point = Point {
         coordinates: Position(vec![1., 2., 3.]),
