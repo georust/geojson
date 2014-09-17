@@ -56,9 +56,11 @@ pub struct MultiPoint {
 
 impl ToJson for MultiPoint {
     fn to_json(&self) -> json::Json {
+        let coordinates: Vec<Position> =
+            self.points.iter().map(|p| p.coordinates.clone()).collect();
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiPoint".to_string().to_json());
-        d.insert("coordinates".to_string(), self.points.to_json());
+        d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
     }
 }
@@ -90,9 +92,11 @@ pub struct MultiLineString {
 
 impl ToJson for MultiLineString {
     fn to_json(&self) -> json::Json {
+        let coordinates: Vec<Vec<Position>> =
+            self.line_strings.iter().map(|l| l.coordinates.clone()).collect();
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiLineString".to_string().to_json());
-        d.insert("coordinates".to_string(), self.line_strings.to_json());
+        d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
     }
 }
@@ -106,14 +110,19 @@ pub struct Polygon {
     pub holes: Vec<Vec<Position>>,
 }
 
+impl Polygon {
+    fn coordinates(&self) -> Vec<Vec<Position>> {
+        let mut coordinates = self.holes.clone();
+        coordinates.insert(0, self.exterior.clone());
+        coordinates
+    }
+}
+
 impl ToJson for Polygon {
     fn to_json(&self) -> json::Json {
-        let mut coordinates = self.holes.clone();
-        coordinates.unshift(self.exterior.clone());
-
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "Polygon".to_string().to_json());
-        d.insert("coordinates".to_string(), coordinates.to_json());
+        d.insert("coordinates".to_string(), self.coordinates().to_json());
         d.to_json()
     }
 }
@@ -128,9 +137,11 @@ pub struct MultiPolygon {
 
 impl ToJson for MultiPolygon {
     fn to_json(&self) -> json::Json {
+        let coordinates: Vec<Vec<Vec<Position>>> =
+            self.polygons.iter().map(|p| p.coordinates()).collect();
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiPolygon".to_string().to_json());
-        d.insert("coordinates".to_string(), self.polygons.to_json());
+        d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
     }
 }
