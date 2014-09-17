@@ -1,7 +1,7 @@
 // TODO
 // impl ToGeojson for ....
 // generic number instead of f64 for position?
-// rename Position to Pos
+// rename Position to Pos or Positions
 
 extern crate serialize;
 

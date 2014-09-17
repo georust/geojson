@@ -1,0 +1,4 @@
+[root]
+name = "rust-geojson"
+version = "0.0.1"
+
