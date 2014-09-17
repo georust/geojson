@@ -1,2 +1,3 @@
 language: rust
 rust: 0.11.0
+script: rustc geometry.rs
