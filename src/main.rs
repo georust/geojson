@@ -181,7 +181,6 @@ pub struct GeometryCollection {
     geometries: Vec<Geometry>,
 }
 
-
 impl ToJson for GeometryCollection {
     fn to_json(&self) -> json::Json {
         let mut d = TreeMap::new();
