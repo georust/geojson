@@ -220,6 +220,7 @@ pub struct FeatureCollection {
 impl ToJson for FeatureCollection {
     fn to_json(&self) -> json::Json {
         let mut d = TreeMap::new();
+        d.insert("type".to_string(), "FeatureCollection".to_string().to_json());
         d.insert("features".to_string(), self.features.to_json());
         d.to_json()
     }
