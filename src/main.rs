@@ -212,7 +212,7 @@ impl ToJson for Feature {
 
 /// FeatureCollection
 ///
-/// [GeoJSON Format Specification § 2.3](http://geojson.org/geojson-spec.html#feature--collection-objects)
+/// [GeoJSON Format Specification § 2.3](http://geojson.org/geojson-spec.html#feature-collection-objects)
 pub struct FeatureCollection {
     features: Vec<Feature>,
 }
