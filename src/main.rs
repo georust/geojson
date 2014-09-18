@@ -167,6 +167,7 @@ impl ToJson for Geometry {
             MultiLineString(ref geom) => geom.to_json(),
             Polygon(ref geom) => geom.to_json(),
             MultiPolygon(ref geom) => geom.to_json(),
+            // TODO: GeometryCollection(ref geom) => geom.to_json(),
         }
     }
 }
