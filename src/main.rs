@@ -185,7 +185,7 @@ impl ToJson for GeometryCollection {
     fn to_json(&self) -> json::Json {
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "GeometryCollection".to_string().to_json());
-        d.insert("coordinates".to_string(), self.geometries.to_json());
+        d.insert("geometries".to_string(), self.geometries.to_json());
         d.to_json()
     }
 }
