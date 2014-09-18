@@ -210,6 +210,22 @@ impl ToJson for Feature {
 }
 
 
+/// FeatureCollection
+///
+/// [GeoJSON Format Specification § 2.3](http://geojson.org/geojson-spec.html#feature--collection-objects)
+pub struct FeatureCollection {
+    features: Vec<Feature>,
+}
+
+impl ToJson for FeatureCollection {
+    fn to_json(&self) -> json::Json {
+        let mut d = TreeMap::new();
+        d.insert("features".to_string(), self.features.to_json());
+        d.to_json()
+    }
+}
+
+
 fn main() {
     let point = Point {
         coordinates: Position(vec![1., 2., 3.]),
