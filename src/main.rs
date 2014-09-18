@@ -161,7 +161,6 @@ pub enum Geometry {
 impl ToJson for Geometry {
     fn to_json(&self) -> json::Json {
         match *self {
-            // TODO: is there a better way of doing this?
             Point(ref geom) => geom.to_json(),
             MultiPoint(ref geom) => geom.to_json(),
             LineString(ref geom) => geom.to_json(),
