@@ -107,7 +107,7 @@ impl ToJson for MultiLineString {
 /// [GeoJSON Format Specification § 2.1.6](http://geojson.org/geojson-spec.html#polygon)
 pub struct Polygon {
     pub exterior: Vec<Position>,
-    pub holes: Vec<Vec<Position>>,
+    pub holes: Vec<Vec<Position>>,  // TODO: this should be optional
 }
 
 impl Polygon {
