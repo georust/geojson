@@ -155,6 +155,7 @@ pub enum Geometry {
     MultiLineString(MultiLineString),
     Polygon(Polygon),
     MultiPolygon(MultiPolygon),
+    GeometryCollection(GeometryCollection),
 }
 
 impl ToJson for Geometry {
@@ -167,7 +168,7 @@ impl ToJson for Geometry {
             MultiLineString(ref geom) => geom.to_json(),
             Polygon(ref geom) => geom.to_json(),
             MultiPolygon(ref geom) => geom.to_json(),
-            // TODO: GeometryCollection(ref geom) => geom.to_json(),
+            GeometryCollection(ref geom) => geom.to_json(),
         }
     }
 }
