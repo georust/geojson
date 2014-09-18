@@ -191,6 +191,25 @@ impl ToJson for GeometryCollection {
 }
 
 
+/// Feature
+///
+/// [GeoJSON Format Specification § 2.2](http://geojson.org/geojson-spec.html#feature-objects)
+pub struct Feature {
+    geometry: Geometry,
+    properties: json::Json,
+}
+
+impl ToJson for Feature {
+    fn to_json(&self) -> json::Json {
+        let mut d = TreeMap::new();
+        d.insert("type".to_string(), "Feature".to_string().to_json());
+        d.insert("geometry".to_string(), self.geometry.to_json());
+        d.insert("properties".to_string(), self.properties.to_json());
+        d.to_json()
+    }
+}
+
+
 fn main() {
     let point = Point {
         coordinates: Position(vec![1., 2., 3.]),
