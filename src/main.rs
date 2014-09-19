@@ -1,7 +1,6 @@
 // TODO
 // impl ToGeojson for ....
 // generic number instead of f64 for position?
-// rename Position to Pos or Positions
 
 extern crate serialize;
 
@@ -10,22 +9,22 @@ use serialize::json::ToJson;
 use serialize::json;
 
 
-/// Position
+/// Pos (alias for Positions)
 ///
 /// [GeoJSON Format Specification § 2.1.1](http://geojson.org/geojson-spec.html#positions)
-pub struct Position(pub Vec<f64>);
+pub struct Pos(pub Vec<f64>);
 
-impl ToJson for Position {
+impl ToJson for Pos {
     fn to_json(&self) -> json::Json {
-        let &Position(ref nums) = self;
+        let &Pos(ref nums) = self;
         nums.to_json()
     }
 }
 
-impl Clone for Position {
-    fn clone(&self) -> Position {
-        let &Position(ref nums) = self;
-        Position(nums.clone())
+impl Clone for Pos {
+    fn clone(&self) -> Pos {
+        let &Pos(ref nums) = self;
+        Pos(nums.clone())
     }
 }
 
@@ -34,7 +33,7 @@ impl Clone for Position {
 ///
 /// [GeoJSON Format Specification § 2.1.2](http://geojson.org/geojson-spec.html#point)
 pub struct Point {
-    pub coordinates: Position,
+    pub coordinates: Pos,
 }
 
 impl ToJson for Point {
@@ -56,7 +55,7 @@ pub struct MultiPoint {
 
 impl ToJson for MultiPoint {
     fn to_json(&self) -> json::Json {
-        let coordinates: Vec<Position> =
+        let coordinates: Vec<Pos> =
             self.points.iter().map(|p| p.coordinates.clone()).collect();
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiPoint".to_string().to_json());
@@ -70,7 +69,7 @@ impl ToJson for MultiPoint {
 ///
 /// [GeoJSON Format Specification § 2.1.4](http://geojson.org/geojson-spec.html#linestring)
 pub struct LineString {
-    pub coordinates: Vec<Position>,
+    pub coordinates: Vec<Pos>,
 }
 
 impl ToJson for LineString {
@@ -92,7 +91,7 @@ pub struct MultiLineString {
 
 impl ToJson for MultiLineString {
     fn to_json(&self) -> json::Json {
-        let coordinates: Vec<Vec<Position>> =
+        let coordinates: Vec<Vec<Pos>> =
             self.line_strings.iter().map(|l| l.coordinates.clone()).collect();
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiLineString".to_string().to_json());
@@ -106,12 +105,12 @@ impl ToJson for MultiLineString {
 ///
 /// [GeoJSON Format Specification § 2.1.6](http://geojson.org/geojson-spec.html#polygon)
 pub struct Polygon {
-    pub exterior: Vec<Position>,
-    pub holes: Vec<Vec<Position>>,  // TODO: this should be optional
+    pub exterior: Vec<Pos>,
+    pub holes: Vec<Vec<Pos>>,  // TODO: this should be optional
 }
 
 impl Polygon {
-    fn coordinates(&self) -> Vec<Vec<Position>> {
+    fn coordinates(&self) -> Vec<Vec<Pos>> {
         let mut coordinates = self.holes.clone();
         coordinates.insert(0, self.exterior.clone());
         coordinates
@@ -137,7 +136,7 @@ pub struct MultiPolygon {
 
 impl ToJson for MultiPolygon {
     fn to_json(&self) -> json::Json {
-        let coordinates: Vec<Vec<Vec<Position>>> =
+        let coordinates: Vec<Vec<Vec<Pos>>> =
             self.polygons.iter().map(|p| p.coordinates()).collect();
         let mut d = TreeMap::new();
         d.insert("type".to_string(), "MultiPolygon".to_string().to_json());
@@ -227,9 +226,7 @@ impl ToJson for FeatureCollection {
 
 
 fn main() {
-    let point = Point {
-        coordinates: Position(vec![1., 2., 3.]),
-    };
+    let point = Point {coordinates: Pos(vec![1., 2., 3.])};
 
     let j: json::Json = point.to_json();
     let s: String = j.to_pretty_str();
