@@ -5,6 +5,7 @@
 extern crate serialize;
 
 use std::collections::TreeMap;
+use std::option::{None, Option, Some};
 use serialize::json::ToJson;
 use serialize::json;
 
@@ -106,14 +107,19 @@ impl ToJson for MultiLineString {
 /// [GeoJSON Format Specification § 2.1.6](http://geojson.org/geojson-spec.html#polygon)
 pub struct Polygon {
     pub exterior: Vec<Pos>,
-    pub holes: Vec<Vec<Pos>>,  // TODO: this should be optional
+    pub holes: Option<Vec<Vec<Pos>>>,
 }
 
 impl Polygon {
     fn coordinates(&self) -> Vec<Vec<Pos>> {
-        let mut coordinates = self.holes.clone();
-        coordinates.insert(0, self.exterior.clone());
-        coordinates
+        match self.holes {
+            None => vec![self.exterior.clone()],
+            Some(ref holes) => {
+                let mut coordinates = holes.clone();
+                coordinates.insert(0, self.exterior.clone());
+                coordinates
+            }
+        }
     }
 }
 
