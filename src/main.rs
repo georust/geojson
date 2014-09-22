@@ -154,25 +154,25 @@ impl ToJson for MultiPolygon {
 
 /// Geometry
 pub enum Geometry {
-    Point(Point),
-    MultiPoint(MultiPoint),
-    LineString(LineString),
-    MultiLineString(MultiLineString),
-    Polygon(Polygon),
-    MultiPolygon(MultiPolygon),
-    GeometryCollection(GeometryCollection),
+    EnumPoint(Point),
+    EnumMultiPoint(MultiPoint),
+    EnumLineString(LineString),
+    EnumMultiLineString(MultiLineString),
+    EnumPolygon(Polygon),
+    EnumMultiPolygon(MultiPolygon),
+    EnumGeometryCollection(GeometryCollection),
 }
 
 impl ToJson for Geometry {
     fn to_json(&self) -> json::Json {
         match *self {
-            Point(ref geom) => geom.to_json(),
-            MultiPoint(ref geom) => geom.to_json(),
-            LineString(ref geom) => geom.to_json(),
-            MultiLineString(ref geom) => geom.to_json(),
-            Polygon(ref geom) => geom.to_json(),
-            MultiPolygon(ref geom) => geom.to_json(),
-            GeometryCollection(ref geom) => geom.to_json(),
+            EnumPoint(ref geom) => geom.to_json(),
+            EnumMultiPoint(ref geom) => geom.to_json(),
+            EnumLineString(ref geom) => geom.to_json(),
+            EnumMultiLineString(ref geom) => geom.to_json(),
+            EnumPolygon(ref geom) => geom.to_json(),
+            EnumMultiPolygon(ref geom) => geom.to_json(),
+            EnumGeometryCollection(ref geom) => geom.to_json(),
         }
     }
 }
