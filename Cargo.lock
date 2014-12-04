@@ -1,4 +1,4 @@
 [root]
-name = "rust-geojson"
+name = "geojson"
 version = "0.0.1"
 
