@@ -5,7 +5,6 @@
 extern crate serialize;
 
 use std::collections::TreeMap;
-use std::option::{None, Option, Some};
 use serialize::json::ToJson;
 use serialize::json;
 
