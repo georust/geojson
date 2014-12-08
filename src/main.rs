@@ -1,5 +1,4 @@
 // TODO
-// impl ToGeojson for ....
 // generic number instead of f64 for position?
 
 extern crate serialize;
@@ -7,6 +6,13 @@ extern crate serialize;
 use std::collections::TreeMap;
 use serialize::json::ToJson;
 use serialize::json;
+
+
+/// ToGeoJson
+pub trait ToGeoJson {
+    // TODO: change this to return a generic GeoJSON object
+    fn to_geojson(&self) -> Geometry;
+}
 
 
 /// Pos (alias for Positions)
