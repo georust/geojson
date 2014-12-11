@@ -4,8 +4,7 @@
 extern crate serialize;
 
 use std::collections::TreeMap;
-use serialize::json::ToJson;
-use serialize::json;
+use serialize::json::{mod, ToJson};
 
 
 /// ToGeoJson
