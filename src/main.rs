@@ -3,7 +3,7 @@
 
 extern crate serialize;
 
-use std::collections::TreeMap;
+use std::collections::HashMap;
 use serialize::json::{mod, ToJson};
 
 
@@ -43,7 +43,7 @@ pub struct Point {
 
 impl ToJson for Point {
     fn to_json(&self) -> json::Json {
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "Point".to_string().to_json());
         d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
@@ -62,7 +62,7 @@ impl ToJson for MultiPoint {
     fn to_json(&self) -> json::Json {
         let coordinates: Vec<Pos> =
             self.points.iter().map(|p| p.coordinates.clone()).collect();
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "MultiPoint".to_string().to_json());
         d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
@@ -79,7 +79,7 @@ pub struct LineString {
 
 impl ToJson for LineString {
     fn to_json(&self) -> json::Json {
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "LineString".to_string().to_json());
         d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
@@ -98,7 +98,7 @@ impl ToJson for MultiLineString {
     fn to_json(&self) -> json::Json {
         let coordinates: Vec<Vec<Pos>> =
             self.line_strings.iter().map(|l| l.coordinates.clone()).collect();
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "MultiLineString".to_string().to_json());
         d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
@@ -129,7 +129,7 @@ impl Polygon {
 
 impl ToJson for Polygon {
     fn to_json(&self) -> json::Json {
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "Polygon".to_string().to_json());
         d.insert("coordinates".to_string(), self.coordinates().to_json());
         d.to_json()
@@ -148,7 +148,7 @@ impl ToJson for MultiPolygon {
     fn to_json(&self) -> json::Json {
         let coordinates: Vec<Vec<Vec<Pos>>> =
             self.polygons.iter().map(|p| p.coordinates()).collect();
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "MultiPolygon".to_string().to_json());
         d.insert("coordinates".to_string(), coordinates.to_json());
         d.to_json()
@@ -191,7 +191,7 @@ pub struct GeometryCollection {
 
 impl ToJson for GeometryCollection {
     fn to_json(&self) -> json::Json {
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "GeometryCollection".to_string().to_json());
         d.insert("geometries".to_string(), self.geometries.to_json());
         d.to_json()
@@ -209,7 +209,7 @@ pub struct Feature {
 
 impl ToJson for Feature {
     fn to_json(&self) -> json::Json {
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "Feature".to_string().to_json());
         d.insert("geometry".to_string(), self.geometry.to_json());
         d.insert("properties".to_string(), self.properties.to_json());
@@ -227,7 +227,7 @@ pub struct FeatureCollection {
 
 impl ToJson for FeatureCollection {
     fn to_json(&self) -> json::Json {
-        let mut d = TreeMap::new();
+        let mut d = HashMap::new();
         d.insert("type".to_string(), "FeatureCollection".to_string().to_json());
         d.insert("features".to_string(), self.features.to_json());
         d.to_json()
