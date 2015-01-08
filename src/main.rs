@@ -253,7 +253,7 @@ fn main() {
     let point = Point {coordinates: Pos(vec![1., 2., 3.])};
 
     let j: json::Json = point.to_json();
-    let s: String = j.to_pretty_str();
+    let s: String = j.pretty().to_string();
 
     println!("{}", s);
 }
