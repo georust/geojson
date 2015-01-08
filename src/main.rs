@@ -18,7 +18,7 @@
 extern crate serialize;
 
 use std::collections::HashMap;
-use serialize::json::{mod, ToJson};
+use serialize::json::{self, ToJson};
 
 
 /// ToGeoJson
