@@ -2,7 +2,8 @@
 
 name = "geojson"
 description = "GeoJSON utilities for Rust"
-version = "0.0.1"
-authors = ["Corey Farwell <coreyf@rwell.org>"]
+version = "0.0.2"
+authors = ["Corey Farwell <coreyf@rwell.org>",
+           "Blake Grotewold <hello@grotewold.me"]
 license = "Apache-2.0"
-repository = "https://github.com/frewsxcv/rust-geojson"
+repository = "https://github.com/georust/rust-geojson"
