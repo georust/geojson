@@ -249,11 +249,9 @@ impl ToJson for FeatureCollection {
 }
 
 
-fn main() {
+#[test]
+fn test_point_tojson() {
     let point = Point {coordinates: Pos(vec![1., 2., 3.])};
-
-    let j: json::Json = point.to_json();
-    let s: String = j.pretty().to_string();
-
-    println!("{}", s);
+    let json_string = point.to_json().to_string();
+    assert_eq!("{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}", json_string);
 }
