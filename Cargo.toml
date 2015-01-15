@@ -7,3 +7,6 @@ authors = ["Corey Farwell <coreyf@rwell.org>",
            "Blake Grotewold <hello@grotewold.me>"]
 license = "Apache-2.0"
 repository = "https://github.com/georust/rust-geojson"
+
+[dependencies]
+rustc-serialize = "0.2"
