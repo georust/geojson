@@ -35,11 +35,8 @@ pub struct Pos(pub Vec<f64>);
 
 impl ToJson for Pos {
     fn to_json(&self) -> json::Json {
-        match self.clone() {
-            Pos(v) => {
-                v.to_json()
-            }
-        }
+        let &Pos(ref nums) = self;
+        nums.to_json()
     }
 }
 
@@ -49,11 +46,8 @@ pub struct Ring(pub Vec<Pos>);
 
 impl ToJson for Ring {
     fn to_json(&self) -> json::Json {
-        match self.clone() {
-            Ring(v) => {
-                v.to_json()
-            }
-        }
+       let &Ring(ref points) = self;
+        points.to_json()
     }
 }
 
@@ -63,11 +57,8 @@ pub struct Poly(pub Vec<Ring>);
 
 impl ToJson for Poly {
     fn to_json(&self) -> json::Json {
-        match self.clone() {
-            Poly(v) => {
-                v.to_json()
-            }
-        }
+        let &Poly(ref rings) = self;
+        rings.to_json()
     }
 }
 
