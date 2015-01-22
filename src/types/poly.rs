@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Array};
 use Ring;
 
 /// Poly  (alias for Polygon)
@@ -23,5 +23,14 @@ impl ToJson for Poly {
     fn to_json(&self) -> Json {
         let &Poly(ref rings) = self;
         rings.to_json()
+    }
+}
+
+impl Poly {
+    pub fn from_json(json_poly: &Array) -> Poly {
+        let vec = json_poly.iter()
+            .map(|json_ring| Ring::from_json(json_ring.as_array().unwrap()))
+            .collect();
+        return Poly(vec);
     }
 }

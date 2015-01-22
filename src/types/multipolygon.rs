@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Poly;
 
 /// MultiPolygon
@@ -30,6 +30,17 @@ impl ToJson for MultiPolygon {
         d.insert(format!("type"), "MultiPolygon".to_json());
         d.insert(format!("coordinates"), self.coordinates.to_json());
         d.to_json()
+    }
+}
+
+impl MultiPolygon {
+    pub fn from_json(json_geometry: &Object) -> MultiPolygon {
+        let coordinates = json_geometry.get("coordinates").unwrap()
+            .as_array().unwrap()
+            .iter()
+            .map(|json_poly| Poly::from_json(json_poly.as_array().unwrap()))
+            .collect();
+        return MultiPolygon{coordinates: coordinates};
     }
 }
 

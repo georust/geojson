@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Array};
 use Pos;
 
 /// Ring
@@ -26,3 +26,11 @@ impl ToJson for Ring {
     }
 }
 
+impl Ring {
+    pub fn from_json(json_ring: &Array) -> Ring {
+        let vec = json_ring.iter()
+            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()))
+            .collect();
+        return Ring(vec);
+    }
+}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection};
 
 /// Geometry
@@ -37,6 +37,15 @@ impl ToJson for Geometry {
             Geometry::Polygon(ref geom) => geom.to_json(),
             Geometry::MultiPolygon(ref geom) => geom.to_json(),
             Geometry::GeometryCollection(ref geom) => geom.to_json(),
+        }
+    }
+}
+
+impl Geometry {
+    pub fn from_json(json_geometry: &Object) -> Geometry {
+        match(json_geometry.get("type").unwrap().as_string().unwrap()) {
+            "MultiPolygon" => Geometry::MultiPolygon(MultiPolygon::from_json(json_geometry)),
+            _ => panic!(),
         }
     }
 }
