@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson, Builder, Object};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Feature;
 
 /// FeatureCollection
@@ -44,7 +44,7 @@ impl FeatureCollection {
 }
 
 pub fn from_str(json_str: &str) -> FeatureCollection {
-    let json_doc = Builder::new(json_str.chars()).build().unwrap();
+    let json_doc = Json::from_str(json_str).unwrap();
     return FeatureCollection::from_json(json_doc.as_object().unwrap());
 }
 
