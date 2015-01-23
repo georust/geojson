@@ -49,3 +49,16 @@ impl Geometry {
         }
     }
 }
+
+#[test]
+fn test_match_geometry_type() {
+    fn geom(json_str: &str) -> Geometry {
+        let json = Json::from_str(json_str).unwrap();
+        return Geometry::from_json(json.as_object().unwrap());
+    }
+
+    match geom("{\"coordinates\":[],\"type\":\"MultiPolygon\"}") {
+        Geometry::MultiPolygon(ref _geom) => (),
+        _ => panic!("expected MultiPolygon")
+    };
+}

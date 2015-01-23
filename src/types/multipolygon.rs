@@ -47,7 +47,7 @@ impl MultiPolygon {
 
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::ToJson;
+    use rustc_serialize::json::{Json, ToJson};
     use {Pos, MultiPolygon, Poly, Ring};
 
     #[test]
@@ -58,5 +58,13 @@ mod tests {
             ])]};
         let json_string = format!("{}",point.to_json());
         assert_eq!("{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}", json_string);
+    }
+
+    #[test]
+    fn test_multi_polygon_from_json() {
+        let json_string = "{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let multi_polygon = MultiPolygon::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", multi_polygon.to_json()));
     }
 }
