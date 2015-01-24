@@ -36,7 +36,7 @@ impl ToJson for Polygon {
 impl Polygon {
     pub fn from_json(json_geometry: &Object) -> Polygon {
         let json_poly = json_geometry.get("coordinates").unwrap();
-        let coordinates = Poly::from_json(json_poly.as_array().unwrap());
+        let coordinates = Poly::from_json(json_poly.as_array().unwrap()).ok().unwrap();
         return Polygon{coordinates: coordinates};
     }
 }

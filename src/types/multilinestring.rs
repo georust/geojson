@@ -38,7 +38,7 @@ impl MultiLineString {
         let coordinates = json_geometry.get("coordinates").unwrap()
             .as_array().unwrap()
             .iter()
-            .map(|json_ring| Ring::from_json(json_ring.as_array().unwrap()))
+            .map(|json_ring| Ring::from_json(json_ring.as_array().unwrap()).ok().unwrap())
             .collect();
         return MultiLineString{coordinates: coordinates};
     }

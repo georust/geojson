@@ -38,7 +38,7 @@ impl MultiPolygon {
         let coordinates = json_geometry.get("coordinates").unwrap()
             .as_array().unwrap()
             .iter()
-            .map(|json_poly| Poly::from_json(json_poly.as_array().unwrap()))
+            .map(|json_poly| Poly::from_json(json_poly.as_array().unwrap()).ok().unwrap())
             .collect();
         return MultiPolygon{coordinates: coordinates};
     }

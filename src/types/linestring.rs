@@ -36,7 +36,7 @@ impl ToJson for LineString {
 impl LineString {
     pub fn from_json(json_geometry: &Object) -> LineString {
         let json_point = json_geometry.get("coordinates").unwrap();
-        let coordinates = Ring::from_json(json_point.as_array().unwrap());
+        let coordinates = Ring::from_json(json_point.as_array().unwrap()).ok().unwrap();
         return LineString{coordinates: coordinates};
     }
 }
