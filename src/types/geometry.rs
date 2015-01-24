@@ -43,8 +43,14 @@ impl ToJson for Geometry {
 
 impl Geometry {
     pub fn from_json(json_geometry: &Object) -> Geometry {
-        match(json_geometry.get("type").unwrap().as_string().unwrap()) {
+        match json_geometry.get("type").unwrap().as_string().unwrap() {
+            "Point" => Geometry::Point(Point::from_json(json_geometry)),
+            "MultiPoint" => Geometry::MultiPoint(MultiPoint::from_json(json_geometry)),
+            "LineString" => Geometry::LineString(LineString::from_json(json_geometry)),
+            "MultiLineString" => Geometry::MultiLineString(MultiLineString::from_json(json_geometry)),
+            "Polygon" => Geometry::Polygon(Polygon::from_json(json_geometry)),
             "MultiPolygon" => Geometry::MultiPolygon(MultiPolygon::from_json(json_geometry)),
+            "GeometryCollection" => Geometry::GeometryCollection(GeometryCollection::from_json(json_geometry)),
             _ => panic!(),
         }
     }
@@ -57,8 +63,38 @@ fn test_match_geometry_type() {
         return Geometry::from_json(json.as_object().unwrap());
     }
 
+    match geom("{\"coordinates\":[],\"type\":\"Point\"}") {
+        Geometry::Point(ref _geom) => (),
+        _ => panic!("expected Point")
+    };
+
+    match geom("{\"coordinates\":[],\"type\":\"MultiPoint\"}") {
+        Geometry::MultiPoint(ref _geom) => (),
+        _ => panic!("expected MultiPoint")
+    };
+
+    match geom("{\"coordinates\":[],\"type\":\"LineString\"}") {
+        Geometry::LineString(ref _geom) => (),
+        _ => panic!("expected LineString")
+    };
+
+    match geom("{\"coordinates\":[],\"type\":\"MultiLineString\"}") {
+        Geometry::MultiLineString(ref _geom) => (),
+        _ => panic!("expected MultiLineString")
+    };
+
+    match geom("{\"coordinates\":[],\"type\":\"Polygon\"}") {
+        Geometry::Polygon(ref _geom) => (),
+        _ => panic!("expected Polygon")
+    };
+
     match geom("{\"coordinates\":[],\"type\":\"MultiPolygon\"}") {
         Geometry::MultiPolygon(ref _geom) => (),
         _ => panic!("expected MultiPolygon")
+    };
+
+    match geom("{\"geometries\":[],\"type\":\"GeometryCollection\"}") {
+        Geometry::GeometryCollection(ref _geom) => (),
+        _ => panic!("expected GeometryCollection")
     };
 }

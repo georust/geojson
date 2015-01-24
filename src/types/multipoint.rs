@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Pos;
 
 /// MultiPoint
@@ -33,9 +33,28 @@ impl ToJson for MultiPoint {
     }
 }
 
+impl MultiPoint {
+    pub fn from_json(json_geometry: &Object) -> MultiPoint {
+        let coordinates = json_geometry.get("coordinates").unwrap()
+            .as_array().unwrap()
+            .iter()
+            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()))
+            .collect();
+        return MultiPoint{coordinates: coordinates};
+    }
+}
+
 #[test]
 fn test_multi_point_tojson() {
     let point = MultiPoint {coordinates: vec![Pos(vec![1., 2., 3.])]};
     let json_string = format!("{}",point.to_json());
     assert_eq!("{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}", json_string);
+}
+
+#[test]
+fn test_multi_point_from_json() {
+    let json_string = "{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}";
+    let json_doc = Json::from_str(json_string).unwrap();
+    let multi_point = MultiPoint::from_json(json_doc.as_object().unwrap());
+    assert_eq!(json_string, format!("{}", multi_point.to_json()));
 }

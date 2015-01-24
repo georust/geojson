@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Poly;
 
 /// Polygon
@@ -33,9 +33,17 @@ impl ToJson for Polygon {
     }
 }
 
+impl Polygon {
+    pub fn from_json(json_geometry: &Object) -> Polygon {
+        let json_poly = json_geometry.get("coordinates").unwrap();
+        let coordinates = Poly::from_json(json_poly.as_array().unwrap());
+        return Polygon{coordinates: coordinates};
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::ToJson;
+    use rustc_serialize::json::{Json, ToJson};
     use {Polygon, Poly, Pos, Ring};
 
     #[test]
@@ -46,5 +54,13 @@ mod tests {
             ])};
         let json_string = format!("{}",point.to_json());
         assert_eq!("{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"Polygon\"}", json_string);
+    }
+
+    #[test]
+    fn test_polygon_from_json() {
+        let json_string = "{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"Polygon\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let polygon = Polygon::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", polygon.to_json()));
     }
 }

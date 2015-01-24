@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Pos;
 
 /// Point
@@ -33,9 +33,25 @@ impl ToJson for Point {
     }
 }
 
+impl Point {
+    pub fn from_json(json_geometry: &Object) -> Point {
+        let json_point = json_geometry.get("coordinates").unwrap();
+        let coordinates = Pos::from_json(json_point.as_array().unwrap());
+        return Point{coordinates: coordinates};
+    }
+}
+
 #[test]
 fn test_point_tojson() {
     let point = Point {coordinates: Pos(vec![1., 2., 3.])};
     let json_string = format!("{}",point.to_json());
     assert_eq!("{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}", json_string);
+}
+
+#[test]
+fn test_point_from_json() {
+    let json_string = "{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}";
+    let json_doc = Json::from_str(json_string).unwrap();
+    let point = Point::from_json(json_doc.as_object().unwrap());
+    assert_eq!(json_string, format!("{}", point.to_json()));
 }
