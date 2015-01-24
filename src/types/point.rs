@@ -36,7 +36,7 @@ impl ToJson for Point {
 impl Point {
     pub fn from_json(json_geometry: &Object) -> Point {
         let json_point = json_geometry.get("coordinates").unwrap();
-        let coordinates = Pos::from_json(json_point.as_array().unwrap());
+        let coordinates = Pos::from_json(json_point.as_array().unwrap()).ok().unwrap();
         return Point{coordinates: coordinates};
     }
 }

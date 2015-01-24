@@ -39,3 +39,16 @@ pub use types::featurecollection::FeatureCollection;
 pub use types::featurecollection::from_str;
 
 mod types;
+
+#[derive(Copy)]
+pub struct GeoJsonError {
+    pub desc: &'static str,
+}
+
+impl GeoJsonError {
+    pub fn new(desc: &'static str) -> GeoJsonError {
+        return GeoJsonError{desc: desc};
+    }
+}
+
+pub type GeoJsonResult<T> = Result<T, GeoJsonError>;

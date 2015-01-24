@@ -38,7 +38,7 @@ impl MultiPoint {
         let coordinates = json_geometry.get("coordinates").unwrap()
             .as_array().unwrap()
             .iter()
-            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()))
+            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()).ok().unwrap())
             .collect();
         return MultiPoint{coordinates: coordinates};
     }

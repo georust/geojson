@@ -29,7 +29,7 @@ impl ToJson for Ring {
 impl Ring {
     pub fn from_json(json_ring: &Array) -> Ring {
         let vec = json_ring.iter()
-            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()))
+            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()).ok().unwrap())
             .collect();
         return Ring(vec);
     }
