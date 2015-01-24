@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Array};
-use {Ring, GeoJsonResult, GeoJsonError};
+use {Ring, GeoJsonResult};
 
 /// Poly  (alias for Polygon)
 #[derive(RustcEncodable, Clone)]
@@ -30,12 +30,7 @@ impl Poly {
     pub fn from_json(json_poly: &Array) -> GeoJsonResult<Poly> {
         let mut vec = vec![];
         for json_ring in json_poly.iter() {
-            vec.push(try!(
-                Ring::from_json(try!(
-                    json_ring.as_array()
-                    .ok_or(GeoJsonError::new("Expected array"))
-                ))
-            ));
+            vec.push(try!(Ring::from_json(expect_array!(json_ring))));
         }
         return Ok(Poly(vec));
     }

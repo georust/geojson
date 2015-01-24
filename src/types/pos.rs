@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Array};
-use {GeoJsonResult, GeoJsonError};
+use GeoJsonResult;
 
 /// Pos (alias for Positions)
 ///
@@ -32,10 +32,7 @@ impl Pos {
     pub fn from_json(json_pos: &Array) -> GeoJsonResult<Pos> {
         let mut vec = vec![];
         for json_f64 in json_pos.iter() {
-            vec.push(try!(
-                json_f64.as_f64()
-                .ok_or(GeoJsonError::new("Expected f64 value"))
-            ));
+            vec.push(expect_f64!(json_f64));
         }
         return Ok(Pos(vec));
     }

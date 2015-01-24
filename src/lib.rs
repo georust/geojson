@@ -38,6 +38,20 @@ pub use types::feature::Feature;
 pub use types::featurecollection::FeatureCollection;
 pub use types::featurecollection::from_str;
 
+macro_rules! expect_f64 {
+    ($value:expr) => (try!(
+        $value.as_f64()
+        .ok_or({use GeoJsonError; GeoJsonError::new("Expected f64 value")})
+    ))
+}
+
+macro_rules! expect_array {
+    ($value:expr) => (try!(
+        $value.as_array()
+        .ok_or({use GeoJsonError; GeoJsonError::new("Expected array value")})
+    ))
+}
+
 mod types;
 
 #[derive(Copy)]
