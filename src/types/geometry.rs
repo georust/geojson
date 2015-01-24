@@ -56,45 +56,53 @@ impl Geometry {
     }
 }
 
-#[test]
-fn test_match_geometry_type() {
-    fn geom(json_str: &str) -> Geometry {
-        let json = Json::from_str(json_str).unwrap();
-        return Geometry::from_json(json.as_object().unwrap());
+
+#[cfg(test)]
+
+mod tests {
+    use rustc_serialize::json::Json;
+    use Geometry;
+
+    #[test]
+    fn test_match_geometry_type() {
+        fn geom(json_str: &str) -> Geometry {
+            let json = Json::from_str(json_str).unwrap();
+            return Geometry::from_json(json.as_object().unwrap());
+        }
+
+        match geom("{\"coordinates\":[],\"type\":\"Point\"}") {
+            Geometry::Point(ref _geom) => (),
+            _ => panic!("expected Point")
+        };
+
+        match geom("{\"coordinates\":[],\"type\":\"MultiPoint\"}") {
+            Geometry::MultiPoint(ref _geom) => (),
+            _ => panic!("expected MultiPoint")
+        };
+
+        match geom("{\"coordinates\":[],\"type\":\"LineString\"}") {
+            Geometry::LineString(ref _geom) => (),
+            _ => panic!("expected LineString")
+        };
+
+        match geom("{\"coordinates\":[],\"type\":\"MultiLineString\"}") {
+            Geometry::MultiLineString(ref _geom) => (),
+            _ => panic!("expected MultiLineString")
+        };
+
+        match geom("{\"coordinates\":[],\"type\":\"Polygon\"}") {
+            Geometry::Polygon(ref _geom) => (),
+            _ => panic!("expected Polygon")
+        };
+
+        match geom("{\"coordinates\":[],\"type\":\"MultiPolygon\"}") {
+            Geometry::MultiPolygon(ref _geom) => (),
+            _ => panic!("expected MultiPolygon")
+        };
+
+        match geom("{\"geometries\":[],\"type\":\"GeometryCollection\"}") {
+            Geometry::GeometryCollection(ref _geom) => (),
+            _ => panic!("expected GeometryCollection")
+        };
     }
-
-    match geom("{\"coordinates\":[],\"type\":\"Point\"}") {
-        Geometry::Point(ref _geom) => (),
-        _ => panic!("expected Point")
-    };
-
-    match geom("{\"coordinates\":[],\"type\":\"MultiPoint\"}") {
-        Geometry::MultiPoint(ref _geom) => (),
-        _ => panic!("expected MultiPoint")
-    };
-
-    match geom("{\"coordinates\":[],\"type\":\"LineString\"}") {
-        Geometry::LineString(ref _geom) => (),
-        _ => panic!("expected LineString")
-    };
-
-    match geom("{\"coordinates\":[],\"type\":\"MultiLineString\"}") {
-        Geometry::MultiLineString(ref _geom) => (),
-        _ => panic!("expected MultiLineString")
-    };
-
-    match geom("{\"coordinates\":[],\"type\":\"Polygon\"}") {
-        Geometry::Polygon(ref _geom) => (),
-        _ => panic!("expected Polygon")
-    };
-
-    match geom("{\"coordinates\":[],\"type\":\"MultiPolygon\"}") {
-        Geometry::MultiPolygon(ref _geom) => (),
-        _ => panic!("expected MultiPolygon")
-    };
-
-    match geom("{\"geometries\":[],\"type\":\"GeometryCollection\"}") {
-        Geometry::GeometryCollection(ref _geom) => (),
-        _ => panic!("expected GeometryCollection")
-    };
 }

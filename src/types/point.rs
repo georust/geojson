@@ -41,17 +41,23 @@ impl Point {
     }
 }
 
-#[test]
-fn test_point_tojson() {
-    let point = Point {coordinates: Pos(vec![1., 2., 3.])};
-    let json_string = format!("{}",point.to_json());
-    assert_eq!("{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}", json_string);
-}
+#[cfg(test)]
+mod tests {
+    use rustc_serialize::json::{Json, ToJson};
+    use {Point, Pos};
 
-#[test]
-fn test_point_from_json() {
-    let json_string = "{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}";
-    let json_doc = Json::from_str(json_string).unwrap();
-    let point = Point::from_json(json_doc.as_object().unwrap());
-    assert_eq!(json_string, format!("{}", point.to_json()));
+    #[test]
+    fn test_point_to_json() {
+        let point = Point{coordinates: Pos(vec![1., 2., 3.])};
+        let json_string = format!("{}", point.to_json());
+        assert_eq!("{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}", json_string);
+    }
+
+    #[test]
+    fn test_point_from_json() {
+        let json_string = "{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let point = Point::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", point.to_json()));
+    }
 }

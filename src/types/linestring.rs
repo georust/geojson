@@ -47,9 +47,9 @@ mod tests {
     use {Pos, LineString, Ring};
 
     #[test]
-    fn test_line_string_tojson() {
-        let point = LineString {coordinates: Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])])};
-        let json_string = format!("{}",point.to_json());
+    fn test_line_string_to_json() {
+        let line_string = LineString{coordinates: Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])])};
+        let json_string = format!("{}", line_string.to_json());
         assert_eq!("{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}", json_string);
     }
 

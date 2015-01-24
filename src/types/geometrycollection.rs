@@ -50,8 +50,8 @@ mod tests {
     use {GeometryCollection, MultiPolygon, Geometry, Poly, Pos, Ring};
 
     #[test]
-    fn test_geometry_collection_string_tojson() {
-        let point = GeometryCollection {
+    fn test_geometry_collection_to_json() {
+        let geometry_collection = GeometryCollection{
             geometries: vec![Geometry::MultiPolygon(MultiPolygon {
                         coordinates: vec![
                             Poly(vec![
@@ -68,7 +68,7 @@ mod tests {
                     })
             ]
         };
-        let json_string = format!("{}",point.to_json());
+        let json_string = format!("{}", geometry_collection.to_json());
         assert_eq!("{\"geometries\":[{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}],\"type\":\"GeometryCollection\"}", json_string);
     }
 

@@ -51,7 +51,7 @@ mod tests {
     use {Geometry, Feature, Poly, MultiPolygon, Pos, Ring};
 
     #[test]
-    fn test_feature_string_tojson() {
+    fn test_feature_to_json() {
         let mut map = BTreeMap::new();
         map.insert(format!("hi"), "there".to_json());
         let point = Feature {

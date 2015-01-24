@@ -44,17 +44,23 @@ impl MultiPoint {
     }
 }
 
-#[test]
-fn test_multi_point_tojson() {
-    let point = MultiPoint {coordinates: vec![Pos(vec![1., 2., 3.])]};
-    let json_string = format!("{}",point.to_json());
-    assert_eq!("{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}", json_string);
-}
+#[cfg(test)]
+mod tests {
+    use rustc_serialize::json::{Json, ToJson};
+    use {MultiPoint, Pos};
 
-#[test]
-fn test_multi_point_from_json() {
-    let json_string = "{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}";
-    let json_doc = Json::from_str(json_string).unwrap();
-    let multi_point = MultiPoint::from_json(json_doc.as_object().unwrap());
-    assert_eq!(json_string, format!("{}", multi_point.to_json()));
+    #[test]
+    fn test_multi_point_tojson() {
+        let multi_point = MultiPoint{coordinates: vec![Pos(vec![1., 2., 3.])]};
+        let json_string = format!("{}", multi_point.to_json());
+        assert_eq!("{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}", json_string);
+    }
+
+    #[test]
+    fn test_multi_point_from_json() {
+        let json_string = "{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let multi_point = MultiPoint::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", multi_point.to_json()));
+    }
 }

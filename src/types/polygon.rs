@@ -47,12 +47,12 @@ mod tests {
     use {Polygon, Poly, Pos, Ring};
 
     #[test]
-    fn test_polygon_string_tojson() {
-        let point = Polygon {coordinates: Poly(vec![
+    fn test_polygon_to_json() {
+        let polygon = Polygon{coordinates: Poly(vec![
             Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]),
             Ring(vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])])
             ])};
-        let json_string = format!("{}",point.to_json());
+        let json_string = format!("{}", polygon.to_json());
         assert_eq!("{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"Polygon\"}", json_string);
     }
 

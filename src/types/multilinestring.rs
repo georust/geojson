@@ -50,12 +50,12 @@ mod tests {
     use {MultiLineString, Pos, Ring};
 
     #[test]
-    fn test_multi_line_string_tojson() {
-        let point = MultiLineString {coordinates: vec![
+    fn test_multi_line_string_to_json() {
+        let multi_line_string = MultiLineString{coordinates: vec![
             Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]),
             Ring(vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])])
             ]};
-        let json_string = format!("{}",point.to_json());
+        let json_string = format!("{}", multi_line_string.to_json());
         assert_eq!("{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"MultiLineString\"}", json_string);
     }
 
