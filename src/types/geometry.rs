@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Object};
-use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection};
+use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, GeoJsonResult};
 
 /// Geometry
 #[derive(RustcEncodable, Clone)]
@@ -42,15 +42,15 @@ impl ToJson for Geometry {
 }
 
 impl Geometry {
-    pub fn from_json(json_geometry: &Object) -> Geometry {
-        match json_geometry.get("type").unwrap().as_string().unwrap() {
-            "Point" => Geometry::Point(Point::from_json(json_geometry)),
-            "MultiPoint" => Geometry::MultiPoint(MultiPoint::from_json(json_geometry)),
-            "LineString" => Geometry::LineString(LineString::from_json(json_geometry)),
-            "MultiLineString" => Geometry::MultiLineString(MultiLineString::from_json(json_geometry)),
-            "Polygon" => Geometry::Polygon(Polygon::from_json(json_geometry)),
-            "MultiPolygon" => Geometry::MultiPolygon(MultiPolygon::from_json(json_geometry)),
-            "GeometryCollection" => Geometry::GeometryCollection(GeometryCollection::from_json(json_geometry)),
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Geometry> {
+        match expect_string!(json_geometry.get("type").unwrap()) {
+            "Point" => Ok(Geometry::Point(try!(Point::from_json(json_geometry)))),
+            "MultiPoint" => Ok(Geometry::MultiPoint(try!(MultiPoint::from_json(json_geometry)))),
+            "LineString" => Ok(Geometry::LineString(try!(LineString::from_json(json_geometry)))),
+            "MultiLineString" => Ok(Geometry::MultiLineString(try!(MultiLineString::from_json(json_geometry)))),
+            "Polygon" => Ok(Geometry::Polygon(try!(Polygon::from_json(json_geometry)))),
+            "MultiPolygon" => Ok(Geometry::MultiPolygon(try!(MultiPolygon::from_json(json_geometry)))),
+            "GeometryCollection" => Ok(Geometry::GeometryCollection(try!(GeometryCollection::from_json(json_geometry)))),
             _ => panic!(),
         }
     }
@@ -62,46 +62,47 @@ impl Geometry {
 mod tests {
     use rustc_serialize::json::Json;
     use Geometry;
+    use GeoJsonResult;
 
     #[test]
     fn test_match_geometry_type() {
-        fn geom(json_str: &str) -> Geometry {
+        fn geom(json_str: &str) -> GeoJsonResult<Geometry> {
             let json = Json::from_str(json_str).unwrap();
-            return Geometry::from_json(json.as_object().unwrap());
+            return Geometry::from_json(expect_object!(json));
         }
 
         match geom("{\"coordinates\":[],\"type\":\"Point\"}") {
-            Geometry::Point(ref _geom) => (),
+            Ok(Geometry::Point(ref _geom)) => (),
             _ => panic!("expected Point")
         };
 
         match geom("{\"coordinates\":[],\"type\":\"MultiPoint\"}") {
-            Geometry::MultiPoint(ref _geom) => (),
+            Ok(Geometry::MultiPoint(ref _geom)) => (),
             _ => panic!("expected MultiPoint")
         };
 
         match geom("{\"coordinates\":[],\"type\":\"LineString\"}") {
-            Geometry::LineString(ref _geom) => (),
+            Ok(Geometry::LineString(ref _geom)) => (),
             _ => panic!("expected LineString")
         };
 
         match geom("{\"coordinates\":[],\"type\":\"MultiLineString\"}") {
-            Geometry::MultiLineString(ref _geom) => (),
+            Ok(Geometry::MultiLineString(ref _geom)) => (),
             _ => panic!("expected MultiLineString")
         };
 
         match geom("{\"coordinates\":[],\"type\":\"Polygon\"}") {
-            Geometry::Polygon(ref _geom) => (),
+            Ok(Geometry::Polygon(ref _geom)) => (),
             _ => panic!("expected Polygon")
         };
 
         match geom("{\"coordinates\":[],\"type\":\"MultiPolygon\"}") {
-            Geometry::MultiPolygon(ref _geom) => (),
+            Ok(Geometry::MultiPolygon(ref _geom)) => (),
             _ => panic!("expected MultiPolygon")
         };
 
         match geom("{\"geometries\":[],\"type\":\"GeometryCollection\"}") {
-            Geometry::GeometryCollection(ref _geom) => (),
+            Ok(Geometry::GeometryCollection(ref _geom)) => (),
             _ => panic!("expected GeometryCollection")
         };
     }

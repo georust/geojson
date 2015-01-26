@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use Ring;
+use {Ring, GeoJsonResult};
 
 /// LineString
 ///
@@ -34,10 +34,10 @@ impl ToJson for LineString {
 }
 
 impl LineString {
-    pub fn from_json(json_geometry: &Object) -> LineString {
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<LineString> {
         let json_point = json_geometry.get("coordinates").unwrap();
-        let coordinates = Ring::from_json(json_point.as_array().unwrap()).ok().unwrap();
-        return LineString{coordinates: coordinates};
+        let coordinates = try!(Ring::from_json(expect_array!(json_point)));
+        return Ok(LineString{coordinates: coordinates});
     }
 }
 
@@ -57,7 +57,7 @@ mod tests {
     fn test_line_string_from_json() {
         let json_string = "{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}";
         let json_doc = Json::from_str(json_string).unwrap();
-        let line_string = LineString::from_json(json_doc.as_object().unwrap());
+        let line_string = LineString::from_json(json_doc.as_object().unwrap()).ok().unwrap();
         assert_eq!(json_string, format!("{}", line_string.to_json()));
     }
 }

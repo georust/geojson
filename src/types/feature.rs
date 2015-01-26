@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, Object, ToJson};
-use Geometry;
+use {Geometry, GeoJsonResult};
 
 /// Feature
 ///
@@ -35,12 +35,12 @@ impl ToJson for Feature {
 }
 
 impl Feature {
-    pub fn from_json(json_feature: &Object) -> Feature {
-        let geometry_json = json_feature.get("geometry").unwrap();
-        return Feature{
-            geometry: Geometry::from_json(geometry_json.as_object().unwrap()),
+    pub fn from_json(json_feature: &Object) -> GeoJsonResult<Feature> {
+        let geometry_json = expect_object!(json_feature.get("geometry").unwrap());
+        return Ok(Feature{
+            geometry: try!(Geometry::from_json(geometry_json)),
             properties: json_feature.get("properties").unwrap().clone(),
-        };
+        });
     }
 }
 

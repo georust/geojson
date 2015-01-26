@@ -38,6 +38,13 @@ pub use types::feature::Feature;
 pub use types::featurecollection::FeatureCollection;
 pub use types::featurecollection::from_str;
 
+macro_rules! expect_string {
+    ($value:expr) => (try!(
+        $value.as_string()
+        .ok_or({use GeoJsonError; GeoJsonError::new("Expected string value")})
+    ))
+}
+
 macro_rules! expect_f64 {
     ($value:expr) => (try!(
         $value.as_f64()
@@ -49,6 +56,13 @@ macro_rules! expect_array {
     ($value:expr) => (try!(
         $value.as_array()
         .ok_or({use GeoJsonError; GeoJsonError::new("Expected array value")})
+    ))
+}
+
+macro_rules! expect_object {
+    ($value:expr) => (try!(
+        $value.as_object()
+        .ok_or({use GeoJsonError; GeoJsonError::new("Expected object value")})
     ))
 }
 
