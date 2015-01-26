@@ -35,7 +35,7 @@ impl ToJson for Point {
 
 impl Point {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Point> {
-        let json_point = json_geometry.get("coordinates").unwrap();
+        let json_point = expect_property!(json_geometry, "coordinates", "missing 'coordinates' field");
         let coordinates = try!(Pos::from_json(expect_array!(json_point)));
         return Ok(Point{coordinates: coordinates});
     }

@@ -35,7 +35,7 @@ impl ToJson for Polygon {
 
 impl Polygon {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Polygon> {
-        let json_poly = json_geometry.get("coordinates").unwrap();
+        let json_poly = expect_property!(json_geometry, "coordinates", "missing 'coordinates' field");
         let coordinates = try!(Poly::from_json(expect_array!(json_poly)));
         return Ok(Polygon{coordinates: coordinates});
     }

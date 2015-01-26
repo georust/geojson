@@ -36,7 +36,7 @@ impl ToJson for MultiPoint {
 impl MultiPoint {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiPoint> {
         let mut coordinates = vec![];
-        for json_pos in expect_array!(json_geometry.get("coordinates").unwrap()).iter() {
+        for json_pos in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")).iter() {
             coordinates.push(try!(Pos::from_json(expect_array!(json_pos))));
         }
         return Ok(MultiPoint{coordinates: coordinates});

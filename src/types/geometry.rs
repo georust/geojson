@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Object};
-use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, GeoJsonResult};
+use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, GeoJsonResult, GeoJsonError};
 
 /// Geometry
 #[derive(RustcEncodable, Clone)]
@@ -43,7 +43,7 @@ impl ToJson for Geometry {
 
 impl Geometry {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Geometry> {
-        match expect_string!(json_geometry.get("type").unwrap()) {
+        match expect_string!(expect_property!(json_geometry, "type", "Missing 'type' field")) {
             "Point" => Ok(Geometry::Point(try!(Point::from_json(json_geometry)))),
             "MultiPoint" => Ok(Geometry::MultiPoint(try!(MultiPoint::from_json(json_geometry)))),
             "LineString" => Ok(Geometry::LineString(try!(LineString::from_json(json_geometry)))),
@@ -51,7 +51,7 @@ impl Geometry {
             "Polygon" => Ok(Geometry::Polygon(try!(Polygon::from_json(json_geometry)))),
             "MultiPolygon" => Ok(Geometry::MultiPolygon(try!(MultiPolygon::from_json(json_geometry)))),
             "GeometryCollection" => Ok(Geometry::GeometryCollection(try!(GeometryCollection::from_json(json_geometry)))),
-            _ => panic!(),
+            _ => Err(GeoJsonError::new("Unknown geometry type")),
         }
     }
 }
@@ -104,6 +104,16 @@ mod tests {
         match geom("{\"geometries\":[],\"type\":\"GeometryCollection\"}") {
             Ok(Geometry::GeometryCollection(ref _geom)) => (),
             _ => panic!("expected GeometryCollection")
+        };
+
+        match geom("{\"type\":\"something else\"}") {
+            Ok(_) => panic!("expected error value"),
+            Err(_) => ()
+        };
+
+        match geom("{}") {
+            Ok(_) => panic!("expected error value"),
+            Err(_) => ()
         };
     }
 }

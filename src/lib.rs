@@ -74,6 +74,15 @@ macro_rules! expect_object {
     ))
 }
 
+macro_rules! expect_property {
+    ($obj:expr, $name:expr, $desc:expr) => (
+        match $obj.get($name) {
+            Some(v) => v,
+            None => return Err({use GeoJsonError; GeoJsonError::new($desc)}),
+        };
+    )
+}
+
 mod types;
 
 #[derive(Copy)]

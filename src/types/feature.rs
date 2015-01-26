@@ -36,10 +36,10 @@ impl ToJson for Feature {
 
 impl Feature {
     pub fn from_json(json_feature: &Object) -> GeoJsonResult<Feature> {
-        let geometry_json = expect_object!(json_feature.get("geometry").unwrap());
+        let geometry_json = expect_object!(expect_property!(json_feature, "geometry", "Missing 'geometry' field"));
         return Ok(Feature{
             geometry: try!(Geometry::from_json(geometry_json)),
-            properties: json_feature.get("properties").unwrap().clone(),
+            properties: expect_property!(json_feature, "properties", "missing 'properties' field").clone(),
         });
     }
 }
