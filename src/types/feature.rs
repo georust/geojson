@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, Object, ToJson};
 use Geometry;
 
 /// Feature
@@ -34,6 +34,16 @@ impl ToJson for Feature {
     }
 }
 
+impl Feature {
+    pub fn from_json(json_feature: &Object) -> Feature {
+        let geometry_json = json_feature.get("geometry").unwrap();
+        return Feature{
+            geometry: Geometry::from_json(geometry_json.as_object().unwrap()),
+            properties: json_feature.get("properties").unwrap().clone(),
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
@@ -41,7 +51,7 @@ mod tests {
     use {Geometry, Feature, Poly, MultiPolygon, Pos, Ring};
 
     #[test]
-    fn test_feature_string_tojson() {
+    fn test_feature_to_json() {
         let mut map = BTreeMap::new();
         map.insert(format!("hi"), "there".to_json());
         let point = Feature {

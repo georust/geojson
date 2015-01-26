@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Ring;
 
 /// LineString
@@ -33,15 +33,31 @@ impl ToJson for LineString {
     }
 }
 
+impl LineString {
+    pub fn from_json(json_geometry: &Object) -> LineString {
+        let json_point = json_geometry.get("coordinates").unwrap();
+        let coordinates = Ring::from_json(json_point.as_array().unwrap());
+        return LineString{coordinates: coordinates};
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::ToJson;
+    use rustc_serialize::json::{ToJson, Json};
     use {Pos, LineString, Ring};
 
     #[test]
-    fn test_line_string_tojson() {
-        let point = LineString {coordinates: Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])])};
-        let json_string = format!("{}",point.to_json());
+    fn test_line_string_to_json() {
+        let line_string = LineString{coordinates: Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])])};
+        let json_string = format!("{}", line_string.to_json());
         assert_eq!("{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}", json_string);
+    }
+
+    #[test]
+    fn test_line_string_from_json() {
+        let json_string = "{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let line_string = LineString::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", line_string.to_json()));
     }
 }

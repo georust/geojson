@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use std::collections::BTreeMap;
 use Ring;
 
@@ -33,18 +33,37 @@ impl ToJson for MultiLineString {
     }
 }
 
+impl MultiLineString {
+    pub fn from_json(json_geometry: &Object) -> MultiLineString {
+        let coordinates = json_geometry.get("coordinates").unwrap()
+            .as_array().unwrap()
+            .iter()
+            .map(|json_ring| Ring::from_json(json_ring.as_array().unwrap()))
+            .collect();
+        return MultiLineString{coordinates: coordinates};
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::ToJson;
+    use rustc_serialize::json::{ToJson, Json};
     use {MultiLineString, Pos, Ring};
 
     #[test]
-    fn test_multi_line_string_tojson() {
-        let point = MultiLineString {coordinates: vec![
+    fn test_multi_line_string_to_json() {
+        let multi_line_string = MultiLineString{coordinates: vec![
             Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]),
             Ring(vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])])
             ]};
-        let json_string = format!("{}",point.to_json());
+        let json_string = format!("{}", multi_line_string.to_json());
         assert_eq!("{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"MultiLineString\"}", json_string);
+    }
+
+    #[test]
+    fn test_multi_line_string_from_json() {
+        let json_string = "{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"MultiLineString\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let multi_line_string = MultiLineString::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", multi_line_string.to_json()));
     }
 }

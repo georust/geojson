@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Geometry;
 
 /// GeometryCollection
@@ -33,14 +33,25 @@ impl ToJson for GeometryCollection {
     }
 }
 
+impl GeometryCollection {
+    pub fn from_json(json_geometry: &Object) -> GeometryCollection {
+        let geometries = json_geometry.get("geometries").unwrap()
+            .as_array().unwrap()
+            .iter()
+            .map(|json_geom| Geometry::from_json(json_geom.as_object().unwrap()))
+            .collect();
+        return GeometryCollection{geometries: geometries};
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::ToJson;
+    use rustc_serialize::json::{ToJson, Json};
     use {GeometryCollection, MultiPolygon, Geometry, Poly, Pos, Ring};
 
     #[test]
-    fn test_geometry_collection_string_tojson() {
-        let point = GeometryCollection {
+    fn test_geometry_collection_to_json() {
+        let geometry_collection = GeometryCollection{
             geometries: vec![Geometry::MultiPolygon(MultiPolygon {
                         coordinates: vec![
                             Poly(vec![
@@ -57,7 +68,15 @@ mod tests {
                     })
             ]
         };
-        let json_string = format!("{}",point.to_json());
+        let json_string = format!("{}", geometry_collection.to_json());
         assert_eq!("{\"geometries\":[{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}],\"type\":\"GeometryCollection\"}", json_string);
+    }
+
+    #[test]
+    fn test_geometry_collection_from_json() {
+        let json_string = "{\"geometries\":[{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}],\"type\":\"GeometryCollection\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let geometry_collection = GeometryCollection::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", geometry_collection.to_json()));
     }
 }

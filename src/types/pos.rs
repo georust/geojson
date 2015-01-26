@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Array};
 
 /// Pos (alias for Positions)
 ///
@@ -24,5 +24,14 @@ impl ToJson for Pos {
     fn to_json(&self) -> Json {
         let &Pos(ref nums) = self;
         nums.to_json()
+    }
+}
+
+impl Pos {
+    pub fn from_json(json_pos: &Array) -> Pos {
+        let vec = json_pos.iter()
+            .map(|json_f64| json_f64.as_f64().unwrap())
+            .collect();
+        return Pos(vec);
     }
 }

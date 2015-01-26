@@ -36,5 +36,6 @@ pub use types::geometrycollection::GeometryCollection;
 
 pub use types::feature::Feature;
 pub use types::featurecollection::FeatureCollection;
+pub use types::featurecollection::from_str;
 
 mod types;

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Feature;
 
 /// FeatureCollection
@@ -32,14 +32,30 @@ impl ToJson for FeatureCollection {
     }
 }
 
+impl FeatureCollection {
+    pub fn from_json(json_doc: &Object) -> FeatureCollection {
+        assert_eq!(json_doc.get("type").unwrap().as_string().unwrap(), "FeatureCollection");
+        let feature_array = json_doc
+            .get("features").unwrap()
+            .as_array().unwrap();
+        let fs: Vec<Feature> = feature_array.iter().map(|f| Feature::from_json(f.as_object().unwrap())).collect();
+        return FeatureCollection{features: fs};
+    }
+}
+
+pub fn from_str(json_str: &str) -> FeatureCollection {
+    let json_doc = Json::from_str(json_str).unwrap();
+    return FeatureCollection::from_json(json_doc.as_object().unwrap());
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
     use rustc_serialize::json::ToJson;
-    use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring};
+    use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring, from_str};
 
     #[test]
-    fn test_feature_collection_string_tojson() {
+    fn test_feature_collection_to_json() {
         let mut map = BTreeMap::new();
         map.insert(format!("hi"), "there".to_json());
         let point = FeatureCollection {
@@ -64,5 +80,12 @@ mod tests {
         ]};
         let json_string = format!("{}",point.to_json());
         assert_eq!("{\"features\":[{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}", json_string);
+    }
+
+    #[test]
+    fn test_json_string_to_feature_collection() {
+        let json_string = "{\"features\":[{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}";
+        let fc = from_str(json_string);
+        assert_eq!(json_string, format!("{}", fc.to_json()));
     }
 }

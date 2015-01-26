@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, Object};
 use Poly;
 
 /// MultiPolygon
@@ -33,19 +33,38 @@ impl ToJson for MultiPolygon {
     }
 }
 
+impl MultiPolygon {
+    pub fn from_json(json_geometry: &Object) -> MultiPolygon {
+        let coordinates = json_geometry.get("coordinates").unwrap()
+            .as_array().unwrap()
+            .iter()
+            .map(|json_poly| Poly::from_json(json_poly.as_array().unwrap()))
+            .collect();
+        return MultiPolygon{coordinates: coordinates};
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
-    use rustc_serialize::json::ToJson;
+    use rustc_serialize::json::{Json, ToJson};
     use {Pos, MultiPolygon, Poly, Ring};
 
     #[test]
-    fn test_multi_polygon_string_tojson() {
-        let point = MultiPolygon {coordinates: vec![Poly(vec![
+    fn test_multi_polygon_to_json() {
+        let multi_polygon = MultiPolygon{coordinates: vec![Poly(vec![
             Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]),
             Ring(vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])])
             ])]};
-        let json_string = format!("{}",point.to_json());
+        let json_string = format!("{}", multi_polygon.to_json());
         assert_eq!("{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}", json_string);
+    }
+
+    #[test]
+    fn test_multi_polygon_from_json() {
+        let json_string = "{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}";
+        let json_doc = Json::from_str(json_string).unwrap();
+        let multi_polygon = MultiPolygon::from_json(json_doc.as_object().unwrap());
+        assert_eq!(json_string, format!("{}", multi_polygon.to_json()));
     }
 }
