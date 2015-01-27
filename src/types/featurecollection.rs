@@ -40,21 +40,21 @@ impl FeatureCollection {
         }
         return Ok(FeatureCollection{features: features});
     }
-}
 
-pub fn from_str(json_str: &str) -> GeoJsonResult<FeatureCollection> {
-    let json_doc = match Json::from_str(json_str) {
-        Ok(v) => v,
-        Err(_) => return Err(GeoJsonError::new("Error parsing JSON document")),
-    };
-    return FeatureCollection::from_json(expect_object!(json_doc));
+    pub fn from_str(json_str: &str) -> GeoJsonResult<FeatureCollection> {
+        let json_doc = match Json::from_str(json_str) {
+            Ok(v) => v,
+            Err(_) => return Err(GeoJsonError::new("Error parsing JSON document")),
+        };
+        return FeatureCollection::from_json(expect_object!(json_doc));
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
     use rustc_serialize::json::ToJson;
-    use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring, from_str};
+    use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring};
 
     #[test]
     fn test_feature_collection_to_json() {
@@ -87,13 +87,13 @@ mod tests {
     #[test]
     fn test_json_string_to_feature_collection() {
         let json_string = "{\"features\":[{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}";
-        let fc = from_str(json_string).ok().unwrap();
+        let fc = FeatureCollection::from_str(json_string).ok().unwrap();
         assert_eq!(json_string, format!("{}", fc.to_json()));
     }
 
     #[test]
     fn test_invalid_json() {
-        match from_str("---") {
+        match FeatureCollection::from_str("---") {
             Ok(_) => panic!(),
             Err(_) => ()
         }
