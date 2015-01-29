@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO
-// generic number instead of f64 for position?
 
 extern crate "rustc-serialize" as rustc_serialize;
 
