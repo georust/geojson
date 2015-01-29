@@ -20,7 +20,7 @@ use Feature;
 ///
 /// [GeoJSON Format Specification § 2.3](http://geojson.org/geojson-spec.html#feature-collection-objects)
 pub struct FeatureCollection {
-    features: Vec<Feature>,
+    pub features: Vec<Feature>,
 }
 
 impl ToJson for FeatureCollection {

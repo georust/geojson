@@ -21,7 +21,7 @@ use Geometry;
 /// [GeoJSON Format Specification § 2.1.8](http://geojson.org/geojson-spec.html#geometry-collection)
 #[derive(RustcEncodable, Clone)]
 pub struct GeometryCollection {
-    geometries: Vec<Geometry>,
+    pub geometries: Vec<Geometry>,
 }
 
 impl ToJson for GeometryCollection {
