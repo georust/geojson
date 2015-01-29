@@ -16,7 +16,7 @@ use rustc_serialize::json::{Json, ToJson, Object};
 use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection};
 
 /// Geometry
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub enum Geometry {
     Point(Point),
     MultiPoint(MultiPoint),

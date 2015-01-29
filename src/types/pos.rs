@@ -17,7 +17,7 @@ use rustc_serialize::json::{Json, ToJson, Array};
 /// Pos (alias for Positions)
 ///
 /// [GeoJSON Format Specification § 2.1.1](http://geojson.org/geojson-spec.html#positions)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct Pos(pub Vec<f64>);
 
 impl ToJson for Pos {

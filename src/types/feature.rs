@@ -19,6 +19,7 @@ use Geometry;
 /// Feature
 ///
 /// [GeoJSON Format Specification § 2.2](http://geojson.org/geojson-spec.html#feature-objects)
+#[derive(Debug)]
 pub struct Feature {
     pub geometry: Geometry,
     pub properties: Json,

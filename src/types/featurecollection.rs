@@ -19,6 +19,7 @@ use Feature;
 /// FeatureCollection
 ///
 /// [GeoJSON Format Specification § 2.3](http://geojson.org/geojson-spec.html#feature-collection-objects)
+#[derive(Debug)]
 pub struct FeatureCollection {
     pub features: Vec<Feature>,
 }

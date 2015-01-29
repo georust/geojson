@@ -16,7 +16,7 @@ use rustc_serialize::json::{Json, ToJson, Array};
 use Pos;
 
 /// Ring
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct Ring(pub Vec<Pos>);
 
 impl ToJson for Ring {

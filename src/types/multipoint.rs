@@ -19,7 +19,7 @@ use Pos;
 /// MultiPoint
 ///
 /// [GeoJSON Format Specification § 2.1.3](http://geojson.org/geojson-spec.html#multipoint)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct MultiPoint {
     pub coordinates: Vec<Pos>,
 }

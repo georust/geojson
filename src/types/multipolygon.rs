@@ -19,7 +19,7 @@ use Poly;
 /// MultiPolygon
 ///
 /// [GeoJSON Format Specification § 2.1.7](http://geojson.org/geojson-spec.html#multipolygon)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct MultiPolygon {
     pub coordinates: Vec<Poly>,
 }

@@ -19,7 +19,7 @@ use Pos;
 /// Point
 ///
 /// [GeoJSON Format Specification § 2.1.2](http://geojson.org/geojson-spec.html#point)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct Point {
     pub coordinates: Pos,
 }
