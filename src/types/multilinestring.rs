@@ -19,7 +19,7 @@ use Ring;
 /// MultiLineString
 ///
 /// [GeoJSON Format Specification § 2.1.5](http://geojson.org/geojson-spec.html#multilinestring)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct MultiLineString {
     pub coordinates: Vec<Ring>,
 }

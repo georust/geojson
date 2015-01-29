@@ -19,7 +19,7 @@ use Ring;
 /// LineString
 ///
 /// [GeoJSON Format Specification § 2.1.4](http://geojson.org/geojson-spec.html#linestring)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct LineString {
     pub coordinates: Ring,
 }

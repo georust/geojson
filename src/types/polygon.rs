@@ -19,7 +19,7 @@ use Poly;
 /// Polygon
 ///
 /// [GeoJSON Format Specification § 2.1.6](http://geojson.org/geojson-spec.html#polygon)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct Polygon {
     pub coordinates: Poly
 }

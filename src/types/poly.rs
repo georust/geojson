@@ -16,7 +16,7 @@ use rustc_serialize::json::{Json, ToJson, Array};
 use Ring;
 
 /// Poly  (alias for Polygon)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct Poly(pub Vec<Ring>);
 
 impl ToJson for Poly {

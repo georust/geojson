@@ -19,7 +19,7 @@ use Geometry;
 /// GeometryCollection
 ///
 /// [GeoJSON Format Specification § 2.1.8](http://geojson.org/geojson-spec.html#geometry-collection)
-#[derive(RustcEncodable, Clone)]
+#[derive(RustcEncodable, Clone, Debug)]
 pub struct GeometryCollection {
     pub geometries: Vec<Geometry>,
 }
