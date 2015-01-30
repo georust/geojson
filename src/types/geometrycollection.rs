@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use rustc_serialize::json::{Json, ToJson, Object};
 use {Geometry, GeoJsonResult};
 
@@ -26,7 +26,7 @@ pub struct GeometryCollection {
 
 impl ToJson for GeometryCollection {
     fn to_json(&self) -> Json {
-        let mut d = BTreeMap::new();
+        let mut d = HashMap::new();
         d.insert(format!("type"), "GeometryCollection".to_json());
         d.insert(format!("geometries"), self.geometries.to_json());
         d.to_json()

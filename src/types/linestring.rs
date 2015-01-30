@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use rustc_serialize::json::{Json, ToJson, Object};
 use {Ring, GeoJsonResult};
 
@@ -26,7 +26,7 @@ pub struct LineString {
 
 impl ToJson for LineString {
     fn to_json(&self) -> Json {
-        let mut d = BTreeMap::new();
+        let mut d = HashMap::new();
         d.insert(format!("type"), "LineString".to_json());
         d.insert(format!("coordinates"), self.coordinates.to_json());
         d.to_json()
