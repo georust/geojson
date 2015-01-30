@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Object};
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use {Ring, GeoJsonResult};
 
 /// MultiLineString
@@ -26,7 +26,7 @@ pub struct MultiLineString {
 
 impl ToJson for MultiLineString {
     fn to_json(&self) -> Json {
-        let mut d = BTreeMap::new();
+        let mut d = HashMap::new();
         d.insert(format!("type"), "MultiLineString".to_json());
         d.insert(format!("coordinates"), self.coordinates.to_json());
         d.to_json()
