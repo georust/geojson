@@ -14,7 +14,7 @@
 
 use rustc_serialize::json::{Json, ToJson, Object};
 use std::collections::BTreeMap;
-use Ring;
+use {Ring, GeoJsonResult};
 
 /// MultiLineString
 ///
@@ -34,13 +34,12 @@ impl ToJson for MultiLineString {
 }
 
 impl MultiLineString {
-    pub fn from_json(json_geometry: &Object) -> MultiLineString {
-        let coordinates = json_geometry.get("coordinates").unwrap()
-            .as_array().unwrap()
-            .iter()
-            .map(|json_ring| Ring::from_json(json_ring.as_array().unwrap()))
-            .collect();
-        return MultiLineString{coordinates: coordinates};
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiLineString> {
+        let mut coordinates = vec![];
+        for json_ring in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")).iter() {
+            coordinates.push(try!(Ring::from_json(expect_array!(json_ring))));
+        }
+        return Ok(MultiLineString{coordinates: coordinates});
     }
 }
 
@@ -63,7 +62,7 @@ mod tests {
     fn test_multi_line_string_from_json() {
         let json_string = "{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"MultiLineString\"}";
         let json_doc = Json::from_str(json_string).unwrap();
-        let multi_line_string = MultiLineString::from_json(json_doc.as_object().unwrap());
+        let multi_line_string = MultiLineString::from_json(json_doc.as_object().unwrap()).ok().unwrap();
         assert_eq!(json_string, format!("{}", multi_line_string.to_json()));
     }
 }

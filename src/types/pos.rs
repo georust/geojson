@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Array};
+use GeoJsonResult;
 
 /// Pos (alias for Positions)
 ///
@@ -28,10 +29,37 @@ impl ToJson for Pos {
 }
 
 impl Pos {
-    pub fn from_json(json_pos: &Array) -> Pos {
-        let vec = json_pos.iter()
-            .map(|json_f64| json_f64.as_f64().unwrap())
-            .collect();
-        return Pos(vec);
+    pub fn from_json(json_pos: &Array) -> GeoJsonResult<Pos> {
+        let mut vec = vec![];
+        for json_f64 in json_pos.iter() {
+            vec.push(expect_f64!(json_f64));
+        }
+        return Ok(Pos(vec));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rustc_serialize::json::Json;
+    use Pos;
+
+    #[test]
+    fn test_from_json_ok() {
+        let json_str = "[1.0, 2.0, 3.0]";
+        let json_pos = Json::from_str(json_str).unwrap();
+        match Pos::from_json(json_pos.as_array().unwrap()) {
+            Ok(Pos(v)) => assert_eq!(vec![1., 2., 3.], v),
+            Err(_) => panic!(),
+        };
+    }
+
+    #[test]
+    fn test_from_json_err() {
+        let json_str = "[null]";
+        let json_pos = Json::from_str(json_str).unwrap();
+        match Pos::from_json(json_pos.as_array().unwrap()) {
+            Ok(_) => panic!(),
+            Err(e) => assert_eq!(e.desc, "Expected f64 value"),
+        };
     }
 }

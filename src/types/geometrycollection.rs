@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use Geometry;
+use {Geometry, GeoJsonResult};
 
 /// GeometryCollection
 ///
@@ -34,13 +34,12 @@ impl ToJson for GeometryCollection {
 }
 
 impl GeometryCollection {
-    pub fn from_json(json_geometry: &Object) -> GeometryCollection {
-        let geometries = json_geometry.get("geometries").unwrap()
-            .as_array().unwrap()
-            .iter()
-            .map(|json_geom| Geometry::from_json(json_geom.as_object().unwrap()))
-            .collect();
-        return GeometryCollection{geometries: geometries};
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<GeometryCollection> {
+        let mut geometries = vec![];
+        for json_geom in expect_array!(expect_property!(json_geometry, "geometries", "Missing 'geometries' field")).iter() {
+            geometries.push(try!(Geometry::from_json(expect_object!(json_geom))));
+        }
+        return Ok(GeometryCollection{geometries: geometries});
     }
 }
 
@@ -76,7 +75,7 @@ mod tests {
     fn test_geometry_collection_from_json() {
         let json_string = "{\"geometries\":[{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}],\"type\":\"GeometryCollection\"}";
         let json_doc = Json::from_str(json_string).unwrap();
-        let geometry_collection = GeometryCollection::from_json(json_doc.as_object().unwrap());
+        let geometry_collection = GeometryCollection::from_json(json_doc.as_object().unwrap()).ok().unwrap();
         assert_eq!(json_string, format!("{}", geometry_collection.to_json()));
     }
 }

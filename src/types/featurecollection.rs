@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use Feature;
+use {Feature, GeoJsonResult, GeoJsonError};
 
 /// FeatureCollection
 ///
@@ -34,26 +34,28 @@ impl ToJson for FeatureCollection {
 }
 
 impl FeatureCollection {
-    pub fn from_json(json_doc: &Object) -> FeatureCollection {
-        assert_eq!(json_doc.get("type").unwrap().as_string().unwrap(), "FeatureCollection");
-        let feature_array = json_doc
-            .get("features").unwrap()
-            .as_array().unwrap();
-        let fs: Vec<Feature> = feature_array.iter().map(|f| Feature::from_json(f.as_object().unwrap())).collect();
-        return FeatureCollection{features: fs};
+    pub fn from_json(json_doc: &Object) -> GeoJsonResult<FeatureCollection> {
+        let mut features = vec![];
+        for feature_json in expect_array!(expect_property!(json_doc, "features", "Missing 'features' field")).iter() {
+            features.push(try!(Feature::from_json(expect_object!(feature_json))));
+        }
+        return Ok(FeatureCollection{features: features});
     }
-}
 
-pub fn from_str(json_str: &str) -> FeatureCollection {
-    let json_doc = Json::from_str(json_str).unwrap();
-    return FeatureCollection::from_json(json_doc.as_object().unwrap());
+    pub fn from_str(json_str: &str) -> GeoJsonResult<FeatureCollection> {
+        let json_doc = match Json::from_str(json_str) {
+            Ok(v) => v,
+            Err(_) => return Err(GeoJsonError::new("Error parsing JSON document")),
+        };
+        return FeatureCollection::from_json(expect_object!(json_doc));
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
     use rustc_serialize::json::ToJson;
-    use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring, from_str};
+    use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring};
 
     #[test]
     fn test_feature_collection_to_json() {
@@ -86,7 +88,15 @@ mod tests {
     #[test]
     fn test_json_string_to_feature_collection() {
         let json_string = "{\"features\":[{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}";
-        let fc = from_str(json_string);
+        let fc = FeatureCollection::from_str(json_string).ok().unwrap();
         assert_eq!(json_string, format!("{}", fc.to_json()));
+    }
+
+    #[test]
+    fn test_invalid_json() {
+        match FeatureCollection::from_str("---") {
+            Ok(_) => panic!(),
+            Err(_) => ()
+        }
     }
 }

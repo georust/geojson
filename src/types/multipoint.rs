@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use Pos;
+use {Pos, GeoJsonResult};
 
 /// MultiPoint
 ///
@@ -34,13 +34,12 @@ impl ToJson for MultiPoint {
 }
 
 impl MultiPoint {
-    pub fn from_json(json_geometry: &Object) -> MultiPoint {
-        let coordinates = json_geometry.get("coordinates").unwrap()
-            .as_array().unwrap()
-            .iter()
-            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()))
-            .collect();
-        return MultiPoint{coordinates: coordinates};
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiPoint> {
+        let mut coordinates = vec![];
+        for json_pos in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")).iter() {
+            coordinates.push(try!(Pos::from_json(expect_array!(json_pos))));
+        }
+        return Ok(MultiPoint{coordinates: coordinates});
     }
 }
 
@@ -60,7 +59,7 @@ mod tests {
     fn test_multi_point_from_json() {
         let json_string = "{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}";
         let json_doc = Json::from_str(json_string).unwrap();
-        let multi_point = MultiPoint::from_json(json_doc.as_object().unwrap());
+        let multi_point = MultiPoint::from_json(json_doc.as_object().unwrap()).ok().unwrap();
         assert_eq!(json_string, format!("{}", multi_point.to_json()));
     }
 }

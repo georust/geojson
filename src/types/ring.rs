@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Array};
-use Pos;
+use {Pos, GeoJsonResult};
 
 /// Ring
 #[derive(RustcEncodable, Clone, Debug)]
@@ -27,10 +27,11 @@ impl ToJson for Ring {
 }
 
 impl Ring {
-    pub fn from_json(json_ring: &Array) -> Ring {
-        let vec = json_ring.iter()
-            .map(|json_pos| Pos::from_json(json_pos.as_array().unwrap()))
-            .collect();
-        return Ring(vec);
+    pub fn from_json(json_ring: &Array) -> GeoJsonResult<Ring> {
+        let mut vec = vec![];
+        for json_pos in json_ring.iter() {
+            vec.push(try!(Pos::from_json(expect_array!(json_pos))));
+        }
+        return Ok(Ring(vec));
     }
 }

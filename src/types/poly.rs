@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Array};
-use Ring;
+use {Ring, GeoJsonResult};
 
 /// Poly  (alias for Polygon)
 #[derive(RustcEncodable, Clone, Debug)]
@@ -27,10 +27,11 @@ impl ToJson for Poly {
 }
 
 impl Poly {
-    pub fn from_json(json_poly: &Array) -> Poly {
-        let vec = json_poly.iter()
-            .map(|json_ring| Ring::from_json(json_ring.as_array().unwrap()))
-            .collect();
-        return Poly(vec);
+    pub fn from_json(json_poly: &Array) -> GeoJsonResult<Poly> {
+        let mut vec = vec![];
+        for json_ring in json_poly.iter() {
+            vec.push(try!(Ring::from_json(expect_array!(json_ring))));
+        }
+        return Ok(Poly(vec));
     }
 }

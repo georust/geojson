@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use Poly;
+use {Poly, GeoJsonResult};
 
 /// Polygon
 ///
@@ -34,10 +34,10 @@ impl ToJson for Polygon {
 }
 
 impl Polygon {
-    pub fn from_json(json_geometry: &Object) -> Polygon {
-        let json_poly = json_geometry.get("coordinates").unwrap();
-        let coordinates = Poly::from_json(json_poly.as_array().unwrap());
-        return Polygon{coordinates: coordinates};
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Polygon> {
+        let json_poly = expect_property!(json_geometry, "coordinates", "missing 'coordinates' field");
+        let coordinates = try!(Poly::from_json(expect_array!(json_poly)));
+        return Ok(Polygon{coordinates: coordinates});
     }
 }
 
@@ -60,7 +60,7 @@ mod tests {
     fn test_polygon_from_json() {
         let json_string = "{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"Polygon\"}";
         let json_doc = Json::from_str(json_string).unwrap();
-        let polygon = Polygon::from_json(json_doc.as_object().unwrap());
+        let polygon = Polygon::from_json(json_doc.as_object().unwrap()).ok().unwrap();
         assert_eq!(json_string, format!("{}", polygon.to_json()));
     }
 }

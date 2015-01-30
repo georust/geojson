@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use Poly;
+use {Poly, GeoJsonResult};
 
 /// MultiPolygon
 ///
@@ -34,13 +34,12 @@ impl ToJson for MultiPolygon {
 }
 
 impl MultiPolygon {
-    pub fn from_json(json_geometry: &Object) -> MultiPolygon {
-        let coordinates = json_geometry.get("coordinates").unwrap()
-            .as_array().unwrap()
-            .iter()
-            .map(|json_poly| Poly::from_json(json_poly.as_array().unwrap()))
-            .collect();
-        return MultiPolygon{coordinates: coordinates};
+    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiPolygon> {
+        let mut coordinates = vec![];
+        for json_poly in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")).iter() {
+            coordinates.push(try!(Poly::from_json(expect_array!(json_poly))));
+        }
+        return Ok(MultiPolygon{coordinates: coordinates});
     }
 }
 
@@ -64,7 +63,7 @@ mod tests {
     fn test_multi_polygon_from_json() {
         let json_string = "{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}";
         let json_doc = Json::from_str(json_string).unwrap();
-        let multi_polygon = MultiPolygon::from_json(json_doc.as_object().unwrap());
+        let multi_polygon = MultiPolygon::from_json(json_doc.as_object().unwrap()).ok().unwrap();
         assert_eq!(json_string, format!("{}", multi_polygon.to_json()));
     }
 }
