@@ -14,14 +14,14 @@
 
 use std::collections::HashMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use {Ring, GeoJsonResult};
+use {Pos, GeoJsonResult};
 
 /// LineString
 ///
 /// [GeoJSON Format Specification § 2.1.4](http://geojson.org/geojson-spec.html#linestring)
 #[derive(RustcEncodable, Clone, Debug)]
 pub struct LineString {
-    pub coordinates: Ring,
+    pub coordinates: Vec<Pos>,
 }
 
 impl ToJson for LineString {
@@ -36,7 +36,10 @@ impl ToJson for LineString {
 impl LineString {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<LineString> {
         let json_point = expect_property!(json_geometry, "coordinates", "missing 'coordinates' field");
-        let coordinates = try!(Ring::from_json(expect_array!(json_point)));
+        let mut coordinates = vec![];
+        for coordinate in expect_array!(json_point).iter() {
+            coordinates.push(try!(Pos::from_json(expect_array!(coordinate))))
+        }
         return Ok(LineString{coordinates: coordinates});
     }
 }
@@ -44,11 +47,11 @@ impl LineString {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{ToJson, Json};
-    use {Pos, LineString, Ring};
+    use {Pos, LineString};
 
     #[test]
     fn test_line_string_to_json() {
-        let line_string = LineString{coordinates: Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])])};
+        let line_string = LineString{coordinates: vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]};
         let json_string = format!("{}", line_string.to_json());
         assert_eq!("{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}", json_string);
     }
