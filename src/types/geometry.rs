@@ -16,6 +16,8 @@ use rustc_serialize::json::{Json, ToJson, Object};
 use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, GeoJsonResult, GeoJsonError};
 
 /// Geometry
+///
+/// [GeoJSON Format Specification § 2.1](http://geojson.org/geojson-spec.html#geometry-objects)
 #[derive(RustcEncodable, Clone, Debug)]
 pub enum Geometry {
     Point(Point),
