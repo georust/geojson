@@ -43,16 +43,19 @@ impl ToJson for Geometry {
 
 impl Geometry {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Geometry> {
-        match expect_string!(expect_property!(json_geometry, "type", "Missing 'type' field")) {
-            "Point" => Ok(Geometry::Point(try!(Point::from_json(json_geometry)))),
-            "MultiPoint" => Ok(Geometry::MultiPoint(try!(MultiPoint::from_json(json_geometry)))),
-            "LineString" => Ok(Geometry::LineString(try!(LineString::from_json(json_geometry)))),
-            "MultiLineString" => Ok(Geometry::MultiLineString(try!(MultiLineString::from_json(json_geometry)))),
-            "Polygon" => Ok(Geometry::Polygon(try!(Polygon::from_json(json_geometry)))),
-            "MultiPolygon" => Ok(Geometry::MultiPolygon(try!(MultiPolygon::from_json(json_geometry)))),
-            "GeometryCollection" => Ok(Geometry::GeometryCollection(try!(GeometryCollection::from_json(json_geometry)))),
-            _ => Err(GeoJsonError::new("Unknown geometry type")),
-        }
+        let type_json = expect_property!(json_geometry, "type", "Missing 'type' field");
+        let type_string = expect_string!(type_json);
+        let geom = match type_string {
+            "Point" => Geometry::Point(try!(Point::from_json(json_geometry))),
+            "MultiPoint" => Geometry::MultiPoint(try!(MultiPoint::from_json(json_geometry))),
+            "LineString" => Geometry::LineString(try!(LineString::from_json(json_geometry))),
+            "MultiLineString" => Geometry::MultiLineString(try!(MultiLineString::from_json(json_geometry))),
+            "Polygon" => Geometry::Polygon(try!(Polygon::from_json(json_geometry))),
+            "MultiPolygon" => Geometry::MultiPolygon(try!(MultiPolygon::from_json(json_geometry))),
+            "GeometryCollection" => Geometry::GeometryCollection(try!(GeometryCollection::from_json(json_geometry))),
+            _ => return Err(GeoJsonError::new("Unknown geometry type")),
+        };
+        Ok(geom)
     }
 }
 
