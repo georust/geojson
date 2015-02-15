@@ -39,7 +39,7 @@ impl MultiPolygon {
         for json_poly in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
             coordinates.push(try!(Poly::from_json(expect_array!(json_poly))));
         }
-        return Ok(MultiPolygon{coordinates: coordinates});
+        Ok(MultiPolygon{coordinates: coordinates})
     }
 }
 

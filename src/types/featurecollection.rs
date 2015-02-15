@@ -39,7 +39,7 @@ impl FeatureCollection {
         for feature_json in expect_array!(expect_property!(json_doc, "features", "Missing 'features' field")) {
             features.push(try!(Feature::from_json(expect_object!(feature_json))));
         }
-        return Ok(FeatureCollection{features: features});
+        Ok(FeatureCollection{features: features})
     }
 
     pub fn from_str(json_str: &str) -> GeoJsonResult<FeatureCollection> {
@@ -47,7 +47,7 @@ impl FeatureCollection {
             Ok(v) => v,
             Err(_) => return Err(GeoJsonError::new("Error parsing JSON document")),
         };
-        return FeatureCollection::from_json(expect_object!(json_doc));
+        FeatureCollection::from_json(expect_object!(json_doc))
     }
 }
 

@@ -39,7 +39,7 @@ impl GeometryCollection {
         for json_geom in expect_array!(expect_property!(json_geometry, "geometries", "Missing 'geometries' field")) {
             geometries.push(try!(Geometry::from_json(expect_object!(json_geom))));
         }
-        return Ok(GeometryCollection{geometries: geometries});
+        Ok(GeometryCollection{geometries: geometries})
     }
 }
 

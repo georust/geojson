@@ -32,6 +32,6 @@ impl Poly {
         for json_ring in json_poly {
             vec.push(try!(Ring::from_json(expect_array!(json_ring))));
         }
-        return Ok(Poly(vec));
+        Ok(Poly(vec))
     }
 }

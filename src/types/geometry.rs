@@ -73,7 +73,7 @@ mod tests {
     fn test_match_geometry_type() {
         fn geom(json_str: &str) -> GeoJsonResult<Geometry> {
             let json = Json::from_str(json_str).unwrap();
-            return Geometry::from_json(expect_object!(json));
+            Geometry::from_json(expect_object!(json))
         }
 
         match geom("{\"coordinates\":[],\"type\":\"Point\"}") {
