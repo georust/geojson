@@ -34,6 +34,6 @@ impl Ring {
         for json_pos in json_ring {
             vec.push(try!(Pos::from_json(expect_array!(json_pos))));
         }
-        return Ok(Ring(vec));
+        Ok(Ring(vec))
     }
 }

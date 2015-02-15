@@ -39,7 +39,7 @@ impl MultiLineString {
         for json_ring in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
             coordinates.push(try!(Ring::from_json(expect_array!(json_ring))));
         }
-        return Ok(MultiLineString{coordinates: coordinates});
+        Ok(MultiLineString{coordinates: coordinates})
     }
 }
 

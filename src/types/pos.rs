@@ -34,7 +34,7 @@ impl Pos {
         for json_f64 in json_pos {
             vec.push(expect_f64!(json_f64));
         }
-        return Ok(Pos(vec));
+        Ok(Pos(vec))
     }
 }
 

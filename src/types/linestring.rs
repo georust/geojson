@@ -40,7 +40,7 @@ impl LineString {
         for coordinate in expect_array!(json_point) {
             coordinates.push(try!(Pos::from_json(expect_array!(coordinate))))
         }
-        return Ok(LineString{coordinates: coordinates});
+        Ok(LineString{coordinates: coordinates})
     }
 }
 

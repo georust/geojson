@@ -88,7 +88,7 @@ pub struct GeoJsonError {
 
 impl GeoJsonError {
     pub fn new(desc: &'static str) -> GeoJsonError {
-        return GeoJsonError{desc: desc};
+        GeoJsonError{desc: desc}
     }
 }
 

@@ -39,7 +39,7 @@ impl MultiPoint {
         for json_pos in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
             coordinates.push(try!(Pos::from_json(expect_array!(json_pos))));
         }
-        return Ok(MultiPoint{coordinates: coordinates});
+        Ok(MultiPoint{coordinates: coordinates})
     }
 }
 
