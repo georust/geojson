@@ -37,7 +37,7 @@ impl LineString {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<LineString> {
         let json_point = expect_property!(json_geometry, "coordinates", "missing 'coordinates' field");
         let mut coordinates = vec![];
-        for coordinate in expect_array!(json_point).iter() {
+        for coordinate in expect_array!(json_point) {
             coordinates.push(try!(Pos::from_json(expect_array!(coordinate))))
         }
         return Ok(LineString{coordinates: coordinates});

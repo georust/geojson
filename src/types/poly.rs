@@ -29,7 +29,7 @@ impl ToJson for Poly {
 impl Poly {
     pub fn from_json(json_poly: &Array) -> GeoJsonResult<Poly> {
         let mut vec = vec![];
-        for json_ring in json_poly.iter() {
+        for json_ring in json_poly {
             vec.push(try!(Ring::from_json(expect_array!(json_ring))));
         }
         return Ok(Poly(vec));

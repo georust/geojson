@@ -36,7 +36,7 @@ impl ToJson for FeatureCollection {
 impl FeatureCollection {
     pub fn from_json(json_doc: &Object) -> GeoJsonResult<FeatureCollection> {
         let mut features = vec![];
-        for feature_json in expect_array!(expect_property!(json_doc, "features", "Missing 'features' field")).iter() {
+        for feature_json in expect_array!(expect_property!(json_doc, "features", "Missing 'features' field")) {
             features.push(try!(Feature::from_json(expect_object!(feature_json))));
         }
         return Ok(FeatureCollection{features: features});

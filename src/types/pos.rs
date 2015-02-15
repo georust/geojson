@@ -31,7 +31,7 @@ impl ToJson for Pos {
 impl Pos {
     pub fn from_json(json_pos: &Array) -> GeoJsonResult<Pos> {
         let mut vec = vec![];
-        for json_f64 in json_pos.iter() {
+        for json_f64 in json_pos {
             vec.push(expect_f64!(json_f64));
         }
         return Ok(Pos(vec));

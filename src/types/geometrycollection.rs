@@ -36,7 +36,7 @@ impl ToJson for GeometryCollection {
 impl GeometryCollection {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<GeometryCollection> {
         let mut geometries = vec![];
-        for json_geom in expect_array!(expect_property!(json_geometry, "geometries", "Missing 'geometries' field")).iter() {
+        for json_geom in expect_array!(expect_property!(json_geometry, "geometries", "Missing 'geometries' field")) {
             geometries.push(try!(Geometry::from_json(expect_object!(json_geom))));
         }
         return Ok(GeometryCollection{geometries: geometries});
