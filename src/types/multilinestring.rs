@@ -14,14 +14,14 @@
 
 use rustc_serialize::json::{Json, ToJson, Object};
 use std::collections::HashMap;
-use {Ring, GeoJsonResult};
+use {Pos, GeoJsonResult};
 
 /// MultiLineString
 ///
 /// [GeoJSON Format Specification § 2.1.5](http://geojson.org/geojson-spec.html#multilinestring)
 #[derive(RustcEncodable, Clone, Debug)]
 pub struct MultiLineString {
-    pub coordinates: Vec<Ring>,
+    pub coordinates: Vec<Vec<Pos>>,
 }
 
 impl ToJson for MultiLineString {
@@ -36,8 +36,12 @@ impl ToJson for MultiLineString {
 impl MultiLineString {
     pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiLineString> {
         let mut coordinates = vec![];
-        for json_ring in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
-            coordinates.push(try!(Ring::from_json(expect_array!(json_ring))));
+        for json_array in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
+            let mut inner_coords = vec![];
+            for coordinate in expect_array!(json_array) {
+                inner_coords.push(try!(Pos::from_json(expect_array!(coordinate))))
+            }
+            coordinates.push(inner_coords);
         }
         Ok(MultiLineString{coordinates: coordinates})
     }
@@ -46,14 +50,14 @@ impl MultiLineString {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{ToJson, Json};
-    use {MultiLineString, Pos, Ring};
+    use {MultiLineString, Pos};
 
     #[test]
     fn test_multi_line_string_to_json() {
         let multi_line_string = MultiLineString{coordinates: vec![
-            Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]),
-            Ring(vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])])
-            ]};
+            vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])],
+            vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])]
+        ]};
         let json_string = format!("{}", multi_line_string.to_json());
         assert_eq!("{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"MultiLineString\"}", json_string);
     }
