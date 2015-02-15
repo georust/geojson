@@ -15,7 +15,9 @@
 use rustc_serialize::json::{Json, ToJson, Array};
 use {Pos, GeoJsonResult};
 
-/// Ring
+/// Ring (alias for LinearRing)
+///
+/// [GeoJSON Format Specification § 2.1.4](http://geojson.org/geojson-spec.html#linestring)
 #[derive(RustcEncodable, Clone, Debug)]
 pub struct Ring(pub Vec<Pos>);
 
