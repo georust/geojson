@@ -53,13 +53,13 @@ impl FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use rustc_serialize::json::ToJson;
     use {FeatureCollection, Feature, MultiPolygon, Geometry, Poly, Pos, Ring};
 
     #[test]
     fn test_feature_collection_to_json() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(format!("hi"), "there".to_json());
         let point = FeatureCollection {
             features:vec![
@@ -78,7 +78,7 @@ mod tests {
                         ])
                     ]
                 }),
-                properties: map.to_json()
+                properties: Some(map)
             }
         ]};
         let json_string = format!("{}",point.to_json());
