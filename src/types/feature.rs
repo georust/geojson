@@ -22,7 +22,7 @@ use {Geometry, GeoJsonResult};
 #[derive(Debug)]
 pub struct Feature {
     pub geometry: Geometry,
-    pub properties: Json,
+    pub properties: Option<Object>,
 }
 
 impl ToJson for Feature {
@@ -38,22 +38,28 @@ impl ToJson for Feature {
 impl Feature {
     pub fn from_json(json_feature: &Object) -> GeoJsonResult<Feature> {
         let geometry_json = expect_object!(expect_property!(json_feature, "geometry", "Missing 'geometry' field"));
+        let properties_json = expect_property!(json_feature, "properties", "missing 'properties' field");
+        let properties = match *properties_json {
+            Json::Object(ref x) => Some(x.clone()),
+            Json::Null => None,
+            _ => panic!("expected an Object or Null value for feature properties"),
+        };
         Ok(Feature{
             geometry: try!(Geometry::from_json(geometry_json)),
-            properties: expect_property!(json_feature, "properties", "missing 'properties' field").clone(),
+            properties: properties,
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
     use rustc_serialize::json::ToJson;
     use {Geometry, Feature, Poly, MultiPolygon, Pos, Ring};
 
     #[test]
     fn test_feature_to_json() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(format!("hi"), "there".to_json());
         let point = Feature {
             geometry: Geometry::MultiPolygon(MultiPolygon {
@@ -70,7 +76,7 @@ mod tests {
                         ])
                     ]
                 }),
-        properties: map.to_json()
+        properties: Some(map)
 
         };
         let json_string = format!("{}",point.to_json());
