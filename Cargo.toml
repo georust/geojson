@@ -9,4 +9,4 @@ license = "Apache-2.0"
 repository = "https://github.com/georust/rust-geojson"
 
 [dependencies]
-rustc-serialize = "0.2"
+rustc-serialize = "0.3"
