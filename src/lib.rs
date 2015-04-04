@@ -81,7 +81,6 @@ macro_rules! expect_property {
 
 mod types;
 
-#[derive(Copy)]
 pub struct GeoJsonError {
     pub desc: &'static str,
 }
