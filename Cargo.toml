@@ -2,7 +2,7 @@
 
 name = "geojson"
 description = "GeoJSON utilities for Rust"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Corey Farwell <coreyf@rwell.org>",
            "Blake Grotewold <hello@grotewold.me>"]
 license = "Apache-2.0"
