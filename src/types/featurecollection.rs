@@ -27,8 +27,8 @@ pub struct FeatureCollection {
 impl ToJson for FeatureCollection {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "FeatureCollection".to_json());
-        d.insert(format!("features"), self.features.to_json());
+        d.insert("type".to_string(), "FeatureCollection".to_json());
+        d.insert("features".to_string(), self.features.to_json());
         d.to_json()
     }
 }
@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn test_feature_collection_to_json() {
         let mut map = BTreeMap::new();
-        map.insert(format!("hi"), "there".to_json());
+        map.insert("hi".to_string(), "there".to_json());
         let point = FeatureCollection {
             features:vec![
               Feature {
@@ -81,7 +81,7 @@ mod tests {
                 properties: Some(map)
             }
         ]};
-        let json_string = format!("{}",point.to_json());
+        let json_string = point.to_json().to_string();
         assert_eq!("{\"features\":[{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}", json_string);
     }
 
@@ -89,7 +89,7 @@ mod tests {
     fn test_json_string_to_feature_collection() {
         let json_string = "{\"features\":[{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}],\"type\":\"FeatureCollection\"}";
         let fc = FeatureCollection::from_str(json_string).ok().unwrap();
-        assert_eq!(json_string, format!("{}", fc.to_json()));
+        assert_eq!(json_string, fc.to_json().to_string());
     }
 
     #[test]

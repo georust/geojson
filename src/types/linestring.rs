@@ -27,8 +27,8 @@ pub struct LineString {
 impl ToJson for LineString {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "LineString".to_json());
-        d.insert(format!("coordinates"), self.coordinates.to_json());
+        d.insert("type".to_string(), "LineString".to_json());
+        d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
     }
 }
@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn test_line_string_to_json() {
         let line_string = LineString{coordinates: vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]};
-        let json_string = format!("{}", line_string.to_json());
+        let json_string = line_string.to_json().to_string();
         assert_eq!("{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}", json_string);
     }
 
@@ -61,6 +61,6 @@ mod tests {
         let json_string = "{\"coordinates\":[[1.0,2.0,3.0],[2.0,4.0,3.0]],\"type\":\"LineString\"}";
         let json_doc = Json::from_str(json_string).unwrap();
         let line_string = LineString::from_json(json_doc.as_object().unwrap()).ok().unwrap();
-        assert_eq!(json_string, format!("{}", line_string.to_json()));
+        assert_eq!(json_string, line_string.to_json().to_string());
     }
 }

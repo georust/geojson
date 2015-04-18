@@ -27,8 +27,8 @@ pub struct MultiPoint {
 impl ToJson for MultiPoint {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "MultiPoint".to_json());
-        d.insert(format!("coordinates"), self.coordinates.to_json());
+        d.insert("type".to_string(), "MultiPoint".to_json());
+        d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
     }
 }
@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn test_multi_point_tojson() {
         let multi_point = MultiPoint{coordinates: vec![Pos(vec![1., 2., 3.])]};
-        let json_string = format!("{}", multi_point.to_json());
+        let json_string = multi_point.to_json().to_string();
         assert_eq!("{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}", json_string);
     }
 
@@ -60,6 +60,6 @@ mod tests {
         let json_string = "{\"coordinates\":[[1.0,2.0,3.0]],\"type\":\"MultiPoint\"}";
         let json_doc = Json::from_str(json_string).unwrap();
         let multi_point = MultiPoint::from_json(json_doc.as_object().unwrap()).ok().unwrap();
-        assert_eq!(json_string, format!("{}", multi_point.to_json()));
+        assert_eq!(json_string, multi_point.to_json().to_string());
     }
 }

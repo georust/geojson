@@ -27,8 +27,8 @@ pub struct Polygon {
 impl ToJson for Polygon {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "Polygon".to_json());
-        d.insert(format!("coordinates"), self.coordinates.to_json());
+        d.insert("type".to_string(), "Polygon".to_json());
+        d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
     }
 }
@@ -52,7 +52,7 @@ mod tests {
             Ring(vec![Pos(vec![1., 2., 3.]), Pos(vec![2., 4., 3.])]),
             Ring(vec![Pos(vec![3., 2., 3.]), Pos(vec![2., 4., 3.])])
             ])};
-        let json_string = format!("{}", polygon.to_json());
+        let json_string = polygon.to_json().to_string();
         assert_eq!("{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"Polygon\"}", json_string);
     }
 
@@ -61,6 +61,6 @@ mod tests {
         let json_string = "{\"coordinates\":[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]],\"type\":\"Polygon\"}";
         let json_doc = Json::from_str(json_string).unwrap();
         let polygon = Polygon::from_json(json_doc.as_object().unwrap()).ok().unwrap();
-        assert_eq!(json_string, format!("{}", polygon.to_json()));
+        assert_eq!(json_string, polygon.to_json().to_string());
     }
 }

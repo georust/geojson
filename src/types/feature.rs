@@ -28,9 +28,9 @@ pub struct Feature {
 impl ToJson for Feature {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "Feature".to_json());
-        d.insert(format!("geometry"), self.geometry.to_json());
-        d.insert(format!("properties"), self.properties.to_json());
+        d.insert("type".to_string(), "Feature".to_json());
+        d.insert("geometry".to_string(), self.geometry.to_json());
+        d.insert("properties".to_string(), self.properties.to_json());
         d.to_json()
     }
 }
@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn test_feature_to_json() {
         let mut map = BTreeMap::new();
-        map.insert(format!("hi"), "there".to_json());
+        map.insert("hi".to_string(), "there".to_json());
         let point = Feature {
             geometry: Geometry::MultiPolygon(MultiPolygon {
                     coordinates: vec![
@@ -79,7 +79,7 @@ mod tests {
         properties: Some(map)
 
         };
-        let json_string = format!("{}",point.to_json());
+        let json_string = point.to_json().to_string();
         assert_eq!("{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}", json_string);
     }
 }

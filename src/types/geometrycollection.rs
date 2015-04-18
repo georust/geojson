@@ -27,8 +27,8 @@ pub struct GeometryCollection {
 impl ToJson for GeometryCollection {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "GeometryCollection".to_json());
-        d.insert(format!("geometries"), self.geometries.to_json());
+        d.insert("type".to_string(), "GeometryCollection".to_json());
+        d.insert("geometries".to_string(), self.geometries.to_json());
         d.to_json()
     }
 }
@@ -67,7 +67,7 @@ mod tests {
                     })
             ]
         };
-        let json_string = format!("{}", geometry_collection.to_json());
+        let json_string = geometry_collection.to_json().to_string();
         assert_eq!("{\"geometries\":[{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}],\"type\":\"GeometryCollection\"}", json_string);
     }
 
@@ -76,6 +76,6 @@ mod tests {
         let json_string = "{\"geometries\":[{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"}],\"type\":\"GeometryCollection\"}";
         let json_doc = Json::from_str(json_string).unwrap();
         let geometry_collection = GeometryCollection::from_json(json_doc.as_object().unwrap()).ok().unwrap();
-        assert_eq!(json_string, format!("{}", geometry_collection.to_json()));
+        assert_eq!(json_string, geometry_collection.to_json().to_string());
     }
 }

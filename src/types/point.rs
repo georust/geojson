@@ -27,8 +27,8 @@ pub struct Point {
 impl ToJson for Point {
     fn to_json(&self) -> Json {
         let mut d = HashMap::new();
-        d.insert(format!("type"), "Point".to_json());
-        d.insert(format!("coordinates"), self.coordinates.to_json());
+        d.insert("type".to_string(), "Point".to_json());
+        d.insert("coordinates".to_string(), self.coordinates.to_json());
         d.to_json()
     }
 }
@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn test_point_to_json() {
         let point = Point{coordinates: Pos(vec![1., 2., 3.])};
-        let json_string = format!("{}", point.to_json());
+        let json_string = point.to_json().to_string();
         assert_eq!("{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}", json_string);
     }
 
@@ -58,6 +58,6 @@ mod tests {
         let json_string = "{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"}";
         let json_doc = Json::from_str(json_string).unwrap();
         let point = Point::from_json(json_doc.as_object().unwrap()).ok().unwrap();
-        assert_eq!(json_string, format!("{}", point.to_json()));
+        assert_eq!(json_string, point.to_json().to_string());
     }
 }
