@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
 use rustc_serialize::json::{Json, ToJson, Object};
 use {Poly, GeoJsonResult};
+use super::super::util::new_geometry_object;
 
 /// MultiPolygon
 ///
@@ -26,10 +26,7 @@ pub struct MultiPolygon {
 
 impl ToJson for MultiPolygon {
     fn to_json(&self) -> Json {
-        let mut d = HashMap::new();
-        d.insert("type".to_string(), "MultiPolygon".to_json());
-        d.insert("coordinates".to_string(), self.coordinates.to_json());
-        d.to_json()
+        new_geometry_object("MultiPolygon", self.coordinates.to_json())
     }
 }
 

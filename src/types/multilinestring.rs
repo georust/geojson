@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Object};
-use std::collections::HashMap;
 use {Pos, GeoJsonResult};
+use super::super::util::new_geometry_object;
 
 /// MultiLineString
 ///
@@ -26,10 +26,7 @@ pub struct MultiLineString {
 
 impl ToJson for MultiLineString {
     fn to_json(&self) -> Json {
-        let mut d = HashMap::new();
-        d.insert("type".to_string(), "MultiLineString".to_json());
-        d.insert("coordinates".to_string(), self.coordinates.to_json());
-        d.to_json()
+        new_geometry_object("MultiLineString", self.coordinates.to_json())
     }
 }
 
