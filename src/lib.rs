@@ -34,6 +34,8 @@ pub use types::geometrycollection::GeometryCollection;
 pub use types::feature::Feature;
 pub use types::featurecollection::FeatureCollection;
 
+use rustc_serialize::json::Object;
+
 macro_rules! expect_string {
     ($value:expr) => (try!(
         match $value.as_string() {
@@ -93,3 +95,7 @@ impl GeoJsonError {
 }
 
 pub type GeoJsonResult<T> = Result<T, GeoJsonError>;
+
+pub trait FromJson: Sized {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self>;
+}

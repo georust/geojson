@@ -14,7 +14,7 @@
 
 use rustc_serialize::json::{Json, ToJson, Object};
 
-use {Pos, GeoJsonResult};
+use {Pos, GeoJsonResult, FromJson};
 use util::new_geometry_object;
 
 
@@ -32,8 +32,8 @@ impl ToJson for MultiPoint {
     }
 }
 
-impl MultiPoint {
-    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiPoint> {
+impl FromJson for MultiPoint {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self> {
         let mut coordinates = vec![];
         for json_pos in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
             coordinates.push(try!(Pos::from_json(expect_array!(json_pos))));
@@ -45,7 +45,7 @@ impl MultiPoint {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{Json, ToJson};
-    use {MultiPoint, Pos};
+    use {MultiPoint, Pos, FromJson};
 
     #[test]
     fn test_multi_point_tojson() {

@@ -14,7 +14,7 @@
 
 use rustc_serialize::json::{Json, ToJson, Object};
 
-use {Poly, GeoJsonResult};
+use {Poly, GeoJsonResult, FromJson};
 use util::new_geometry_object;
 
 
@@ -32,8 +32,8 @@ impl ToJson for Polygon {
     }
 }
 
-impl Polygon {
-    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Polygon> {
+impl FromJson for Polygon {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self> {
         let json_poly = expect_property!(json_geometry, "coordinates", "missing 'coordinates' field");
         let coordinates = try!(Poly::from_json(expect_array!(json_poly)));
         Ok(Polygon{coordinates: coordinates})
@@ -43,7 +43,7 @@ impl Polygon {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{Json, ToJson};
-    use {Polygon, Poly, Pos, Ring};
+    use {Polygon, Poly, Pos, Ring, FromJson};
 
     #[test]
     fn test_polygon_to_json() {

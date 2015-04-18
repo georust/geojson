@@ -14,7 +14,7 @@
 
 use std::collections::HashMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use {Feature, GeoJsonResult, GeoJsonError};
+use {Feature, GeoJsonResult, GeoJsonError, FromJson};
 
 /// FeatureCollection
 ///
@@ -33,15 +33,17 @@ impl ToJson for FeatureCollection {
     }
 }
 
-impl FeatureCollection {
-    pub fn from_json(json_doc: &Object) -> GeoJsonResult<FeatureCollection> {
+impl FromJson for FeatureCollection {
+    fn from_json(json_doc: &Object) -> GeoJsonResult<Self> {
         let mut features = vec![];
         for feature_json in expect_array!(expect_property!(json_doc, "features", "Missing 'features' field")) {
             features.push(try!(Feature::from_json(expect_object!(feature_json))));
         }
         Ok(FeatureCollection{features: features})
     }
+}
 
+impl FeatureCollection {
     pub fn from_str(json_str: &str) -> GeoJsonResult<FeatureCollection> {
         let json_doc = match Json::from_str(json_str) {
             Ok(v) => v,

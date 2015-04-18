@@ -14,7 +14,7 @@
 
 use rustc_serialize::json::{Json, ToJson, Object};
 
-use {Poly, GeoJsonResult};
+use {Poly, GeoJsonResult, FromJson};
 use util::new_geometry_object;
 
 
@@ -32,8 +32,8 @@ impl ToJson for MultiPolygon {
     }
 }
 
-impl MultiPolygon {
-    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiPolygon> {
+impl FromJson for MultiPolygon {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self> {
         let mut coordinates = vec![];
         for json_poly in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
             coordinates.push(try!(Poly::from_json(expect_array!(json_poly))));
@@ -46,7 +46,7 @@ impl MultiPolygon {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{Json, ToJson};
-    use {Pos, MultiPolygon, Poly, Ring};
+    use {Pos, MultiPolygon, Poly, Ring, FromJson};
 
     #[test]
     fn test_multi_polygon_to_json() {

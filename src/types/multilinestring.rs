@@ -14,7 +14,7 @@
 
 use rustc_serialize::json::{Json, ToJson, Object};
 
-use {Pos, GeoJsonResult};
+use {Pos, GeoJsonResult, FromJson};
 use util::new_geometry_object;
 
 
@@ -32,8 +32,8 @@ impl ToJson for MultiLineString {
     }
 }
 
-impl MultiLineString {
-    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<MultiLineString> {
+impl FromJson for MultiLineString {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self> {
         let mut coordinates = vec![];
         for json_array in expect_array!(expect_property!(json_geometry, "coordinates", "missing 'coordinates' field")) {
             let mut inner_coords = vec![];
@@ -49,7 +49,7 @@ impl MultiLineString {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{ToJson, Json};
-    use {MultiLineString, Pos};
+    use {MultiLineString, Pos, FromJson};
 
     #[test]
     fn test_multi_line_string_to_json() {

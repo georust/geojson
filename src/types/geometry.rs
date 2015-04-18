@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Object};
-use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, GeoJsonResult, GeoJsonError};
+use {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection, GeoJsonResult, GeoJsonError, FromJson};
 
 /// Geometry
 ///
@@ -43,8 +43,8 @@ impl ToJson for Geometry {
     }
 }
 
-impl Geometry {
-    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<Geometry> {
+impl FromJson for Geometry {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self> {
         let type_json = expect_property!(json_geometry, "type", "Missing 'type' field");
         let type_string = expect_string!(type_json);
         let geom = match type_string {
@@ -68,6 +68,7 @@ mod tests {
     use rustc_serialize::json::Json;
     use Geometry;
     use GeoJsonResult;
+    use FromJson;
 
     #[test]
     fn test_match_geometry_type() {

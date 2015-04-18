@@ -14,7 +14,7 @@
 
 use std::collections::HashMap;
 use rustc_serialize::json::{Json, ToJson, Object};
-use {Geometry, GeoJsonResult};
+use {Geometry, GeoJsonResult, FromJson};
 
 /// GeometryCollection
 ///
@@ -33,8 +33,8 @@ impl ToJson for GeometryCollection {
     }
 }
 
-impl GeometryCollection {
-    pub fn from_json(json_geometry: &Object) -> GeoJsonResult<GeometryCollection> {
+impl FromJson for GeometryCollection {
+    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self> {
         let mut geometries = vec![];
         for json_geom in expect_array!(expect_property!(json_geometry, "geometries", "Missing 'geometries' field")) {
             geometries.push(try!(Geometry::from_json(expect_object!(json_geom))));
@@ -46,7 +46,7 @@ impl GeometryCollection {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::{ToJson, Json};
-    use {GeometryCollection, MultiPolygon, Geometry, Poly, Pos, Ring};
+    use {GeometryCollection, MultiPolygon, Geometry, Poly, Pos, Ring, FromJson};
 
     #[test]
     fn test_geometry_collection_to_json() {
