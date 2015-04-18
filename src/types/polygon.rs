@@ -13,8 +13,10 @@
 // limitations under the License.
 
 use rustc_serialize::json::{Json, ToJson, Object};
+
 use {Poly, GeoJsonResult};
-use super::super::util::new_geometry_object;
+use util::new_geometry_object;
+
 
 /// Polygon
 ///
