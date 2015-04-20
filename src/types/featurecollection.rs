@@ -80,7 +80,8 @@ mod tests {
                         ])
                     ]
                 }),
-                properties: Some(map)
+                properties: Some(map),
+                id: None
             }
         ]};
         let json_string = point.to_json().to_string();

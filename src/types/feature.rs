@@ -23,6 +23,7 @@ use {Geometry, GeoJsonResult, FromJson};
 pub struct Feature {
     pub geometry: Geometry,
     pub properties: Option<Object>,
+    pub id: Option<String>,  // todo: change this to &str?
 }
 
 impl ToJson for Feature {
@@ -31,6 +32,9 @@ impl ToJson for Feature {
         d.insert("type".to_string(), "Feature".to_json());
         d.insert("geometry".to_string(), self.geometry.to_json());
         d.insert("properties".to_string(), self.properties.to_json());
+        if let Some(ref id) = self.id {
+            d.insert("id".to_string(), id.to_json());
+        }
         d.to_json()
     }
 }
@@ -44,9 +48,11 @@ impl FromJson for Feature {
             Json::Null => None,
             _ => panic!("expected an Object or Null value for feature properties"),
         };
+        let id = json_feature.get("id").and_then(|id| id.as_string()).map(|id| id.to_string());
         Ok(Feature{
             geometry: try!(Geometry::from_json(geometry_json)),
             properties: properties,
+            id: id,
         })
     }
 }
@@ -54,8 +60,8 @@ impl FromJson for Feature {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
-    use rustc_serialize::json::ToJson;
-    use {Geometry, Feature, Poly, MultiPolygon, Pos, Ring};
+    use rustc_serialize::json::{Json, ToJson};
+    use {Geometry, Feature, Poly, MultiPolygon, Pos, Ring, Point, FromJson};
 
     #[test]
     fn test_feature_to_json() {
@@ -76,10 +82,32 @@ mod tests {
                         ])
                     ]
                 }),
-        properties: Some(map)
+        properties: Some(map),
+        id: None
 
         };
         let json_string = point.to_json().to_string();
         assert_eq!("{\"geometry\":{\"coordinates\":[[[[1.0,2.0,3.0],[2.0,4.0,3.0]],[[3.0,2.0,3.0],[2.0,4.0,3.0]]]],\"type\":\"MultiPolygon\"},\"properties\":{\"hi\":\"there\"},\"type\":\"Feature\"}", json_string);
+    }
+
+    #[test]
+    fn test_feature_with_id() {
+        let id = Some("1".to_string());
+        let feature = Feature {
+            id: id.clone(),
+            geometry: Geometry::Point(Point{coordinates: Pos(vec![1., 2., 3.])}),
+            properties: None,
+        };
+
+        let string = feature.to_json().to_string();
+        assert_eq!("{\"geometry\":{\"coordinates\":[1.0,2.0,3.0],\"type\":\"Point\"},\"id\":\"1\",\"properties\":null,\"type\":\"Feature\"}", string);
+
+        let json = Json::from_str(&string).unwrap();
+        let object = match json {
+            Json::Object(object) => object,
+            _ => unreachable!(),
+        };
+        let feature = Feature::from_json(&object).ok().unwrap();
+        assert_eq!(feature.id, id);
     }
 }
