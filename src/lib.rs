@@ -14,88 +14,46 @@
 
 extern crate rustc_serialize;
 
-pub use types::pos::Pos;
+use rustc_serialize::json;
 
-pub use types::ring::Ring;
+pub type Bbox = Vec<f64>;
 
-pub use types::point::Point;
-pub use types::multipoint::MultiPoint;
+pub type Position = Vec<f64>;
 
-pub use types::linestring::LineString;
-pub use types::multilinestring::MultiLineString;
+pub type PointType = Position;
+pub type LineStringType = Vec<Position>;
+pub type PolygonType = Vec<Vec<Position>>;
 
-pub use types::poly::Poly;
-pub use types::polygon::Polygon;
-pub use types::multipolygon::MultiPolygon;
+#[macro_use]
+mod macros;
 
-pub use types::geometry::Geometry;
-pub use types::geometrycollection::GeometryCollection;
-
-pub use types::feature::Feature;
-pub use types::featurecollection::FeatureCollection;
-
-use rustc_serialize::json::Object;
-
-macro_rules! expect_string {
-    ($value:expr) => (try!(
-        match $value.as_string() {
-            Some(v) => Ok(v),
-            None => Err({use GeoJsonError; GeoJsonError::new("Expected string value")})
-        }
-    ))
-}
-
-macro_rules! expect_f64 {
-    ($value:expr) => (try!(
-        match $value.as_f64() {
-            Some(v) => Ok(v),
-            None => Err({use GeoJsonError; GeoJsonError::new("Expected f64 value")})
-        }
-    ))
-}
-
-macro_rules! expect_array {
-    ($value:expr) => (try!(
-        match $value.as_array() {
-            Some(v) => Ok(v),
-            None => Err({use GeoJsonError; GeoJsonError::new("Expected array value")})
-        }
-    ))
-}
-
-macro_rules! expect_object {
-    ($value:expr) => (try!(
-        match $value.as_object() {
-            Some(v) => Ok(v),
-            None => Err({use GeoJsonError; GeoJsonError::new("Expected object value")})
-        }
-    ))
-}
-
-macro_rules! expect_property {
-    ($obj:expr, $name:expr, $desc:expr) => (
-        match $obj.get($name) {
-            Some(v) => v,
-            None => return Err({use GeoJsonError; GeoJsonError::new($desc)}),
-        };
-    )
-}
-
-mod types;
 mod util;
 
-pub struct GeoJsonError {
+mod crs;
+pub use crs::Crs;
+
+mod geojson;
+pub use geojson::GeoJson;
+
+mod geometry;
+pub use geometry::{Geometry, Value};
+
+mod feature;
+pub use feature::Feature;
+
+mod feature_collection;
+pub use feature_collection::FeatureCollection;
+
+pub struct Error {
     pub desc: &'static str,
 }
 
-impl GeoJsonError {
-    pub fn new(desc: &'static str) -> GeoJsonError {
-        GeoJsonError{desc: desc}
+impl Error {
+    pub fn new(desc: &'static str) -> Error {
+        return Error{desc: desc};
     }
 }
 
-pub type GeoJsonResult<T> = Result<T, GeoJsonError>;
-
-pub trait FromJson: Sized {
-    fn from_json(json_geometry: &Object) -> GeoJsonResult<Self>;
+trait FromObject: Sized {
+    fn from_object(object: &json::Object) -> Result<Self, Error>;
 }
