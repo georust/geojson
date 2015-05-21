@@ -16,8 +16,7 @@ use std::collections::BTreeMap;
 
 use rustc_serialize::json::{self, Json, ToJson};
 
-use ::{Bbox, Crs, Error, Feature, FromObject};
-use ::util::ObjectUtils;
+use ::{Bbox, Crs, Error, Feature, FromObject, util};
 
 
 /// FeatureCollection
@@ -52,9 +51,9 @@ impl<'a> From<&'a FeatureCollection> for json::Object {
 impl FromObject for FeatureCollection {
     fn from_object(object: &json::Object) -> Result<Self, Error> {
         return Ok(FeatureCollection{
-            bbox: try!(object.get_bbox()),
-            features: try!(object.get_features()),
-            crs: try!(object.get_crs()),
+            bbox: try!(util::get_bbox(object)),
+            features: try!(util::get_features(object)),
+            crs: try!(util::get_crs(object)),
         });
     }
 }

@@ -16,8 +16,7 @@ use std::collections::BTreeMap;
 
 use rustc_serialize::json::{self, ToJson};
 
-use ::{Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject};
-use ::util::ObjectUtils;
+use ::{Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -86,24 +85,24 @@ impl FromObject for Geometry {
         let type_ = expect_type!(object);
         let value = match type_ {
             "Point" =>
-                Value::Point(try!(object.get_coords_one_pos())),
+                Value::Point(try!(util::get_coords_one_pos(object))),
             "MultiPoint" =>
-                Value::MultiPoint(try!(object.get_coords_1d_pos())),
+                Value::MultiPoint(try!(util::get_coords_1d_pos(object))),
             "LineString" =>
-                Value::LineString(try!(object.get_coords_1d_pos())),
+                Value::LineString(try!(util::get_coords_1d_pos(object))),
             "MultiLineString" =>
-                Value::MultiLineString(try!(object.get_coords_2d_pos())),
+                Value::MultiLineString(try!(util::get_coords_2d_pos(object))),
             "Polygon" =>
-                Value::Polygon(try!(object.get_coords_2d_pos())),
+                Value::Polygon(try!(util::get_coords_2d_pos(object))),
             "MultiPolygon" =>
-                Value::MultiPolygon(try!(object.get_coords_3d_pos())),
+                Value::MultiPolygon(try!(util::get_coords_3d_pos(object))),
             "GeometryCollection" =>
-                Value::GeometryCollection(try!(object.get_geometries())),
+                Value::GeometryCollection(try!(util::get_geometries(object))),
             _ => return Err(Error::new("Unknown geometry type")),
         };
 
-        let bbox = try!(object.get_bbox());
-        let crs = try!(object.get_crs());
+        let bbox = try!(util::get_bbox(object));
+        let crs = try!(util::get_crs(object));
 
         return Ok(Geometry {
             bbox: bbox,

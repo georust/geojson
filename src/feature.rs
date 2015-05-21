@@ -16,8 +16,7 @@ use std::collections::BTreeMap;
 
 use rustc_serialize::json::{self, Json, ToJson};
 
-use ::{Bbox, Crs, Error, FromObject, Geometry};
-use ::util::ObjectUtils;
+use ::{Bbox, Crs, Error, FromObject, Geometry, util};
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -53,11 +52,11 @@ impl<'a> From<&'a Feature> for json::Object {
 impl FromObject for Feature {
     fn from_object(object: &json::Object) -> Result<Self, Error> {
         return Ok(Feature{
-            geometry: try!(object.get_geometry()),
-            properties: try!(object.get_properties()),
-            id: try!(object.get_id()),
-            crs: try!(object.get_crs()),
-            bbox: try!(object.get_bbox()),
+            geometry: try!(util::get_geometry(object)),
+            properties: try!(util::get_properties(object)),
+            id: try!(util::get_id(object)),
+            crs: try!(util::get_crs(object)),
+            bbox: try!(util::get_bbox(object)),
         });
     }
 }
