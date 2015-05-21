@@ -45,22 +45,22 @@ impl<'a> From<&'a FeatureCollection> for json::Object {
             map.insert(String::from("bbox"), bbox.to_json());
         }
 
-        map
+        return map;
     }
 }
 
 impl FromObject for FeatureCollection {
     fn from_object(object: &json::Object) -> Result<Self, Error> {
-        Ok(FeatureCollection{
+        return Ok(FeatureCollection{
             bbox: try!(object.get_bbox()),
             features: try!(object.get_features()),
             crs: try!(object.get_crs()),
-        })
+        });
     }
 }
 
 impl ToJson for FeatureCollection {
     fn to_json(&self) -> json::Json {
-        json::Json::Object(self.into())
+        return json::Json::Object(self.into());
     }
 }

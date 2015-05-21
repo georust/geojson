@@ -33,7 +33,7 @@ pub enum Value {
 
 impl ToJson for Value {
     fn to_json(&self) -> json::Json {
-        match *self {
+        return match *self {
             Value::Point(ref x) => x.to_json(),
             Value::MultiPoint(ref x) => x.to_json(),
             Value::LineString(ref x) => x.to_json(),
@@ -41,7 +41,7 @@ impl ToJson for Value {
             Value::Polygon(ref x) => x.to_json(),
             Value::MultiPolygon(ref x) => x.to_json(),
             Value::GeometryCollection(ref x) => x.to_json(),
-        }
+        };
     }
 }
 
@@ -77,7 +77,7 @@ impl<'a> From<&'a Geometry> for json::Object {
             Value::GeometryCollection(..) => "geometries",
             _ => "coordinates",
         }), geometry.value.to_json());
-        map
+        return map;
     }
 }
 
@@ -105,17 +105,17 @@ impl FromObject for Geometry {
         let bbox = try!(object.get_bbox());
         let crs = try!(object.get_crs());
 
-        Ok(Geometry {
+        return Ok(Geometry {
             bbox: bbox,
             value: value,
             crs: crs,
-        })
+        });
     }
 }
 
 impl ToJson for Geometry {
     fn to_json(&self) -> json::Json {
-        json::Json::Object(self.into())
+        return json::Json::Object(self.into());
     }
 }
 

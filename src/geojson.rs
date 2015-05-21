@@ -28,11 +28,11 @@ pub enum GeoJson {
 
 impl<'a> From<&'a GeoJson> for json::Object {
     fn from(geojson: &'a GeoJson) -> json::Object {
-        match *geojson {
+        return match *geojson {
             GeoJson::Geometry(ref geometry) => geometry.into(),
             GeoJson::Feature(ref feature) => feature.into(),
             GeoJson::FeatureCollection(ref fc) => fc.into(),
-        }
+        };
     }
 }
 
@@ -40,7 +40,7 @@ impl<'a> From<&'a GeoJson> for json::Object {
 impl FromObject for GeoJson {
     fn from_object(object: &json::Object) -> Result<Self, Error> {
         let type_ = expect_string!(expect_property!(object, "type", "Missing 'type' field"));
-        match &type_ as &str {
+        return match &type_ as &str {
             "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon" =>
                 Geometry::from_object(object).map(GeoJson::Geometry),
             "Feature" =>
@@ -48,13 +48,13 @@ impl FromObject for GeoJson {
             "FeatureCollection" =>
                 FeatureCollection::from_object(object).map(GeoJson::FeatureCollection),
             _ => Err(Error::new("Encountered unknown GeoJSON type")),
-        }
+        };
     }
 }
 
 impl json::ToJson for GeoJson {
     fn to_json(&self) -> json::Json {
-        json::Json::Object(self.into())
+        return json::Json::Object(self.into());
     }
 }
 
@@ -70,6 +70,6 @@ impl FromStr for GeoJson {
             json::Json::Object(object) => object,
             _ => return Err(Error::new("Attempted to create GeoJSON from JSON that is not an object")),
         };
-        GeoJson::from_object(&object)
+        return GeoJson::from_object(&object);
     }
 }

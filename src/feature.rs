@@ -46,25 +46,25 @@ impl<'a> From<&'a Feature> for json::Object {
         if let Some(ref id) = feature.id {
             map.insert(String::from("id"), id.to_json());
         }
-        map
+        return map;
     }
 }
 
 impl FromObject for Feature {
     fn from_object(object: &json::Object) -> Result<Self, Error> {
-        Ok(Feature{
+        return Ok(Feature{
             geometry: try!(object.get_geometry()),
             properties: try!(object.get_properties()),
             id: try!(object.get_id()),
             crs: try!(object.get_crs()),
             bbox: try!(object.get_bbox()),
-        })
+        });
     }
 }
 
 impl ToJson for Feature {
     fn to_json(&self) -> json::Json {
-        json::Json::Object(self.into())
+        return json::Json::Object(self.into());
     }
 }
 

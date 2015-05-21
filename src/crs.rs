@@ -48,7 +48,7 @@ impl<'a> From<&'a Crs> for json::Object {
             }
         };
         crs_map.insert(String::from("properties"), properties_map.to_json());
-        crs_map
+        return crs_map;
     }
 }
 
@@ -56,7 +56,7 @@ impl FromObject for Crs {
     fn from_object(object: &json::Object) -> Result<Self, Error> {
         let type_ = expect_type!(object);
         let properties = expect_object!(expect_property!(object, "properties", "Encountered CRS object type with no properties"));
-        Ok(match type_ {
+        return Ok(match type_ {
             "name" => {
                 let name = expect_string!(expect_property!(properties, "name", "Encountered Named CRS object with no name"));
                 Crs::Named {name: String::from(name)}
@@ -70,12 +70,12 @@ impl FromObject for Crs {
                 Crs::Linked {type_: type_, href: href}
             },
             _ => return Err(Error::new("Encountered unknown CRS type")),
-        })
+        });
     }
 }
 
 impl ToJson for Crs {
     fn to_json(&self) -> json::Json {
-        json::Json::Object(self.into())
+        return json::Json::Object(self.into());
     }
 }

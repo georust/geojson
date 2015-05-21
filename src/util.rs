@@ -34,7 +34,7 @@ pub trait ObjectUtils {
 
 impl ObjectUtils for Object {
     fn get_coords_value(&self) -> Result<&Json, Error> {
-        Ok(expect_property!(self, "coordinates", "Encountered Geometry object without 'coordinates' member"))
+        return Ok(expect_property!(self, "coordinates", "Encountered Geometry object without 'coordinates' member"));
     }
 
     /// Used by FeatureCollection, Feature, Geometry
@@ -57,7 +57,7 @@ impl ObjectUtils for Object {
             }
         }
 
-        Ok(Some(bbox))
+        return Ok(Some(bbox));
     }
 
     /// Used by FeatureCollection, Feature, Geometry
@@ -72,17 +72,17 @@ impl ObjectUtils for Object {
             None => return Err(Error::new("Encountered 'crs' with non-object value")),
         };
 
-        Crs::from_object(crs_object).map(Some)
+        return Crs::from_object(crs_object).map(Some);
     }
 
     /// Used by Feature
     fn get_properties(&self) -> Result<Option<Object>, Error> {
         let properties = expect_property!(self, "properties", "missing 'properties' field");
-        match *properties {
+        return match *properties {
             Json::Object(ref x) => Ok(Some(x.clone())),
             Json::Null => Ok(None),
             _ => return Err(Error::new("expected an Object or Null value for feature properties")),
-        }
+        };
     }
 
     /// Retrieve a single Position from the value of the "coordinates" key
@@ -90,7 +90,7 @@ impl ObjectUtils for Object {
     /// Used by Value::Point
     fn get_coords_one_pos(&self) -> Result<Position, Error> {
         let coords_json = try!(self.get_coords_value());
-        json_to_position(&coords_json)
+        return json_to_position(&coords_json);
     }
 
     /// Retrieve a one dimensional Vec of Positions from the value of the "coordinates" key
@@ -98,7 +98,7 @@ impl ObjectUtils for Object {
     /// Used by Value::MultiPoint and Value::LineString
     fn get_coords_1d_pos(&self) -> Result<Vec<Position>, Error> {
         let coords_json = try!(self.get_coords_value());
-        json_to_1d_positions(&coords_json)
+        return json_to_1d_positions(&coords_json);
     }
 
     /// Retrieve a two dimensional Vec of Positions from the value of the "coordinates" key
@@ -106,7 +106,7 @@ impl ObjectUtils for Object {
     /// Used by Value::MultiLineString and Value::Polygon
     fn get_coords_2d_pos(&self) -> Result<Vec<Vec<Position>>, Error> {
         let coords_json = try!(self.get_coords_value());
-        json_to_2d_positions(&coords_json)
+        return json_to_2d_positions(&coords_json);
     }
 
     /// Retrieve a three dimensional Vec of Positions from the value of the "coordinates" key
@@ -114,7 +114,7 @@ impl ObjectUtils for Object {
     /// Used by Value::MultiPolygon
     fn get_coords_3d_pos(&self) -> Result<Vec<Vec<Vec<Position>>>, Error> {
         let coords_json = try!(self.get_coords_value());
-        json_to_3d_positions(&coords_json)
+        return json_to_3d_positions(&coords_json);
     }
 
     /// Used by Value::GeometryCollection
@@ -127,18 +127,18 @@ impl ObjectUtils for Object {
             let geometry = try!(Geometry::from_object(obj));
             geometries.push(geometry);
         }
-        Ok(geometries)
+        return Ok(geometries);
     }
 
     /// Used by Feature
     fn get_id(&self) -> Result<Option<Json>, Error> {
-        Ok(self.get("id").map(Clone::clone))
+        return Ok(self.get("id").map(Clone::clone));
     }
 
     /// Used by Feature
     fn get_geometry(&self) -> Result<Geometry, Error> {
         let geometry = expect_object!(expect_property!(self, "geometry", "Missing 'geometry' field"));
-        Geometry::from_object(geometry)
+        return Geometry::from_object(geometry);
     }
 
     /// Used by FeatureCollection
@@ -150,7 +150,7 @@ impl ObjectUtils for Object {
             let feature: Feature = try!(Feature::from_object(feature));
             features.push(feature);
         }
-        Ok(features)
+        return Ok(features);
     }
 }
 
@@ -161,7 +161,7 @@ fn json_to_position(json: &Json) -> Result<Position, Error> {
     for position in coords_array {
         coords.push(expect_f64!(position));
     }
-    Ok(coords)
+    return Ok(coords);
 }
 
 fn json_to_1d_positions(json: &Json) -> Result<Vec<Position>, Error> {
@@ -170,7 +170,7 @@ fn json_to_1d_positions(json: &Json) -> Result<Vec<Position>, Error> {
     for item in coords_array {
         coords.push(try!(json_to_position(item)));
     }
-    Ok(coords)
+    return Ok(coords);
 }
 
 fn json_to_2d_positions(json: &Json) -> Result<Vec<Vec<Position>>, Error> {
@@ -179,7 +179,7 @@ fn json_to_2d_positions(json: &Json) -> Result<Vec<Vec<Position>>, Error> {
     for item in coords_array {
         coords.push(try!(json_to_1d_positions(item)));
     }
-    Ok(coords)
+    return Ok(coords);
 }
 
 fn json_to_3d_positions(json: &Json) -> Result<Vec<Vec<Vec<Position>>>, Error> {
@@ -188,5 +188,5 @@ fn json_to_3d_positions(json: &Json) -> Result<Vec<Vec<Vec<Position>>>, Error> {
     for item in coords_array {
         coords.push(try!(json_to_2d_positions(item)));
     }
-    Ok(coords)
+    return Ok(coords);
 }

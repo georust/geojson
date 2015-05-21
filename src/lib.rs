@@ -50,7 +50,7 @@ pub struct Error {
 
 impl Error {
     pub fn new(desc: &'static str) -> Error {
-        Error{desc: desc}
+        return Error{desc: desc};
     }
 }
 
