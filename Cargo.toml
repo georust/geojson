@@ -1,7 +1,7 @@
 [package]
 
 name = "geojson"
-description = "GeoJSON utilities for Rust"
+description = "Library for serializing the GeoJSON open GIS file format"
 version = "0.1.0"
 authors = ["Corey Farwell <coreyf@rwell.org>",
            "Blake Grotewold <hello@grotewold.me>"]
