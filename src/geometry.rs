@@ -91,6 +91,18 @@ pub struct Geometry {
     pub crs: Option<Crs>,
 }
 
+impl Geometry {
+    /// Returns a new `Geometry` with the specified `value`. `bbox` and `crs` will be set to
+    /// `None`.
+    pub fn new(value: Value) -> Self {
+        Geometry {
+            bbox: None,
+            value: value,
+            crs: None,
+        }
+    }
+}
+
 impl<'a> From<&'a Geometry> for json::Object {
     fn from(geometry: &'a Geometry) -> json::Object {
         let mut map = BTreeMap::new();
