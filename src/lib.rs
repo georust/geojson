@@ -37,7 +37,7 @@
 //!
 //! ## Writing
 //!
-//! ```norun
+//! ```ignore,rust
 //! use std::collections::HashMap;
 //! use rustc_serialize::json::ToJson;
 //! use geojson::{Feature, GeoJson, Geometry, Value};
