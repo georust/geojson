@@ -19,6 +19,10 @@ use rustc_serialize::json::{self, Json, ToJson};
 use ::{Bbox, Crs, Error, FromObject, Geometry, util};
 
 
+/// Feature Objects
+///
+/// [GeoJSON Format Specification § 2.2]
+/// (http://geojson.org/geojson-spec.html#feature-objects)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Feature {
     pub bbox: Option<Bbox>,

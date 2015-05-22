@@ -19,9 +19,10 @@ use rustc_serialize::json::{self, Json, ToJson};
 use ::{Bbox, Crs, Error, Feature, FromObject, util};
 
 
-/// FeatureCollection
+/// Feature Collection Objects
 ///
-/// [GeoJSON Format Specification § 2.3](http://geojson.org/geojson-spec.html#feature-collection-objects)
+/// [GeoJSON Format Specification § 2.3]
+/// (http://geojson.org/geojson-spec.html#feature-collection-objects)
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeatureCollection {
     pub bbox: Option<Bbox>,
