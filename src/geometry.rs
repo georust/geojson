@@ -19,14 +19,49 @@ use rustc_serialize::json::{self, ToJson};
 use ::{Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
 
 
+/// The underlying Geometry value
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
+    /// Point
+    ///
+    /// [GeoJSON Format Specification § 2.1.2]
+    /// (http://geojson.org/geojson-spec.html#point)
     Point(PointType),
+
+    /// MultiPoint
+    ///
+    /// [GeoJSON Format Specification § 2.1.3]
+    /// (http://geojson.org/geojson-spec.html#multipoint)
     MultiPoint(Vec<PointType>),
+
+    /// LineString
+    ///
+    /// [GeoJSON Format Specification § 2.1.4]
+    /// (http://geojson.org/geojson-spec.html#linestring)
     LineString(LineStringType),
+
+    /// MultiLineString
+    ///
+    /// [GeoJSON Format Specification § 2.1.5]
+    /// (http://geojson.org/geojson-spec.html#multilinestring)
     MultiLineString(Vec<LineStringType>),
+
+    /// Polygon
+    ///
+    /// [GeoJSON Format Specification § 2.1.6]
+    /// (http://geojson.org/geojson-spec.html#polygon)
     Polygon(PolygonType),
+
+    /// MultiPolygon
+    ///
+    /// [GeoJSON Format Specification § 2.1.7]
+    /// (http://geojson.org/geojson-spec.html#multipolygon)
     MultiPolygon(Vec<PolygonType>),
+
+    /// GeometryCollection
+    ///
+    /// [GeoJSON Format Specification § 2.1.8]
+    /// (http://geojson.org/geojson-spec.html#geometry-collection)
     GeometryCollection(Vec<Geometry>),
 }
 
@@ -45,6 +80,10 @@ impl ToJson for Value {
 }
 
 
+/// Geometry Objects
+///
+/// [GeoJSON Format Specification § 2.1]
+/// (http://geojson.org/geojson-spec.html#geometry-objects)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Geometry {
     pub bbox: Option<Bbox>,

@@ -16,8 +16,16 @@ extern crate rustc_serialize;
 
 use rustc_serialize::json;
 
+/// Bounding Boxes
+///
+/// [GeoJSON Format Specification § 4]
+/// (http://geojson.org/geojson-spec.html#bounding-boxes)
 pub type Bbox = Vec<f64>;
 
+/// Positions
+///
+/// [GeoJSON Format Specification § 2.1.1]
+/// (http://geojson.org/geojson-spec.html#positions)
 pub type Position = Vec<f64>;
 
 pub type PointType = Position;
@@ -44,6 +52,7 @@ pub use feature::Feature;
 mod feature_collection;
 pub use feature_collection::FeatureCollection;
 
+/// Error when reading a GeoJSON object from a str or Object
 pub struct Error {
     pub desc: &'static str,
 }

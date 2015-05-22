@@ -19,6 +19,10 @@ use rustc_serialize::json::{self, ToJson};
 use ::{Error, Geometry, Feature, FeatureCollection, FromObject};
 
 
+/// GeoJSON Objects
+///
+/// [GeoJSON Format Specification § 2]
+/// (http://geojson.org/geojson-spec.html#geojson-objects)
 #[derive(Clone, Debug, PartialEq)]
 pub enum GeoJson {
     Geometry(Geometry),

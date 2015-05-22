@@ -19,11 +19,24 @@ use rustc_serialize::json::{self, ToJson};
 use ::{Error, FromObject};
 
 
+/// Coordinate Reference System Objects
+///
+/// [GeoJSON Format Specification § 3]
+/// (http://geojson.org/geojson-spec.html#coordinate-reference-system-objects)
 #[derive(Clone, Debug, PartialEq)]
 pub enum Crs {
+    /// Named CRS
+    ///
+    /// [GeoJSON Format Specification § 3.1]
+    /// (http://geojson.org/geojson-spec.html#named-crs)
     Named {
         name: String,
     },
+
+    /// Linked CRS
+    ///
+    /// [GeoJSON Format Specification § 3.2]
+    /// (http://geojson.org/geojson-spec.html#linked-crs)
     Linked {
         href: String,
         type_: Option<String>,
