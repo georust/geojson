@@ -8,9 +8,9 @@ rust-geojson
 
 Library for serializing the [GeoJSON](http://geojson.org) vector GIS file format
 
-# Examples
+## Examples
 
-## Reading
+### Reading
 
 ```rust
 use geojson::GeoJson;
@@ -31,7 +31,7 @@ let geojson_str = r#"
 let geojson = geojson_str.parse::<GeoJson>().unwrap();
 ```
 
-## Writing
+### Writing
 
 ```rust
 use std::collections::HashMap;
@@ -58,5 +58,7 @@ let geojson = GeoJson::Feature(Feature {
 
 let geojson_string = geojson.to_string();
 ```
+
+## License
 
 Licensed under version two of the Apache License.
