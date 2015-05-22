@@ -23,11 +23,11 @@
 //! {
 //!     "type": "Feature",
 //!     "properties": {
-//!         "name": "Pleasantville Station"
+//!         "name": "Firestone Grill"
 //!     },
 //!     "geometry": {
 //!         "type": "Point",
-//!         "coordinates": [73.7922, 41.1342]
+//!         "coordinates": [-120.66029,35.2812]
 //!     }
 //! }
 //! "#;
@@ -43,13 +43,13 @@
 //! use geojson::{Feature, GeoJson, Geometry, Value};
 //!
 //! let geometry = Geometry::new(
-//!     Value::Point(vec![73.7922, 41.1342])
+//!     Value::Point(vec![-120.66029,35.2812])
 //! );
 //!
 //! let mut properties = HashMap::new();
 //! properties.insert(
 //!     String::from("name"),
-//!     "Pleasantville Station".to_json(),
+//!     "Firestone Grill".to_json(),
 //! );
 //!
 //! let geojson = GeoJson::Feature(Feature {
