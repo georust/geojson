@@ -6,6 +6,6 @@ rust-geojson
 
 [Documentation](https://georust.github.io/rust-geojson/)
 
-[GeoJSON](http://geojson.org/) bindings and utilities for Rust
+Library for serializing the [GeoJSON](http://geojson.org) open GIS file format
 
 Licensed under version two of the Apache License.
