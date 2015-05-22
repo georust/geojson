@@ -14,7 +14,7 @@
 
 use std::str::FromStr;
 
-use rustc_serialize::json;
+use rustc_serialize::json::{self, ToJson};
 
 use ::{Error, Geometry, Feature, FeatureCollection, FromObject};
 
@@ -71,5 +71,11 @@ impl FromStr for GeoJson {
             _ => return Err(Error::new("Attempted to create GeoJSON from JSON that is not an object")),
         };
         return GeoJson::from_object(&object);
+    }
+}
+
+impl ToString for GeoJson {
+    fn to_string(&self) -> String {
+        return self.to_json().to_string();
     }
 }
