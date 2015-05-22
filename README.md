@@ -6,7 +6,7 @@ rust-geojson
 
 [Documentation](https://georust.github.io/rust-geojson/)
 
-Library for serializing the [GeoJSON](http://geojson.org) open GIS file format
+Library for serializing the [GeoJSON](http://geojson.org) vector GIS file format
 
 # Examples
 
