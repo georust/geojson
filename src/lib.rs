@@ -12,6 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! # Examples
+//!
+//! ## Reading
+//!
+//! ```
+//! use geojson::GeoJson;
+//!
+//! let geojson_str = r#"
+//! {
+//!     "type": "Feature",
+//!     "properties": {
+//!         "name": "Pleasantville Station"
+//!     },
+//!     "geometry": {
+//!         "type": "Point",
+//!         "coordinates": [73.7922, 41.1342]
+//!     }
+//! }
+//! "#;
+//!
+//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! ```
+//!
+//! ## Writing
+//!
+//! ```norun
+//! use std::collections::HashMap;
+//! use rustc_serialize::json::ToJson;
+//! use geojson::{Feature, GeoJson, Geometry, Value};
+//!
+//! let geometry = Geometry::new(
+//!     Value::Point(vec![73.7922, 41.1342])
+//! );
+//!
+//! let mut properties = HashMap::new();
+//! properties.insert(
+//!     String::from("name"),
+//!     "Pleasantville Station".to_json(),
+//! );
+//!
+//! let geojson = GeoJson::Feature(Feature {
+//!     crs: None,
+//!     bbox: None,
+//!     geometry: geometry,
+//!     id: None,
+//!     properties: Some(properties),
+//! });
+//!
+//! let geojson_string = geojson.to_string();
+//! ```
+
 extern crate rustc_serialize;
 
 use rustc_serialize::json;
