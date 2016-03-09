@@ -5,7 +5,7 @@ description = "Library for serializing the GeoJSON vector GIS file format"
 version = "0.1.0"
 authors = ["Corey Farwell <coreyf@rwell.org>",
            "Blake Grotewold <hello@grotewold.me>"]
-license = "Apache-2.0"
+license = "MIT/Apache-2.0"
 repository = "https://github.com/georust/rust-geojson"
 readme = "README.md"
 documentation = "https://georust.github.io/rust-geojson/"
