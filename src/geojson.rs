@@ -51,7 +51,7 @@ impl FromObject for GeoJson {
                 Feature::from_object(object).map(GeoJson::Feature),
             "FeatureCollection" =>
                 FeatureCollection::from_object(object).map(GeoJson::FeatureCollection),
-            _ => Err(Error::new("Encountered unknown GeoJSON type")),
+            _ => Err(Error::GeoJsonUnknownType),
         };
     }
 }
@@ -68,11 +68,11 @@ impl FromStr for GeoJson {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let decoded_json = match json::Json::from_str(s) {
             Ok(j) => j,
-            Err(..) => return Err(Error::new("Encountered malformed JSON")),
+            Err(..) => return Err(Error::MalformedJson),
         };
         let object = match decoded_json {
             json::Json::Object(object) => object,
-            _ => return Err(Error::new("Attempted to create GeoJSON from JSON that is not an object")),
+            _ => return Err(Error::GeoJsonExpectedObject),
         };
         return GeoJson::from_object(&object);
     }

@@ -149,7 +149,7 @@ impl FromObject for Geometry {
                 Value::MultiPolygon(try!(util::get_coords_3d_pos(object))),
             "GeometryCollection" =>
                 Value::GeometryCollection(try!(util::get_geometries(object))),
-            _ => return Err(Error::new("Unknown geometry type")),
+            _ => return Err(Error::GeometryUnknownType),
         };
 
         let bbox = try!(util::get_bbox(object));

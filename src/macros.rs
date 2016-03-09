@@ -22,7 +22,7 @@ macro_rules! expect_string {
     ($value:expr) => (try!(
         match $value.as_string() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::new("Expected string value")})
+            None => Err({use Error; Error::ExpectedStringValue})
         }
     ))
 }
@@ -31,7 +31,7 @@ macro_rules! expect_f64 {
     ($value:expr) => (try!(
         match $value.as_f64() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::new("Expected f64 value")})
+            None => Err({use Error; Error::ExpectedF64Value})
         }
     ))
 }
@@ -40,7 +40,7 @@ macro_rules! expect_array {
     ($value:expr) => (try!(
         match $value.as_array() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::new("Expected array value")})
+            None => Err({use Error; Error::ExpectedArrayValue})
         }
     ))
 }
@@ -49,7 +49,7 @@ macro_rules! expect_object {
     ($value:expr) => (try!(
         match $value.as_object() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::new("Expected object value")})
+            None => Err({use Error; Error::ExpectedObjectValue})
         }
     ))
 }
@@ -58,7 +58,7 @@ macro_rules! expect_property {
     ($obj:expr, $name:expr, $desc:expr) => (
         match $obj.get($name) {
             Some(v) => v,
-            None => return Err({use Error; Error::new($desc)}),
+            None => return Err({use Error; Error::ExpectedProperty}),
         };
     )
 }
