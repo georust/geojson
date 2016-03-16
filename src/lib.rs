@@ -105,13 +105,87 @@ pub use feature_collection::FeatureCollection;
 
 /// Error when reading a GeoJSON object from a str or Object
 #[derive(Debug)]
-pub struct Error {
-    pub desc: &'static str,
+pub enum Error {
+    BboxExpectedArray,
+    BboxExpectedNumericValues,
+    CrsExpectedObject,
+    CrsUnknownType(String),
+    GeoJsonExpectedObject,
+    GeoJsonUnknownType,
+    GeometryUnknownType,
+    MalformedJson,
+    PropertiesExpectedObjectOrNull,
+
+    // FIXME: make these types more specific
+    ExpectedStringValue,
+    ExpectedProperty,
+    ExpectedF64Value,
+    ExpectedArrayValue,
+    ExpectedObjectValue,
 }
 
-impl Error {
-    pub fn new(desc: &'static str) -> Error {
-        return Error{desc: desc};
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Error::BboxExpectedArray =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered non-array type for a 'bbox' object."),
+            Error::BboxExpectedNumericValues =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered non-numeric value within 'bbox' array."),
+            Error::CrsExpectedObject =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered non-object type for a 'crs' object."),
+            Error::CrsUnknownType(ref t) =>
+                write!(f, "Encountered unknown type '{}' for a 'crs' object.", t),
+            Error::GeoJsonExpectedObject =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered non-object type for GeoJSON."),
+            Error::GeoJsonUnknownType =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered unknown GeoJSON object type."),
+            Error::GeometryUnknownType =>
+                write!(f, "Encountered unknown 'geometry' object type."),
+            Error::MalformedJson =>
+                // FIXME: can we report specific serialization error?
+                write!(f, "Encountered malformed JSON."),
+            Error::PropertiesExpectedObjectOrNull =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered neither object type nor null type for \
+                           'properties' object."),
+            Error::ExpectedStringValue =>
+                write!(f, "Expected a string value."),
+            Error::ExpectedProperty =>
+                write!(f, "Expected a GeoJSON 'property'."),
+            Error::ExpectedF64Value =>
+                write!(f, "Expected a floating-point value."),
+            Error::ExpectedArrayValue =>
+                write!(f, "Expected an array."),
+            Error::ExpectedObjectValue =>
+                write!(f, "Expected an object."),
+        }
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        match *self {
+            Error::BboxExpectedArray => "non-array 'bbox' type",
+            Error::BboxExpectedNumericValues => "non-numeric 'bbox' array",
+            Error::CrsExpectedObject => "non-object 'crs' type",
+            Error::CrsUnknownType(..) => "unknown 'crs' type",
+            Error::GeoJsonExpectedObject => "non-object GeoJSON type",
+            Error::GeoJsonUnknownType => "unknown GeoJSON object type",
+            Error::GeometryUnknownType => "unknown 'geometry' object type",
+            Error::MalformedJson => "malformed JSON",
+            Error::PropertiesExpectedObjectOrNull =>
+                "neither object type nor null type for properties' object.",
+            Error::ExpectedStringValue => "expected a string value",
+            Error::ExpectedProperty => "expected a GeoJSON 'property'",
+            Error::ExpectedF64Value => "expected a floating-point value",
+            Error::ExpectedArrayValue => "expected an array",
+            Error::ExpectedObjectValue => "expected an object",
+        }
     }
 }
 

@@ -82,7 +82,7 @@ impl FromObject for Crs {
                 };
                 Crs::Linked {type_: type_, href: href}
             },
-            _ => return Err(Error::new("Encountered unknown CRS type")),
+            t => return Err(Error::CrsUnknownType(t.into())),
         });
     }
 }

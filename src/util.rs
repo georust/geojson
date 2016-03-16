@@ -30,14 +30,14 @@ pub fn get_bbox(object: &Object) -> Result<Option<Bbox>, Error> {
 
     let bbox_array = match bbox_json.as_array() {
         Some(b) => b,
-        None => return Err(Error::new("Encountered 'bbox' with non-array value")),
+        None => return Err(Error::BboxExpectedArray),
     };
 
     let mut bbox = vec![];
     for item_json in bbox_array {
         match item_json.as_f64() {
             Some(item_f64) => bbox.push(item_f64),
-            None => return Err(Error::new("Encountered non numeric value in 'bbox' array")),
+            None => return Err(Error::BboxExpectedNumericValues),
         }
     }
 
@@ -53,7 +53,7 @@ pub fn get_crs(object: &Object) -> Result<Option<Crs>, Error> {
 
     let crs_object = match crs_json.as_object() {
         Some(c) => c,
-        None => return Err(Error::new("Encountered 'crs' with non-object value")),
+        None => return Err(Error::CrsExpectedObject),
     };
 
     return Crs::from_object(crs_object).map(Some);
@@ -65,7 +65,7 @@ pub fn get_properties(object: &Object) -> Result<Option<Object>, Error> {
     return match *properties {
         Json::Object(ref x) => Ok(Some(x.clone())),
         Json::Null => Ok(None),
-        _ => return Err(Error::new("expected an Object or Null value for feature properties")),
+        _ => return Err(Error::PropertiesExpectedObjectOrNull),
     };
 }
 
