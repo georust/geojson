@@ -1,0 +1,17 @@
+extern crate serde;
+extern crate serde_json;
+
+#[doc(hidden)]
+mod json {
+    use std::collections::BTreeMap;
+
+    use serde_json::Value;
+
+    pub fn json_val<T: ?Sized + Serialize>(val: &T) -> Value {
+        ::serde_json::value::to_value(val)
+    }
+
+    pub use serde::{ Serialize, Deserialize, Serializer, Deserializer, Error as SerdeError };
+    pub use serde_json::Value as JsonValue;
+    pub type JsonObject = BTreeMap<String, JsonValue>;
+}

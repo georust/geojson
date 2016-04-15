@@ -14,6 +14,14 @@
 
 //! # Examples
 //!
+//! Both `rustc_serialize` (default) and `serde` are supported.
+//! To use `serde`, add the `with-serde` feature to your Cargo.toml:
+//!
+//! ```text
+//! [dependencies]
+//! geojson={version="*", features=["with-serde"]}
+//! ```
+//!
 //! ## Reading
 //!
 //! ```
@@ -37,19 +45,64 @@
 //!
 //! ## Writing
 //!
-//! ```ignore,rust
-//! use std::collections::HashMap;
-//! use rustc_serialize::json::ToJson;
-//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! Writing `geojson` depends on the serialization framework because some structs
+//! (like `Feature`) use json values for properties.
 //!
-//! let geometry = Geometry::new(
-//!     Value::Point(vec![-120.66029,35.2812])
-//! );
+//! For `rustc_serialize` use `rustc_serialize::json::Object`:
 //!
-//! let mut properties = HashMap::new();
+//! ```ignore
+//! let mut properties = BTreeMap::new();
 //! properties.insert(
 //!     String::from("name"),
 //!     "Firestone Grill".to_json(),
+//! );
+//! ```
+//!
+//! For `serde` use `serde_json::Value::Object`:
+//!
+//! ```ignore
+//! let mut properties = BTreeMap::new();
+//! properties.insert(
+//!     String::from("name"),
+//!     "Firestone Grill".to_value(),
+//! );
+//! ```
+//!
+//! `GeoJson` can then be serialized by calling `to_string`:
+//!
+//! ```rust
+//! # #[cfg(not(feature = "with-serde"))]
+//! # extern crate rustc_serialize;
+//! # #[cfg(not(feature = "with-serde"))]
+//! use rustc_serialize::json::ToJson;
+//! # #[cfg(feature = "with-serde")]
+//! # extern crate serde_json;
+//! # extern crate geojson;
+//! use std::collections::BTreeMap;
+//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! # #[cfg(not(feature = "with-serde"))]
+//! # fn properties() -> ::rustc_serialize::json::Object {
+//! # let mut properties = std::collections::BTreeMap::new();
+//! # properties.insert(
+//! #     String::from("name"),
+//! #     "Firestone Grill".to_json(),
+//! # );
+//! # properties
+//! # }
+//! # #[cfg(feature = "with-serde")]
+//! # fn properties() -> ::std::collections::BTreeMap<String, ::serde_json::Value> {
+//! # let mut properties = std::collections::BTreeMap::new();
+//! # properties.insert(
+//! #     String::from("name"),
+//! #     ::serde_json::Value::String(String::from("Firestone Grill")),
+//! # );
+//! # properties
+//! # }
+//! # fn main() {
+//! # let properties = properties();
+//!
+//! let geometry = Geometry::new(
+//!     Value::Point(vec![-120.66029,35.2812])
 //! );
 //!
 //! let geojson = GeoJson::Feature(Feature {
@@ -61,11 +114,14 @@
 //! });
 //!
 //! let geojson_string = geojson.to_string();
+//! # }
 //! ```
 
-extern crate rustc_serialize;
+#[cfg(not(feature = "with-serde"))]
+include!("lib.rustc_serialize.rs.in");
 
-use rustc_serialize::json;
+#[cfg(feature = "with-serde")]
+include!("lib.serde.rs.in");
 
 /// Bounding Boxes
 ///
@@ -190,5 +246,5 @@ impl std::error::Error for Error {
 }
 
 trait FromObject: Sized {
-    fn from_object(object: &json::Object) -> Result<Self, Error>;
+    fn from_object(object: &json::JsonObject) -> Result<Self, Error>;
 }

@@ -11,5 +11,11 @@ readme = "README.md"
 documentation = "https://georust.github.io/rust-geojson/"
 keywords = ["geojson", "gis", "json", "geo"]
 
+[features]
+default = ["rustc-serialize"]
+with-serde = ["serde","serde_json"]
+
 [dependencies]
-rustc-serialize = "0.3"
+rustc-serialize = { version = "0.3", optional = true }
+serde = { version = "~0.7", optional = true }
+serde_json = { version = "~0.7", optional = true }
