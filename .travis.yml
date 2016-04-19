@@ -3,6 +3,12 @@ rust:
   - nightly
   - beta
   - stable
+env:
+  - FEATURES=""
+  - FEATURES="with-serde"
+script:
+  - cargo build --features "$FEATURES"
+  - cargo test --features "$FEATURES"
 after_success: |
   cargo doc && \
   echo '<meta http-equiv=refresh content=0;url=geojson/index.html>' > target/doc/index.html && \

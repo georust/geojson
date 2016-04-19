@@ -14,7 +14,12 @@
 
 use std::str::FromStr;
 
-use rustc_serialize::json::{self, ToJson};
+#[cfg(not(feature = "with-serde"))]
+use ::json::ToJson;
+#[cfg(feature = "with-serde")]
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
+
+use ::json::{JsonValue, JsonObject};
 
 use ::{Error, Geometry, Feature, FeatureCollection, FromObject};
 
@@ -30,8 +35,8 @@ pub enum GeoJson {
     FeatureCollection(FeatureCollection),
 }
 
-impl<'a> From<&'a GeoJson> for json::Object {
-    fn from(geojson: &'a GeoJson) -> json::Object {
+impl<'a> From<&'a GeoJson> for JsonObject {
+    fn from(geojson: &'a GeoJson) -> JsonObject {
         return match *geojson {
             GeoJson::Geometry(ref geometry) => geometry.into(),
             GeoJson::Feature(ref feature) => feature.into(),
@@ -42,7 +47,7 @@ impl<'a> From<&'a GeoJson> for json::Object {
 
 
 impl FromObject for GeoJson {
-    fn from_object(object: &json::Object) -> Result<Self, Error> {
+    fn from_object(object: &JsonObject) -> Result<Self, Error> {
         let type_ = expect_string!(expect_property!(object, "type", "Missing 'type' field"));
         return match &type_ as &str {
             "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon" =>
@@ -56,9 +61,35 @@ impl FromObject for GeoJson {
     }
 }
 
-impl json::ToJson for GeoJson {
-    fn to_json(&self) -> json::Json {
-        return json::Json::Object(self.into());
+#[cfg(not(feature = "with-serde"))]
+impl ToJson for GeoJson {
+    fn to_json(&self) -> JsonValue {
+        return ::rustc_serialize::json::Json::Object(self.into());
+    }
+}
+
+#[cfg(feature = "with-serde")]
+impl Serialize for GeoJson {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    where S: Serializer {
+        JsonObject::from(self).serialize(serializer)
+    }
+}
+
+#[cfg(feature = "with-serde")]
+impl Deserialize for GeoJson {
+    fn deserialize<D>(deserializer: &mut D) -> Result<GeoJson, D::Error>
+    where D: Deserializer {
+        use std::error::Error as StdError;
+
+        let val = try!(JsonValue::deserialize(deserializer));
+
+        if let Some(geo) = val.as_object() {
+            GeoJson::from_object(geo).map_err(|e| D::Error::custom(e.description()))
+        }
+        else {
+            Err(D::Error::custom("expected json object"))
+        }
     }
 }
 
@@ -66,20 +97,47 @@ impl FromStr for GeoJson {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let decoded_json = match json::Json::from_str(s) {
-            Ok(j) => j,
-            Err(..) => return Err(Error::MalformedJson),
-        };
-        let object = match decoded_json {
-            json::Json::Object(object) => object,
-            _ => return Err(Error::GeoJsonExpectedObject),
-        };
+        let object = try!(get_object(s));
+
         return GeoJson::from_object(&object);
     }
 }
 
+#[cfg(not(feature = "with-serde"))]
+fn get_object(s: &str) -> Result<JsonObject, Error> {
+    let decoded_json = match JsonValue::from_str(s) {
+        Ok(j) => j,
+        Err(..) => return Err(Error::MalformedJson),
+    };
+    match decoded_json {
+        ::rustc_serialize::json::Json::Object(object) => Ok(object),
+        _ => return Err(Error::GeoJsonExpectedObject),
+    }
+}
+#[cfg(feature = "with-serde")]
+fn get_object(s: &str) -> Result<JsonObject, Error> {
+    let decoded_json: ::serde_json::Value = match ::serde_json::from_str(s) {
+        Ok(j) => j,
+        Err(..) => return Err(Error::MalformedJson),
+    };
+
+    if let Some(geo) = decoded_json.as_object() {
+        return Ok(geo.clone());
+    }
+    else {
+        return Err(Error::MalformedJson);
+    }
+}
+
+#[cfg(not(feature = "with-serde"))]
 impl ToString for GeoJson {
     fn to_string(&self) -> String {
         return self.to_json().to_string();
+    }
+}
+#[cfg(feature = "with-serde")]
+impl ToString for GeoJson {
+    fn to_string(&self) -> String {
+        return ::serde_json::to_string(self).unwrap_or(String::new());
     }
 }

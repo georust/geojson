@@ -1,0 +1,10 @@
+extern crate rustc_serialize;
+
+#[doc(hidden)]
+mod json {
+    pub fn json_val<T: ToJson>(val: &T) -> JsonValue {
+        (*val).to_json()
+    }
+
+    pub use rustc_serialize::json::{ Json as JsonValue, Object as JsonObject, ToJson };
+}
