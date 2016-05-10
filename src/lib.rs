@@ -108,7 +108,7 @@
 //! let geojson = GeoJson::Feature(Feature {
 //!     crs: None,
 //!     bbox: None,
-//!     geometry: geometry,
+//!     geometry: Some(geometry),
 //!     id: None,
 //!     properties: Some(properties),
 //! });
@@ -171,6 +171,7 @@ pub enum Error {
     GeometryUnknownType,
     MalformedJson,
     PropertiesExpectedObjectOrNull,
+    FeatureInvalidGeometryValue,
 
     // FIXME: make these types more specific
     ExpectedStringValue,
@@ -209,6 +210,10 @@ impl std::fmt::Display for Error {
                 // FIXME: inform what type we actually found
                 write!(f, "Encountered neither object type nor null type for \
                            'properties' object."),
+            Error::FeatureInvalidGeometryValue =>
+                // FIXME: inform what type we actually found
+                write!(f, "Encountered neither object type nor null type for \
+                           'geometry' field on 'feature' object."),
             Error::ExpectedStringValue =>
                 write!(f, "Expected a string value."),
             Error::ExpectedProperty =>
@@ -236,6 +241,8 @@ impl std::error::Error for Error {
             Error::MalformedJson => "malformed JSON",
             Error::PropertiesExpectedObjectOrNull =>
                 "neither object type nor null type for properties' object.",
+            Error::FeatureInvalidGeometryValue =>
+                "neither object type nor null type for 'geometry' field on 'feature' object.",
             Error::ExpectedStringValue => "expected a string value",
             Error::ExpectedProperty => "expected a GeoJSON 'property'",
             Error::ExpectedF64Value => "expected a floating-point value",

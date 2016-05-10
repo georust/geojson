@@ -120,9 +120,16 @@ pub fn get_id(object: &JsonObject) -> Result<Option<JsonValue>, Error> {
 }
 
 /// Used by Feature
-pub fn get_geometry(object: &JsonObject) -> Result<Geometry, Error> {
-    let geometry = expect_object!(expect_property!(object, "geometry", "Missing 'geometry' field"));
-    return Geometry::from_object(geometry);
+pub fn get_geometry(object: &JsonObject) -> Result<Option<Geometry>, Error> {
+    let geometry = expect_property!(object, "geometry", "Missing 'geometry' field");
+    match *geometry {
+        JsonValue::Object(ref x) => {
+            let geometry_object = try!(Geometry::from_object(x));
+            Ok(Some(geometry_object))
+        },
+        JsonValue::Null => Ok(None),
+        _ => Err(Error::FeatureInvalidGeometryValue),
+    }
 }
 
 /// Used by FeatureCollection
