@@ -51,7 +51,7 @@ properties.insert(
 let geojson = GeoJson::Feature(Feature {
     crs: None,
     bbox: None,
-    geometry: geometry,
+    geometry: Some(geometry),
     id: None,
     properties: Some(properties),
 });

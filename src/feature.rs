@@ -31,7 +31,7 @@ use ::{Bbox, Crs, Error, FromObject, Geometry, util};
 pub struct Feature {
     pub bbox: Option<Bbox>,
     pub crs: Option<Crs>,
-    pub geometry: Geometry,
+    pub geometry: Option<Geometry>,
     pub id: Option<JsonValue>,
     pub properties: Option<JsonObject>,
 }
@@ -105,7 +105,7 @@ impl Deserialize for Feature {
 
 #[cfg(test)]
 mod tests {
-    use ::{Feature, Geometry, Value, GeoJson};
+    use ::{Error, Feature, Geometry, Value, GeoJson};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\"Feature\"}"
@@ -124,11 +124,11 @@ mod tests {
 
     fn feature() -> Feature {
         ::Feature {
-            geometry: Geometry {
+            geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 crs: None,
                 bbox: None,
-            },
+            }),
             properties: properties(),
             crs: None,
             bbox: None,
@@ -172,5 +172,29 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn feature_json_null_geometry() {
+        let geojson_str = r#"{
+            "geometry": null,
+            "properties":{},
+            "type":"Feature"
+        }"#;
+        let geojson = geojson_str.parse::<GeoJson>().unwrap();
+        let feature = match geojson {
+            GeoJson::Feature(feature) => feature,
+            _ => unimplemented!(),
+        };
+        assert!(feature.geometry.is_none());
+    }
+
+    #[test]
+    fn feature_json_invalid_geometry() {
+        let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
+        match geojson_str.parse::<GeoJson>().unwrap_err() {
+            Error::FeatureInvalidGeometryValue => (),
+            _ => unreachable!(),
+        }
     }
 }
