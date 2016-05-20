@@ -45,6 +45,24 @@ impl<'a> From<&'a GeoJson> for JsonObject {
     }
 }
 
+impl From<Geometry> for GeoJson {
+    fn from(geometry: Geometry) -> Self {
+        GeoJson::Geometry(geometry)
+    }
+}
+
+impl From<Feature> for GeoJson {
+    fn from(feature: Feature) -> Self {
+        GeoJson::Feature(feature)
+    }
+}
+
+impl From<FeatureCollection> for GeoJson {
+    fn from(feature_collection: FeatureCollection) -> GeoJson {
+        GeoJson::FeatureCollection(feature_collection)
+    }
+}
+
 
 impl FromObject for GeoJson {
     fn from_object(object: &JsonObject) -> Result<Self, Error> {

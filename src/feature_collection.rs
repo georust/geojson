@@ -47,7 +47,7 @@ use ::{Bbox, Crs, Error, Feature, FromObject, util};
 ///     features: vec![],
 /// };
 ///
-/// let serialized = GeoJson::FeatureCollection(feature_collection).to_string();
+/// let serialized = GeoJson::from(feature_collection).to_string();
 ///
 /// assert_eq!(
 ///     serialized,
