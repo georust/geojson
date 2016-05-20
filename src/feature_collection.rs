@@ -28,6 +28,33 @@ use ::{Bbox, Crs, Error, Feature, FromObject, util};
 ///
 /// [GeoJSON Format Specification § 2.3]
 /// (http://geojson.org/geojson-spec.html#feature-collection-objects)
+///
+/// # Examples
+///
+/// Serialization:
+///
+/// ```rust
+/// # extern crate geojson;
+/// # extern crate rustc_serialize;
+/// # fn main() {
+/// use geojson::FeatureCollection;
+/// use geojson::GeoJson;
+/// use rustc_serialize::json::ToJson;
+///
+/// let feature_collection = FeatureCollection {
+///     bbox: None,
+///     crs: None,
+///     features: vec![],
+/// };
+///
+/// let serialized = GeoJson::FeatureCollection(feature_collection).to_string();
+///
+/// assert_eq!(
+///     serialized,
+///     "{\"features\":[],\"type\":\"FeatureCollection\"}"
+/// );
+/// # }
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeatureCollection {
     pub bbox: Option<Bbox>,
