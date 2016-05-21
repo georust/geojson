@@ -50,22 +50,44 @@
 //!
 //! For `rustc_serialize` use `rustc_serialize::json::Object`:
 //!
-//! ```ignore
+//! ```
+//! # #[cfg(not(feature = "with-serde"))]
+//! # extern crate rustc_serialize;
+//! # #[cfg(not(feature = "with-serde"))]
+//! # fn main () {
+//! use rustc_serialize::json::ToJson;
+//! use std::collections::BTreeMap;
+//!
 //! let mut properties = BTreeMap::new();
 //! properties.insert(
 //!     String::from("name"),
 //!     "Firestone Grill".to_json(),
 //! );
+//! # }
+//! #
+//! # #[cfg(feature = "with-serde")]
+//! # fn main() {}
 //! ```
 //!
 //! For `serde` use `serde_json::Value::Object`:
 //!
-//! ```ignore
+//! ```
+//! # #[cfg(feature = "with-serde")]
+//! # extern crate serde_json;
+//! # #[cfg(feature = "with-serde")]
+//! # fn main () {
+//! use serde_json::to_value;
+//! use std::collections::BTreeMap;
+//!
 //! let mut properties = BTreeMap::new();
 //! properties.insert(
 //!     String::from("name"),
-//!     "Firestone Grill".to_value(),
+//!     to_value("Firestone Grill"),
 //! );
+//! # }
+//! #
+//! # #[cfg(not(feature = "with-serde"))]
+//! # fn main() {}
 //! ```
 //!
 //! `GeoJson` can then be serialized by calling `to_string`:
