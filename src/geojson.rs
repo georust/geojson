@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt;
 use std::str::FromStr;
 
 #[cfg(not(feature = "with-serde"))]
@@ -148,14 +149,17 @@ fn get_object(s: &str) -> Result<JsonObject, Error> {
 }
 
 #[cfg(not(feature = "with-serde"))]
-impl ToString for GeoJson {
-    fn to_string(&self) -> String {
-        return self.to_json().to_string();
+impl fmt::Display for GeoJson {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.to_json().to_string())
     }
 }
+
 #[cfg(feature = "with-serde")]
-impl ToString for GeoJson {
-    fn to_string(&self) -> String {
-        return ::serde_json::to_string(self).unwrap_or(String::new());
+impl fmt::Display for GeoJson {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        ::serde_json::to_string(self)
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
     }
 }
