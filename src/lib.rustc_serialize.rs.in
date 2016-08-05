@@ -6,5 +6,9 @@ mod json {
         (*val).to_json()
     }
 
+    pub fn as_str(val: &JsonValue) -> Option<&str> {
+    	val.as_string()
+    }
+
     pub use rustc_serialize::json::{ Json as JsonValue, Object as JsonObject, ToJson };
 }

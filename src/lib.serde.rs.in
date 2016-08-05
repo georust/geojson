@@ -11,6 +11,10 @@ mod json {
         ::serde_json::value::to_value(val)
     }
 
+    pub fn as_str(val: &Value) -> Option<&str> {
+    	val.as_str()
+    }
+
     pub use serde::{ Serialize, Deserialize, Serializer, Deserializer, Error as SerdeError };
     pub use serde_json::Value as JsonValue;
     pub type JsonObject = BTreeMap<String, JsonValue>;

@@ -33,7 +33,7 @@ use ::{Bbox, Crs, Error, Feature, FromObject, util};
 ///
 /// Serialization:
 ///
-/// ```rust
+/// ```norun
 /// # extern crate geojson;
 /// # extern crate rustc_serialize;
 /// # fn main() {
