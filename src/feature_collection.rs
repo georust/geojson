@@ -33,13 +33,11 @@ use ::{Bbox, Crs, Error, Feature, FromObject, util};
 ///
 /// Serialization:
 ///
-/// ```rust
+/// ```
 /// # extern crate geojson;
-/// # extern crate rustc_serialize;
 /// # fn main() {
 /// use geojson::FeatureCollection;
 /// use geojson::GeoJson;
-/// use rustc_serialize::json::ToJson;
 ///
 /// let feature_collection = FeatureCollection {
 ///     bbox: None,

@@ -20,7 +20,7 @@ macro_rules! expect_type {
 
 macro_rules! expect_string {
     ($value:expr) => (try!(
-        match $value.as_string() {
+        match $crate::json::as_str($value) {
             Some(v) => Ok(v),
             None => Err({use Error; Error::ExpectedStringValue})
         }
