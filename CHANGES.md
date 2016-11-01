@@ -1,5 +1,9 @@
 # Changes
 
+## 0.4.1
+
+* [Derive `Eq` and `PartialEq` for `Error`.](https://github.com/georust/rust-geojson/issues/51)
+
 ## 0.4.0
 
 * [Implement `Display` instead of `ToString` for `GeoJson`.](https://github.com/georust/rust-geojson/pull/46)
