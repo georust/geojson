@@ -182,7 +182,7 @@ mod feature_collection;
 pub use feature_collection::FeatureCollection;
 
 /// Error when reading a GeoJSON object from a str or Object
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     BboxExpectedArray,
     BboxExpectedNumericValues,
