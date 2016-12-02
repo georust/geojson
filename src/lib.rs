@@ -145,6 +145,9 @@ include!("lib.rustc_serialize.rs.in");
 #[cfg(feature = "with-serde")]
 include!("lib.serde.rs.in");
 
+extern crate geo;
+extern crate num;
+
 /// Bounding Boxes
 ///
 /// [GeoJSON Format Specification § 4]
@@ -180,6 +183,9 @@ pub use feature::Feature;
 
 mod feature_collection;
 pub use feature_collection::FeatureCollection;
+
+/// Convert geo::types to geometry::Geometry
+pub mod conversion;
 
 /// Error when reading a GeoJSON object from a str or Object
 #[derive(Debug, PartialEq, Eq)]

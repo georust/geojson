@@ -19,3 +19,5 @@ with-serde = ["serde","serde_json"]
 rustc-serialize = { version = "0.3", optional = true }
 serde = { version = "~0.8", optional = true }
 serde_json = { version = "~0.8", optional = true }
+geo = "^0.3"
+num = "0.1"
