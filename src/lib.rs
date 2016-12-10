@@ -185,6 +185,7 @@ mod feature_collection;
 pub use feature_collection::FeatureCollection;
 
 /// Convert geo::types to geometry::Geometry
+#[doc(hidden)]
 pub mod conversion;
 
 /// Error when reading a GeoJSON object from a str or Object
