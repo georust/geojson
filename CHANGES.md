@@ -1,5 +1,9 @@
 # Changes
 
+## 0.4.2
+
+* [Ability to convert a structure from rust-geo to rust-geojson](https://github.com/georust/rust-geojson/issues/51)
+
 ## 0.4.1
 
 * [Derive `Eq` and `PartialEq` for `Error`.](https://github.com/georust/rust-geojson/issues/51)
