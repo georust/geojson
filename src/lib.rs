@@ -145,6 +145,7 @@ include!("lib.rustc_serialize.rs.in");
 #[cfg(feature = "with-serde")]
 include!("lib.serde.rs.in");
 
+#[cfg(feature = "geo")]
 extern crate geo;
 extern crate num;
 
