@@ -1,5 +1,9 @@
 # Changes
 
+## 0.4.3
+
+* [Ability to convert a structure from rust-geojson to rust-geo](https://github.com/georust/rust-geojson/pull/56)
+
 ## 0.4.2
 
 * [Ability to convert a structure from rust-geo to rust-geojson](https://github.com/georust/rust-geojson/issues/51)
