@@ -16,11 +16,11 @@ use std::fmt;
 use std::str::FromStr;
 
 #[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
+use ::json::{JsonValue, ToJson};
 #[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer};
 
-use ::json::{JsonValue, JsonObject};
+use ::json::JsonObject;
 
 use ::{Error, Geometry, Feature, FeatureCollection, FromObject};
 
@@ -89,7 +89,7 @@ impl ToJson for GeoJson {
 
 #[cfg(feature = "with-serde")]
 impl Serialize for GeoJson {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
@@ -97,18 +97,14 @@ impl Serialize for GeoJson {
 
 #[cfg(feature = "with-serde")]
 impl Deserialize for GeoJson {
-    fn deserialize<D>(deserializer: &mut D) -> Result<GeoJson, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<GeoJson, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(geo) = val.as_object() {
-            GeoJson::from_object(geo).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        GeoJson::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 

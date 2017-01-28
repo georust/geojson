@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
-
 #[cfg(not(feature = "with-serde"))]
 use ::json::ToJson;
 #[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer};
 
 use ::json::{JsonValue, JsonObject, json_val};
 
@@ -102,7 +100,7 @@ impl<'a> From<&'a Value> for JsonValue {
 
 #[cfg(feature = "with-serde")]
 impl Serialize for Value {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonValue::from(self).serialize(serializer)
     }
@@ -133,7 +131,7 @@ impl Geometry {
 
 impl<'a> From<&'a Geometry> for JsonObject {
     fn from(geometry: &'a Geometry) -> JsonObject {
-        let mut map = BTreeMap::new();
+        let mut map = JsonObject::new();
         if let Some(ref crs) = geometry.crs {
             map.insert(String::from("crs"), json_val(crs));
         }
@@ -202,7 +200,7 @@ impl ToJson for Geometry {
 
 #[cfg(feature = "with-serde")]
 impl Serialize for Geometry {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
@@ -210,18 +208,14 @@ impl Serialize for Geometry {
 
 #[cfg(feature = "with-serde")]
 impl Deserialize for Geometry {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Geometry, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Geometry, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(geo) = val.as_object() {
-            Geometry::from_object(geo).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        Geometry::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 

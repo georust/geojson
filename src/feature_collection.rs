@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
-
 #[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
+use ::json::{JsonValue, ToJson};
 #[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer};
 
-use ::json::{JsonValue, JsonObject, json_val};
+use ::json::{JsonObject, json_val};
 
 use ::{Bbox, Crs, Error, Feature, FromObject, util};
 
@@ -63,7 +61,7 @@ pub struct FeatureCollection {
 
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
-        let mut map = BTreeMap::new();
+        let mut map = JsonObject::new();
         map.insert(String::from("type"), json_val(&String::from("FeatureCollection")));
         map.insert(String::from("features"), json_val(&fc.features));
 
@@ -98,7 +96,7 @@ impl ToJson for FeatureCollection {
 
 #[cfg(feature = "with-serde")]
 impl Serialize for FeatureCollection {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
@@ -106,17 +104,13 @@ impl Serialize for FeatureCollection {
 
 #[cfg(feature = "with-serde")]
 impl Deserialize for FeatureCollection {
-    fn deserialize<D>(deserializer: &mut D) -> Result<FeatureCollection, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(features) = val.as_object() {
-            FeatureCollection::from_object(features).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        FeatureCollection::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }

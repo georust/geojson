@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
-
 #[cfg(not(feature = "with-serde"))]
 use ::json::ToJson;
 #[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer};
 
 use ::json::{JsonValue, JsonObject, json_val};
 use ::{Bbox, Crs, Error, FromObject, Geometry, util};
@@ -38,7 +36,7 @@ pub struct Feature {
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
-        let mut map = BTreeMap::new();
+        let mut map = JsonObject::new();
         map.insert(String::from("type"), json_val(&String::from("Feature")));
         map.insert(String::from("geometry"), json_val(&feature.geometry));
         if let Some(ref properties) = feature.properties {
@@ -79,7 +77,7 @@ impl ToJson for Feature {
 
 #[cfg(feature = "with-serde")]
 impl Serialize for Feature {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
@@ -87,18 +85,14 @@ impl Serialize for Feature {
 
 #[cfg(feature = "with-serde")]
 impl Deserialize for Feature {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Feature, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(feature) = val.as_object() {
-            Feature::from_object(feature).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        Feature::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -117,9 +111,7 @@ mod tests {
     }
     #[cfg(feature = "with-serde")]
     fn properties() -> Option<::json::JsonObject> {
-        use std::collections::BTreeMap;
-
-        Some(BTreeMap::new())
+        Some(::json::JsonObject::new())
     }
 
     fn feature() -> Feature {

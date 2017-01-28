@@ -76,13 +76,12 @@
 //! # extern crate serde_json;
 //! # #[cfg(feature = "with-serde")]
 //! # fn main () {
-//! use serde_json::to_value;
-//! use std::collections::BTreeMap;
+//! use serde_json::{Map, to_value};
 //!
-//! let mut properties = BTreeMap::new();
+//! let mut properties = Map::new();
 //! properties.insert(
 //!     String::from("name"),
-//!     to_value("Firestone Grill"),
+//!     to_value("Firestone Grill").unwrap(),
 //! );
 //! # }
 //! #
@@ -112,8 +111,8 @@
 //! # properties
 //! # }
 //! # #[cfg(feature = "with-serde")]
-//! # fn properties() -> ::std::collections::BTreeMap<String, ::serde_json::Value> {
-//! # let mut properties = std::collections::BTreeMap::new();
+//! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
+//! # let mut properties = ::serde_json::Map::new();
 //! # properties.insert(
 //! #     String::from("name"),
 //! #     ::serde_json::Value::String(String::from("Firestone Grill")),
