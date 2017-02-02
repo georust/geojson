@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer};
-
-use ::json::{JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject, json_val};
 use ::{Bbox, Crs, Error, FromObject, Geometry, util};
 
 
@@ -68,14 +63,6 @@ impl FromObject for Feature {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for Feature {
-    fn to_json(&self) -> ::rustc_serialize::json::Json {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for Feature {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
@@ -83,7 +70,6 @@ impl Serialize for Feature {
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for Feature {
     fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
     where D: Deserializer {
@@ -105,11 +91,6 @@ mod tests {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\"Feature\"}"
     }
 
-    #[cfg(not(feature = "with-serde"))]
-    fn properties() -> Option<::json::JsonObject> {
-        Some(::rustc_serialize::json::Object::new())
-    }
-    #[cfg(feature = "with-serde")]
     fn properties() -> Option<::json::JsonObject> {
         Some(::json::JsonObject::new())
     }
@@ -128,24 +109,12 @@ mod tests {
         }
     }
 
-    #[cfg(not(feature = "with-serde"))]
-    fn encode(feature: &Feature) -> String {
-        use rustc_serialize::json::{self, ToJson};
-
-        json::encode(&feature.to_json()).unwrap()
-    }
-    #[cfg(feature = "with-serde")]
     fn encode(feature: &Feature) -> String {
         use serde_json;
 
         serde_json::to_string(&feature).unwrap()
     }
 
-    #[cfg(not(feature = "with-serde"))]
-    fn decode(json_string: String) -> GeoJson {
-        json_string.parse().unwrap()
-    }
-    #[cfg(feature = "with-serde")]
     fn decode(json_string: String) -> GeoJson {
         json_string.parse().unwrap()
     }

@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer};
-
-use ::json::{JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject, json_val};
 
 use ::{Error, FromObject};
 
@@ -91,14 +86,6 @@ impl FromObject for Crs {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for Crs {
-    fn to_json(&self) -> JsonValue {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for Crs {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
@@ -106,7 +93,6 @@ impl Serialize for Crs {
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for Crs {
     fn deserialize<D>(deserializer: D) -> Result<Crs, D::Error>
     where D: Deserializer {

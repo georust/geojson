@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer};
-
-use ::json::{JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject, json_val};
 
 use ::{Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
 
@@ -68,22 +63,6 @@ pub enum Value {
     GeometryCollection(Vec<Geometry>),
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for Value {
-    fn to_json(&self) -> JsonValue {
-        return match *self {
-            Value::Point(ref x) => json_val(x),
-            Value::MultiPoint(ref x) => json_val(x),
-            Value::LineString(ref x) => json_val(x),
-            Value::MultiLineString(ref x) => json_val(x),
-            Value::Polygon(ref x) => json_val(x),
-            Value::MultiPolygon(ref x) => json_val(x),
-            Value::GeometryCollection(ref x) => json_val(x),
-        };
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
         return match *value {
@@ -98,7 +77,6 @@ impl<'a> From<&'a Value> for JsonValue {
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
@@ -191,14 +169,6 @@ impl FromObject for Geometry {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for Geometry {
-    fn to_json(&self) -> JsonValue {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for Geometry {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
@@ -206,7 +176,6 @@ impl Serialize for Geometry {
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for Geometry {
     fn deserialize<D>(deserializer: D) -> Result<Geometry, D::Error>
     where D: Deserializer {
@@ -224,24 +193,12 @@ impl Deserialize for Geometry {
 mod tests {
     use ::{GeoJson, Geometry, Value};
 
-    #[cfg(not(feature = "with-serde"))]
-    fn encode(geometry: &Geometry) -> String {
-        use rustc_serialize::json::{self, ToJson};
-
-        json::encode(&geometry.to_json()).unwrap()
-    }
-    #[cfg(feature = "with-serde")]
     fn encode(geometry: &Geometry) -> String {
         use serde_json;
 
         serde_json::to_string(&geometry).unwrap()
     }
 
-    #[cfg(not(feature = "with-serde"))]
-    fn decode(json_string: String) -> GeoJson {
-        json_string.parse().unwrap()
-    }
-    #[cfg(feature = "with-serde")]
     fn decode(json_string: String) -> GeoJson {
         json_string.parse().unwrap()
     }

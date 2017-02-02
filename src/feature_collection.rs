@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(feature = "with-serde"))]
-use ::json::{JsonValue, ToJson};
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer};
-
-use ::json::{JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject, json_val};
 
 use ::{Bbox, Crs, Error, Feature, FromObject, util};
 
@@ -58,7 +53,6 @@ pub struct FeatureCollection {
     pub features: Vec<Feature>,
 }
 
-
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
         let mut map = JsonObject::new();
@@ -87,14 +81,6 @@ impl FromObject for FeatureCollection {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for FeatureCollection {
-    fn to_json(&self) -> JsonValue {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for FeatureCollection {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
@@ -102,7 +88,6 @@ impl Serialize for FeatureCollection {
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for FeatureCollection {
     fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
     where D: Deserializer {

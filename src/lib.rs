@@ -14,12 +14,12 @@
 
 //! # Examples
 //!
-//! Both `rustc_serialize` (default) and `serde` are supported.
-//! To use `serde`, add the `with-serde` feature to your Cargo.toml:
+//! This crate uses `serde` for serialization.
+//! To get started, add `geojson` to your `Cargo.toml`:
 //!
 //! ```text
 //! [dependencies]
-//! geojson={version="*", features=["with-serde"]}
+//! geojson= "*"
 //! ```
 //!
 //! ## Reading
@@ -48,33 +48,10 @@
 //! Writing `geojson` depends on the serialization framework because some structs
 //! (like `Feature`) use json values for properties.
 //!
-//! For `rustc_serialize` use `rustc_serialize::json::Object`:
-//!
 //! ```
-//! # #[cfg(not(feature = "with-serde"))]
-//! # extern crate rustc_serialize;
-//! # #[cfg(not(feature = "with-serde"))]
-//! # fn main () {
-//! use rustc_serialize::json::ToJson;
-//! use std::collections::BTreeMap;
-//!
-//! let mut properties = BTreeMap::new();
-//! properties.insert(
-//!     String::from("name"),
-//!     "Firestone Grill".to_json(),
-//! );
-//! # }
-//! #
-//! # #[cfg(feature = "with-serde")]
-//! # fn main() {}
-//! ```
-//!
-//! For `serde` use `serde_json::Value::Object`:
-//!
-//! ```
-//! # #[cfg(feature = "with-serde")]
-//! # extern crate serde_json;
-//! # #[cfg(feature = "with-serde")]
+//! # extern crate geojson;
+//! extern crate serde_json;
+//! 
 //! # fn main () {
 //! use serde_json::{Map, to_value};
 //!
@@ -84,33 +61,15 @@
 //!     to_value("Firestone Grill").unwrap(),
 //! );
 //! # }
-//! #
-//! # #[cfg(not(feature = "with-serde"))]
-//! # fn main() {}
 //! ```
 //!
 //! `GeoJson` can then be serialized by calling `to_string`:
 //!
 //! ```rust
-//! # #[cfg(not(feature = "with-serde"))]
-//! # extern crate rustc_serialize;
-//! # #[cfg(not(feature = "with-serde"))]
-//! use rustc_serialize::json::ToJson;
-//! # #[cfg(feature = "with-serde")]
 //! # extern crate serde_json;
 //! # extern crate geojson;
 //! use std::collections::BTreeMap;
 //! use geojson::{Feature, GeoJson, Geometry, Value};
-//! # #[cfg(not(feature = "with-serde"))]
-//! # fn properties() -> ::rustc_serialize::json::Object {
-//! # let mut properties = std::collections::BTreeMap::new();
-//! # properties.insert(
-//! #     String::from("name"),
-//! #     "Firestone Grill".to_json(),
-//! # );
-//! # properties
-//! # }
-//! # #[cfg(feature = "with-serde")]
 //! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
 //! # let mut properties = ::serde_json::Map::new();
 //! # properties.insert(
@@ -138,11 +97,8 @@
 //! # }
 //! ```
 
-#[cfg(not(feature = "with-serde"))]
-include!("lib.rustc_serialize.rs.in");
-
-#[cfg(feature = "with-serde")]
-include!("lib.serde.rs.in");
+extern crate serde;
+extern crate serde_json;
 
 #[cfg(feature = "geo")]
 extern crate geo;
@@ -279,6 +235,27 @@ impl std::error::Error for Error {
             Error::ExpectedObjectValue => "expected an object",
         }
     }
+}
+
+mod json {
+    use serde_json::Value;
+
+    // FIXME: Return `Result` (means updating `From` impls)
+    pub fn json_val<T: ?Sized + Serialize>(val: &T) -> Value {
+        match ::serde_json::value::to_value(val) {
+            Ok(val) => val,
+            _ => unimplemented!()
+        }
+    }
+
+    pub fn as_str(val: &Value) -> Option<&str> {
+        val.as_str()
+    }
+
+    pub use serde::{Serialize, Deserialize, Serializer, Deserializer};
+    pub use serde::error::Error as SerdeError;
+    pub use serde_json::{Map, Value as JsonValue};
+    pub type JsonObject = Map<String, JsonValue>;
 }
 
 trait FromObject: Sized {
