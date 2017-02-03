@@ -5,7 +5,6 @@ rust:
   - stable
 env:
   - FEATURES=""
-  - FEATURES="with-serde"
 script:
   - cargo build --features "$FEATURES"
   - cargo test --features "$FEATURES"
