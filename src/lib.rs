@@ -51,7 +51,7 @@
 //! ```
 //! # extern crate geojson;
 //! extern crate serde_json;
-//! 
+//!
 //! # fn main () {
 //! use serde_json::{Map, to_value};
 //!
