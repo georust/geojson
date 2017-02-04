@@ -240,12 +240,6 @@ impl std::error::Error for Error {
 }
 
 mod json {
-    use serde_json::Value;
-
-    pub fn as_str(val: &Value) -> Option<&str> {
-        val.as_str()
-    }
-
     pub use serde::{Serialize, Deserialize, Serializer, Deserializer};
     pub use serde::error::Error as SerdeError;
     pub use serde_json::{Map, Value as JsonValue};
