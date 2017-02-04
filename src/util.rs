@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{JsonValue, JsonObject};
+use json::{JsonValue, JsonObject};
 
-use ::{Bbox, Crs, Error, Feature, FromObject, Geometry, Position};
+use {Bbox, Crs, Error, Feature, FromObject, Geometry, Position};
 
 
 pub fn get_coords_value<'a>(object: &JsonObject) -> Result<&JsonValue, Error> {
-    return Ok(expect_property!(object, "coordinates", "Encountered Geometry object without 'coordinates' member"));
+    return Ok(expect_property!(object,
+                               "coordinates",
+                               "Encountered Geometry object without 'coordinates' member"));
 }
 
 /// Used by FeatureCollection, Feature, Geometry
@@ -103,7 +105,10 @@ pub fn get_coords_3d_pos(object: &JsonObject) -> Result<Vec<Vec<Vec<Position>>>,
 
 /// Used by Value::GeometryCollection
 pub fn get_geometries(object: &JsonObject) -> Result<Vec<Geometry>, Error> {
-    let geometries_json = expect_property!(object, "geometries", "Encountered GeometryCollection without 'geometries' property");
+    let geometries_json = expect_property!(object,
+                                           "geometries",
+                                           "Encountered GeometryCollection without 'geometries' \
+                                            property");
     let geometries_array = expect_array!(geometries_json);
     let mut geometries = vec![];
     for json in geometries_array {
@@ -126,7 +131,7 @@ pub fn get_geometry(object: &JsonObject) -> Result<Option<Geometry>, Error> {
         JsonValue::Object(ref x) => {
             let geometry_object = try!(Geometry::from_object(x));
             Ok(Some(geometry_object))
-        },
+        }
         JsonValue::Null => Ok(None),
         _ => Err(Error::FeatureInvalidGeometryValue),
     }
@@ -135,7 +140,8 @@ pub fn get_geometry(object: &JsonObject) -> Result<Option<Geometry>, Error> {
 /// Used by FeatureCollection
 pub fn get_features(object: &JsonObject) -> Result<Vec<Feature>, Error> {
     let mut features = vec![];
-    let features_json = expect_array!(expect_property!(object, "features", "Missing 'features' field"));
+    let features_json =
+        expect_array!(expect_property!(object, "features", "Missing 'features' field"));
     for feature in features_json {
         let feature = expect_object!(feature);
         let feature: Feature = try!(Feature::from_object(feature));

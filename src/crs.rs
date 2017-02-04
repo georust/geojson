@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
 use serde_json;
 
-use ::{Error, FromObject};
+use {Error, FromObject};
 
 
 /// Coordinate Reference System Objects
@@ -28,18 +28,13 @@ pub enum Crs {
     ///
     /// [GeoJSON Format Specification § 3.1]
     /// (http://geojson.org/geojson-spec.html#named-crs)
-    Named {
-        name: String,
-    },
+    Named { name: String },
 
     /// Linked CRS
     ///
     /// [GeoJSON Format Specification § 3.2]
     /// (http://geojson.org/geojson-spec.html#linked-crs)
-    Linked {
-        href: String,
-        type_: Option<String>,
-    },
+    Linked { href: String, type_: Option<String> },
 }
 
 impl<'a> From<&'a Crs> for JsonObject {
@@ -47,19 +42,22 @@ impl<'a> From<&'a Crs> for JsonObject {
         let mut crs_map = JsonObject::new();
         let mut properties_map = JsonObject::new();
         match *crs {
-            Crs::Named{ref name} => {
+            Crs::Named { ref name } => {
                 crs_map.insert(String::from("type"), json!("name"));
                 properties_map.insert(String::from("name"), serde_json::to_value(name).unwrap());
             }
-            Crs::Linked{ref href, ref type_} => {
+            Crs::Linked { ref href, ref type_ } => {
                 crs_map.insert(String::from("type"), json!("link"));
                 properties_map.insert(String::from("href"), serde_json::to_value(href).unwrap());
                 if let Some(ref type_) = *type_ {
-                    properties_map.insert(String::from("type"), serde_json::to_value(type_).unwrap());
+                    properties_map.insert(
+                        String::from("type"),
+                        serde_json::to_value(type_).unwrap());
                 }
             }
         };
-        crs_map.insert(String::from("properties"), serde_json::to_value(&properties_map).unwrap());
+        crs_map.insert(String::from("properties"),
+                       serde_json::to_value(&properties_map).unwrap());
         return crs_map;
     }
 }
@@ -67,21 +65,34 @@ impl<'a> From<&'a Crs> for JsonObject {
 impl FromObject for Crs {
     fn from_object(object: &JsonObject) -> Result<Self, Error> {
         let type_ = expect_type!(object);
-        let properties = expect_object!(expect_property!(object, "properties", "Encountered CRS object type with no properties"));
+        let properties = expect_object!(expect_property!(object,
+                                                         "properties",
+                                                         "Encountered CRS object type with no \
+                                                          properties"));
 
         return Ok(match type_ {
             "name" => {
-                let name = expect_string!(expect_property!(&properties, "name", "Encountered Named CRS object with no name"));
-                Crs::Named {name: String::from(name)}
-            },
+                let name = expect_string!(expect_property!(&properties,
+                                                           "name",
+                                                           "Encountered Named CRS object with \
+                                                            no name"));
+                Crs::Named { name: String::from(name) }
+            }
             "link" => {
-                let href = expect_string!(expect_property!(&properties, "href", "Encountered Linked CRS object with no link")).to_string();
+                let href = expect_string!(expect_property!(&properties,
+                                                           "href",
+                                                           "Encountered Linked CRS object with \
+                                                            no link"))
+                    .to_string();
                 let type_ = match properties.get("type") {
                     Some(type_) => Some(expect_string!(type_).to_string()),
                     None => None,
                 };
-                Crs::Linked {type_: type_, href: href}
-            },
+                Crs::Linked {
+                    type_: type_,
+                    href: href,
+                }
+            }
             t => return Err(Error::CrsUnknownType(t.into())),
         });
     }
@@ -89,14 +100,16 @@ impl FromObject for Crs {
 
 impl Serialize for Crs {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+        where S: Serializer
+    {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
 impl Deserialize for Crs {
     fn deserialize<D>(deserializer: D) -> Result<Crs, D::Error>
-    where D: Deserializer {
+        where D: Deserializer
+    {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 

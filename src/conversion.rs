@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::geometry;
-use ::{PointType, LineStringType, PolygonType};
+use geometry;
+use {PointType, LineStringType, PolygonType};
 use geo;
 use num::Float;
 use std::convert::From;
@@ -316,7 +316,8 @@ impl<T> TryInto<geo::Geometry<T>> for geometry::Value
                 Ok(geo::Geometry::LineString(create_geo_line_string(line_string_type)))
             }
             geometry::Value::MultiLineString(ref multi_line_string_type) => {
-                Ok(geo::Geometry::MultiLineString(create_geo_multi_line_string(multi_line_string_type)))
+                Ok(geo::Geometry::MultiLineString(
+                    create_geo_multi_line_string(multi_line_string_type)))
             }
             geometry::Value::Polygon(ref polygon_type) => {
                 Ok(geo::Geometry::Polygon(create_geo_polygon(polygon_type)))
@@ -390,7 +391,7 @@ macro_rules! assert_almost_eq {
 
 #[cfg(test)]
 mod tests {
-    use ::{Geometry, Value};
+    use {Geometry, Value};
     use geo;
     use geo::{Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon,
               GeometryCollection};
@@ -573,16 +574,14 @@ mod tests {
         let geojson_geometry_collection = Value::from(&geo_geometry_collection);
 
         if let Value::GeometryCollection(geometries) = geojson_geometry_collection {
-            let geometry_type = |geometry: &Geometry| {
-                match geometry.value {
-                    Value::Point(..) => "Point",
-                    Value::MultiPoint(..) => "MultiPoint",
-                    Value::LineString(..) => "LineString",
-                    Value::MultiLineString(..) => "MultiLineString",
-                    Value::Polygon(..) => "Polygon",
-                    Value::MultiPolygon(..) => "MultiPolygon",
-                    Value::GeometryCollection(..) => "GeometryCollection",
-                }
+            let geometry_type = |geometry: &Geometry| match geometry.value {
+                Value::Point(..) => "Point",
+                Value::MultiPoint(..) => "MultiPoint",
+                Value::LineString(..) => "LineString",
+                Value::MultiLineString(..) => "MultiLineString",
+                Value::Polygon(..) => "Polygon",
+                Value::MultiPolygon(..) => "MultiPolygon",
+                Value::GeometryCollection(..) => "GeometryCollection",
             };
 
             assert_eq!(3, geometries.len());

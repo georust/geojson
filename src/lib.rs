@@ -224,10 +224,12 @@ impl std::error::Error for Error {
             Error::GeoJsonUnknownType => "unknown GeoJSON object type",
             Error::GeometryUnknownType => "unknown 'geometry' object type",
             Error::MalformedJson => "malformed JSON",
-            Error::PropertiesExpectedObjectOrNull =>
-                "neither object type nor null type for properties' object.",
-            Error::FeatureInvalidGeometryValue =>
-                "neither object type nor null type for 'geometry' field on 'feature' object.",
+            Error::PropertiesExpectedObjectOrNull => {
+                "neither object type nor null type for properties' object."
+            }
+            Error::FeatureInvalidGeometryValue => {
+                "neither object type nor null type for 'geometry' field on 'feature' object."
+            }
             Error::ExpectedStringValue => "expected a string value",
             Error::ExpectedProperty => "expected a GeoJSON 'property'",
             Error::ExpectedF64Value => "expected a floating-point value",
