@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
+use json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
 
-use ::{Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
+use {Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
 
 
 /// The underlying Geometry value
@@ -66,20 +66,22 @@ pub enum Value {
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
         match *value {
-            Value::Point(ref x) => ::serde_json::to_value(x),
-            Value::MultiPoint(ref x) => ::serde_json::to_value(x),
-            Value::LineString(ref x) => ::serde_json::to_value(x),
-            Value::MultiLineString(ref x) => ::serde_json::to_value(x),
-            Value::Polygon(ref x) => ::serde_json::to_value(x),
-            Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
-            Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
-        }.unwrap()
+                Value::Point(ref x) => ::serde_json::to_value(x),
+                Value::MultiPoint(ref x) => ::serde_json::to_value(x),
+                Value::LineString(ref x) => ::serde_json::to_value(x),
+                Value::MultiLineString(ref x) => ::serde_json::to_value(x),
+                Value::Polygon(ref x) => ::serde_json::to_value(x),
+                Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
+                Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
+            }
+            .unwrap()
     }
 }
 
 impl Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+        where S: Serializer
+    {
         JsonValue::from(self).serialize(serializer)
     }
 }
@@ -130,9 +132,10 @@ impl<'a> From<&'a Geometry> for JsonObject {
         map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
 
         map.insert(String::from(match geometry.value {
-            Value::GeometryCollection(..) => "geometries",
-            _ => "coordinates",
-        }), ::serde_json::to_value(&geometry.value).unwrap());
+                       Value::GeometryCollection(..) => "geometries",
+                       _ => "coordinates",
+                   }),
+                   ::serde_json::to_value(&geometry.value).unwrap());
         return map;
     }
 }
@@ -141,20 +144,13 @@ impl FromObject for Geometry {
     fn from_object(object: &JsonObject) -> Result<Self, Error> {
         let type_ = expect_type!(object);
         let value = match type_ {
-            "Point" =>
-                Value::Point(try!(util::get_coords_one_pos(object))),
-            "MultiPoint" =>
-                Value::MultiPoint(try!(util::get_coords_1d_pos(object))),
-            "LineString" =>
-                Value::LineString(try!(util::get_coords_1d_pos(object))),
-            "MultiLineString" =>
-                Value::MultiLineString(try!(util::get_coords_2d_pos(object))),
-            "Polygon" =>
-                Value::Polygon(try!(util::get_coords_2d_pos(object))),
-            "MultiPolygon" =>
-                Value::MultiPolygon(try!(util::get_coords_3d_pos(object))),
-            "GeometryCollection" =>
-                Value::GeometryCollection(try!(util::get_geometries(object))),
+            "Point" => Value::Point(try!(util::get_coords_one_pos(object))),
+            "MultiPoint" => Value::MultiPoint(try!(util::get_coords_1d_pos(object))),
+            "LineString" => Value::LineString(try!(util::get_coords_1d_pos(object))),
+            "MultiLineString" => Value::MultiLineString(try!(util::get_coords_2d_pos(object))),
+            "Polygon" => Value::Polygon(try!(util::get_coords_2d_pos(object))),
+            "MultiPolygon" => Value::MultiPolygon(try!(util::get_coords_3d_pos(object))),
+            "GeometryCollection" => Value::GeometryCollection(try!(util::get_geometries(object))),
             _ => return Err(Error::GeometryUnknownType),
         };
 
@@ -171,14 +167,16 @@ impl FromObject for Geometry {
 
 impl Serialize for Geometry {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+        where S: Serializer
+    {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
 impl Deserialize for Geometry {
     fn deserialize<D>(deserializer: D) -> Result<Geometry, D::Error>
-    where D: Deserializer {
+        where D: Deserializer
+    {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
@@ -191,7 +189,7 @@ impl Deserialize for Geometry {
 
 #[cfg(test)]
 mod tests {
-    use ::{GeoJson, Geometry, Value};
+    use {GeoJson, Geometry, Value};
 
     fn encode(geometry: &Geometry) -> String {
         use serde_json;

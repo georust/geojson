@@ -1,5 +1,9 @@
 # Changes
 
+## 0.5.0
+
+* [Upgrade to serde 0.9, remove rustc-serialize support, make geo-interop feature mandatory,](https://github.com/georust/rust-geojson/pull/60)
+
 ## 0.4.3
 
 * [Ability to convert a structure from rust-geojson to rust-geo](https://github.com/georust/rust-geojson/pull/56)

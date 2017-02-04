@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
+use json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
 use serde_json;
-use ::{Bbox, Crs, Error, FromObject, Geometry, util};
+use {Bbox, Crs, Error, FromObject, Geometry, util};
 
 
 /// Feature Objects
@@ -34,9 +34,11 @@ impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("Feature"));
-        map.insert(String::from("geometry"), serde_json::to_value(&feature.geometry).unwrap());
+        map.insert(String::from("geometry"),
+                   serde_json::to_value(&feature.geometry).unwrap());
         if let Some(ref properties) = feature.properties {
-            map.insert(String::from("properties"), serde_json::to_value(properties).unwrap());
+            map.insert(String::from("properties"),
+                       serde_json::to_value(properties).unwrap());
         }
         if let Some(ref crs) = feature.crs {
             map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
@@ -54,7 +56,7 @@ impl<'a> From<&'a Feature> for JsonObject {
 
 impl FromObject for Feature {
     fn from_object(object: &JsonObject) -> Result<Self, Error> {
-        return Ok(Feature{
+        return Ok(Feature {
             geometry: try!(util::get_geometry(object)),
             properties: try!(util::get_properties(object)),
             id: try!(util::get_id(object)),
@@ -66,14 +68,16 @@ impl FromObject for Feature {
 
 impl Serialize for Feature {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+        where S: Serializer
+    {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
 impl Deserialize for Feature {
     fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
-    where D: Deserializer {
+        where D: Deserializer
+    {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
@@ -86,10 +90,11 @@ impl Deserialize for Feature {
 
 #[cfg(test)]
 mod tests {
-    use ::{Error, Feature, Geometry, Value, GeoJson};
+    use {Error, Feature, Geometry, Value, GeoJson};
 
     fn feature_json_str() -> &'static str {
-        "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\"Feature\"}"
+        "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
+         \"Feature\"}"
     }
 
     fn properties() -> Option<::json::JsonObject> {

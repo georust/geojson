@@ -15,9 +15,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
 
-use ::{Error, Geometry, Feature, FeatureCollection, FromObject};
+use {Error, Geometry, Feature, FeatureCollection, FromObject};
 
 
 /// GeoJSON Objects
@@ -64,12 +64,16 @@ impl FromObject for GeoJson {
     fn from_object(object: &JsonObject) -> Result<Self, Error> {
         let type_ = expect_string!(expect_property!(object, "type", "Missing 'type' field"));
         return match &type_ as &str {
-            "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon" | "MultiPolygon" =>
-                Geometry::from_object(object).map(GeoJson::Geometry),
-            "Feature" =>
-                Feature::from_object(object).map(GeoJson::Feature),
-            "FeatureCollection" =>
-                FeatureCollection::from_object(object).map(GeoJson::FeatureCollection),
+            "Point" |
+            "MultiPoint" |
+            "LineString" |
+            "MultiLineString" |
+            "Polygon" |
+            "MultiPolygon" => Geometry::from_object(object).map(GeoJson::Geometry),
+            "Feature" => Feature::from_object(object).map(GeoJson::Feature),
+            "FeatureCollection" => {
+                FeatureCollection::from_object(object).map(GeoJson::FeatureCollection)
+            }
             _ => Err(Error::GeoJsonUnknownType),
         };
     }
@@ -77,14 +81,16 @@ impl FromObject for GeoJson {
 
 impl Serialize for GeoJson {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+        where S: Serializer
+    {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
 impl Deserialize for GeoJson {
     fn deserialize<D>(deserializer: D) -> Result<GeoJson, D::Error>
-    where D: Deserializer {
+        where D: Deserializer
+    {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
@@ -112,8 +118,7 @@ fn get_object(s: &str) -> Result<JsonObject, Error> {
 
     if let Some(geo) = decoded_json.as_object() {
         return Ok(geo.clone());
-    }
-    else {
+    } else {
         return Err(Error::MalformedJson);
     }
 }

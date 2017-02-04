@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
 use serde_json;
 
-use ::{Bbox, Crs, Error, Feature, FromObject, util};
+use {Bbox, Crs, Error, Feature, FromObject, util};
 
 
 /// Feature Collection Objects
@@ -58,7 +58,8 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("FeatureCollection"));
-        map.insert(String::from("features"), serde_json::to_value(&fc.features).unwrap());
+        map.insert(String::from("features"),
+                   serde_json::to_value(&fc.features).unwrap());
 
         if let Some(ref crs) = fc.crs {
             map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
@@ -74,7 +75,7 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 
 impl FromObject for FeatureCollection {
     fn from_object(object: &JsonObject) -> Result<Self, Error> {
-        return Ok(FeatureCollection{
+        return Ok(FeatureCollection {
             bbox: try!(util::get_bbox(object)),
             features: try!(util::get_features(object)),
             crs: try!(util::get_crs(object)),
@@ -84,14 +85,16 @@ impl FromObject for FeatureCollection {
 
 impl Serialize for FeatureCollection {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+        where S: Serializer
+    {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
 impl Deserialize for FeatureCollection {
     fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
-    where D: Deserializer {
+        where D: Deserializer
+    {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
