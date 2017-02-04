@@ -101,7 +101,6 @@ extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
-#[cfg(feature = "geo")]
 extern crate geo;
 extern crate num;
 

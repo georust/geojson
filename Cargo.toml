@@ -11,12 +11,8 @@ readme = "README.md"
 documentation = "https://georust.github.io/rust-geojson/"
 keywords = ["geojson", "gis", "json", "geo"]
 
-[features]
-default = ["geo-interop"]
-geo-interop = ["geo", "num"]
-
 [dependencies]
 serde = "~0.9"
 serde_json = "~0.9"
-geo = { version = "^0.3", optional = true }
-num = { version = "0.1", optional = true }
+geo = "^0.3"
+num = "0.1"
