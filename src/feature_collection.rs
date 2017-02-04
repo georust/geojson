@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use serde_json;
 
 use ::{Bbox, Crs, Error, Feature, FromObject, util};
 
@@ -56,15 +57,15 @@ pub struct FeatureCollection {
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
         let mut map = JsonObject::new();
-        map.insert(String::from("type"), json_val(&String::from("FeatureCollection")));
-        map.insert(String::from("features"), json_val(&fc.features));
+        map.insert(String::from("type"), json!("FeatureCollection"));
+        map.insert(String::from("features"), serde_json::value::to_value(&fc.features).unwrap());
 
         if let Some(ref crs) = fc.crs {
-            map.insert(String::from("crs"), json_val(crs));
+            map.insert(String::from("crs"), serde_json::value::to_value(crs).unwrap());
         }
 
         if let Some(ref bbox) = fc.bbox {
-            map.insert(String::from("bbox"), json_val(bbox));
+            map.insert(String::from("bbox"), serde_json::value::to_value(bbox).unwrap());
         }
 
         return map;

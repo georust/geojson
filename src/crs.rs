@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use serde_json;
 
 use ::{Error, FromObject};
 
@@ -47,18 +48,18 @@ impl<'a> From<&'a Crs> for JsonObject {
         let mut properties_map = JsonObject::new();
         match *crs {
             Crs::Named{ref name} => {
-                crs_map.insert(String::from("type"), json_val(&String::from("name")));
-                properties_map.insert(String::from("name"), json_val(name));
+                crs_map.insert(String::from("type"), json!("name"));
+                properties_map.insert(String::from("name"), serde_json::value::to_value(name).unwrap());
             }
             Crs::Linked{ref href, ref type_} => {
-                crs_map.insert(String::from("type"), json_val(&String::from("link")));
-                properties_map.insert(String::from("href"), json_val(href));
+                crs_map.insert(String::from("type"), json!("link"));
+                properties_map.insert(String::from("href"), serde_json::value::to_value(href).unwrap());
                 if let Some(ref type_) = *type_ {
-                    properties_map.insert(String::from("type"), json_val(type_));
+                    properties_map.insert(String::from("type"), serde_json::value::to_value(type_).unwrap());
                 }
             }
         };
-        crs_map.insert(String::from("properties"), json_val(&properties_map));
+        crs_map.insert(String::from("properties"), serde_json::value::to_value(&properties_map).unwrap());
         return crs_map;
     }
 }

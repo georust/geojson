@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
 
 use ::{Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
 
@@ -65,15 +65,15 @@ pub enum Value {
 
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
-        return match *value {
-            Value::Point(ref x) => json_val(x),
-            Value::MultiPoint(ref x) => json_val(x),
-            Value::LineString(ref x) => json_val(x),
-            Value::MultiLineString(ref x) => json_val(x),
-            Value::Polygon(ref x) => json_val(x),
-            Value::MultiPolygon(ref x) => json_val(x),
-            Value::GeometryCollection(ref x) => json_val(x),
-        };
+        match *value {
+            Value::Point(ref x) => ::serde_json::value::to_value(x),
+            Value::MultiPoint(ref x) => ::serde_json::value::to_value(x),
+            Value::LineString(ref x) => ::serde_json::value::to_value(x),
+            Value::MultiLineString(ref x) => ::serde_json::value::to_value(x),
+            Value::Polygon(ref x) => ::serde_json::value::to_value(x),
+            Value::MultiPolygon(ref x) => ::serde_json::value::to_value(x),
+            Value::GeometryCollection(ref x) => ::serde_json::value::to_value(x),
+        }.unwrap()
     }
 }
 
@@ -111,10 +111,10 @@ impl<'a> From<&'a Geometry> for JsonObject {
     fn from(geometry: &'a Geometry) -> JsonObject {
         let mut map = JsonObject::new();
         if let Some(ref crs) = geometry.crs {
-            map.insert(String::from("crs"), json_val(crs));
+            map.insert(String::from("crs"), ::serde_json::value::to_value(crs).unwrap());
         }
         if let Some(ref bbox) = geometry.bbox {
-            map.insert(String::from("bbox"), json_val(bbox));
+            map.insert(String::from("bbox"), ::serde_json::value::to_value(bbox).unwrap());
         }
 
         let ty = String::from(match geometry.value {
@@ -127,12 +127,12 @@ impl<'a> From<&'a Geometry> for JsonObject {
             Value::GeometryCollection(..) => "GeometryCollection",
         });
 
-        map.insert(String::from("type"), json_val(&ty));
+        map.insert(String::from("type"), ::serde_json::value::to_value(&ty).unwrap());
 
         map.insert(String::from(match geometry.value {
             Value::GeometryCollection(..) => "geometries",
             _ => "coordinates",
-        }), json_val(&geometry.value));
+        }), ::serde_json::value::to_value(&geometry.value).unwrap());
         return map;
     }
 }

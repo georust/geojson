@@ -98,6 +98,7 @@
 //! ```
 
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 
 #[cfg(feature = "geo")]
@@ -239,14 +240,6 @@ impl std::error::Error for Error {
 
 mod json {
     use serde_json::Value;
-
-    // FIXME: Return `Result` (means updating `From` impls)
-    pub fn json_val<T: ?Sized + Serialize>(val: &T) -> Value {
-        match ::serde_json::value::to_value(val) {
-            Ok(val) => val,
-            _ => unimplemented!()
-        }
-    }
 
     pub fn as_str(val: &Value) -> Option<&str> {
         val.as_str()

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
+use serde_json;
 use ::{Bbox, Crs, Error, FromObject, Geometry, util};
 
 
@@ -32,19 +33,19 @@ pub struct Feature {
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
         let mut map = JsonObject::new();
-        map.insert(String::from("type"), json_val(&String::from("Feature")));
-        map.insert(String::from("geometry"), json_val(&feature.geometry));
+        map.insert(String::from("type"), json!("Feature"));
+        map.insert(String::from("geometry"), serde_json::value::to_value(&feature.geometry).unwrap());
         if let Some(ref properties) = feature.properties {
-            map.insert(String::from("properties"), json_val(properties));
+            map.insert(String::from("properties"), serde_json::value::to_value(properties).unwrap());
         }
         if let Some(ref crs) = feature.crs {
-            map.insert(String::from("crs"), json_val(crs));
+            map.insert(String::from("crs"), serde_json::value::to_value(crs).unwrap());
         }
         if let Some(ref bbox) = feature.bbox {
-            map.insert(String::from("bbox"), json_val(bbox));
+            map.insert(String::from("bbox"), serde_json::value::to_value(bbox).unwrap());
         }
         if let Some(ref id) = feature.id {
-            map.insert(String::from("id"), json_val(id));
+            map.insert(String::from("id"), serde_json::value::to_value(id).unwrap());
         }
 
         return map;
