@@ -66,13 +66,13 @@ pub enum Value {
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
         match *value {
-            Value::Point(ref x) => ::serde_json::value::to_value(x),
-            Value::MultiPoint(ref x) => ::serde_json::value::to_value(x),
-            Value::LineString(ref x) => ::serde_json::value::to_value(x),
-            Value::MultiLineString(ref x) => ::serde_json::value::to_value(x),
-            Value::Polygon(ref x) => ::serde_json::value::to_value(x),
-            Value::MultiPolygon(ref x) => ::serde_json::value::to_value(x),
-            Value::GeometryCollection(ref x) => ::serde_json::value::to_value(x),
+            Value::Point(ref x) => ::serde_json::to_value(x),
+            Value::MultiPoint(ref x) => ::serde_json::to_value(x),
+            Value::LineString(ref x) => ::serde_json::to_value(x),
+            Value::MultiLineString(ref x) => ::serde_json::to_value(x),
+            Value::Polygon(ref x) => ::serde_json::to_value(x),
+            Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
+            Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
         }.unwrap()
     }
 }
@@ -111,10 +111,10 @@ impl<'a> From<&'a Geometry> for JsonObject {
     fn from(geometry: &'a Geometry) -> JsonObject {
         let mut map = JsonObject::new();
         if let Some(ref crs) = geometry.crs {
-            map.insert(String::from("crs"), ::serde_json::value::to_value(crs).unwrap());
+            map.insert(String::from("crs"), ::serde_json::to_value(crs).unwrap());
         }
         if let Some(ref bbox) = geometry.bbox {
-            map.insert(String::from("bbox"), ::serde_json::value::to_value(bbox).unwrap());
+            map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
 
         let ty = String::from(match geometry.value {
@@ -127,12 +127,12 @@ impl<'a> From<&'a Geometry> for JsonObject {
             Value::GeometryCollection(..) => "GeometryCollection",
         });
 
-        map.insert(String::from("type"), ::serde_json::value::to_value(&ty).unwrap());
+        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
 
         map.insert(String::from(match geometry.value {
             Value::GeometryCollection(..) => "geometries",
             _ => "coordinates",
-        }), ::serde_json::value::to_value(&geometry.value).unwrap());
+        }), ::serde_json::to_value(&geometry.value).unwrap());
         return map;
     }
 }

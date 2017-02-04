@@ -49,17 +49,17 @@ impl<'a> From<&'a Crs> for JsonObject {
         match *crs {
             Crs::Named{ref name} => {
                 crs_map.insert(String::from("type"), json!("name"));
-                properties_map.insert(String::from("name"), serde_json::value::to_value(name).unwrap());
+                properties_map.insert(String::from("name"), serde_json::to_value(name).unwrap());
             }
             Crs::Linked{ref href, ref type_} => {
                 crs_map.insert(String::from("type"), json!("link"));
-                properties_map.insert(String::from("href"), serde_json::value::to_value(href).unwrap());
+                properties_map.insert(String::from("href"), serde_json::to_value(href).unwrap());
                 if let Some(ref type_) = *type_ {
-                    properties_map.insert(String::from("type"), serde_json::value::to_value(type_).unwrap());
+                    properties_map.insert(String::from("type"), serde_json::to_value(type_).unwrap());
                 }
             }
         };
-        crs_map.insert(String::from("properties"), serde_json::value::to_value(&properties_map).unwrap());
+        crs_map.insert(String::from("properties"), serde_json::to_value(&properties_map).unwrap());
         return crs_map;
     }
 }

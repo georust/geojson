@@ -34,18 +34,18 @@ impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("Feature"));
-        map.insert(String::from("geometry"), serde_json::value::to_value(&feature.geometry).unwrap());
+        map.insert(String::from("geometry"), serde_json::to_value(&feature.geometry).unwrap());
         if let Some(ref properties) = feature.properties {
-            map.insert(String::from("properties"), serde_json::value::to_value(properties).unwrap());
+            map.insert(String::from("properties"), serde_json::to_value(properties).unwrap());
         }
         if let Some(ref crs) = feature.crs {
-            map.insert(String::from("crs"), serde_json::value::to_value(crs).unwrap());
+            map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
         }
         if let Some(ref bbox) = feature.bbox {
-            map.insert(String::from("bbox"), serde_json::value::to_value(bbox).unwrap());
+            map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
         }
         if let Some(ref id) = feature.id {
-            map.insert(String::from("id"), serde_json::value::to_value(id).unwrap());
+            map.insert(String::from("id"), serde_json::to_value(id).unwrap());
         }
 
         return map;

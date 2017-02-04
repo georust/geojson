@@ -58,14 +58,14 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("FeatureCollection"));
-        map.insert(String::from("features"), serde_json::value::to_value(&fc.features).unwrap());
+        map.insert(String::from("features"), serde_json::to_value(&fc.features).unwrap());
 
         if let Some(ref crs) = fc.crs {
-            map.insert(String::from("crs"), serde_json::value::to_value(crs).unwrap());
+            map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
         }
 
         if let Some(ref bbox) = fc.bbox {
-            map.insert(String::from("bbox"), serde_json::value::to_value(bbox).unwrap());
+            map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
         }
 
         return map;
