@@ -15,12 +15,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-#[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
-
-use ::json::{JsonValue, JsonObject};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
 
 use ::{Error, Geometry, Feature, FeatureCollection, FromObject};
 
@@ -80,35 +75,22 @@ impl FromObject for GeoJson {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for GeoJson {
-    fn to_json(&self) -> JsonValue {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for GeoJson {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for GeoJson {
-    fn deserialize<D>(deserializer: &mut D) -> Result<GeoJson, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<GeoJson, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(geo) = val.as_object() {
-            GeoJson::from_object(geo).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        GeoJson::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -122,18 +104,6 @@ impl FromStr for GeoJson {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-fn get_object(s: &str) -> Result<JsonObject, Error> {
-    let decoded_json = match JsonValue::from_str(s) {
-        Ok(j) => j,
-        Err(..) => return Err(Error::MalformedJson),
-    };
-    match decoded_json {
-        ::rustc_serialize::json::Json::Object(object) => Ok(object),
-        _ => return Err(Error::GeoJsonExpectedObject),
-    }
-}
-#[cfg(feature = "with-serde")]
 fn get_object(s: &str) -> Result<JsonObject, Error> {
     let decoded_json: ::serde_json::Value = match ::serde_json::from_str(s) {
         Ok(j) => j,
@@ -148,14 +118,6 @@ fn get_object(s: &str) -> Result<JsonObject, Error> {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl fmt::Display for GeoJson {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&self.to_json().to_string())
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl fmt::Display for GeoJson {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         ::serde_json::to_string(self)

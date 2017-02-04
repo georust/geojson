@@ -12,14 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
-
-#[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
-
-use ::json::{JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use serde_json;
 
 use ::{Error, FromObject};
 
@@ -50,22 +44,22 @@ pub enum Crs {
 
 impl<'a> From<&'a Crs> for JsonObject {
     fn from(crs: &'a Crs) -> JsonObject {
-        let mut crs_map = BTreeMap::new();
-        let mut properties_map = BTreeMap::new();
+        let mut crs_map = JsonObject::new();
+        let mut properties_map = JsonObject::new();
         match *crs {
             Crs::Named{ref name} => {
-                crs_map.insert(String::from("type"), json_val(&String::from("name")));
-                properties_map.insert(String::from("name"), json_val(name));
+                crs_map.insert(String::from("type"), json!("name"));
+                properties_map.insert(String::from("name"), serde_json::to_value(name).unwrap());
             }
             Crs::Linked{ref href, ref type_} => {
-                crs_map.insert(String::from("type"), json_val(&String::from("link")));
-                properties_map.insert(String::from("href"), json_val(href));
+                crs_map.insert(String::from("type"), json!("link"));
+                properties_map.insert(String::from("href"), serde_json::to_value(href).unwrap());
                 if let Some(ref type_) = *type_ {
-                    properties_map.insert(String::from("type"), json_val(type_));
+                    properties_map.insert(String::from("type"), serde_json::to_value(type_).unwrap());
                 }
             }
         };
-        crs_map.insert(String::from("properties"), json_val(&properties_map));
+        crs_map.insert(String::from("properties"), serde_json::to_value(&properties_map).unwrap());
         return crs_map;
     }
 }
@@ -93,34 +87,21 @@ impl FromObject for Crs {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for Crs {
-    fn to_json(&self) -> JsonValue {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for Crs {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for Crs {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Crs, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Crs, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(crs) = val.as_object() {
-            Crs::from_object(crs).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        Crs::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }

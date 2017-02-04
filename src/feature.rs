@@ -12,14 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
-
-#[cfg(not(feature = "with-serde"))]
-use ::json::ToJson;
-#[cfg(feature = "with-serde")]
-use ::json::{Serialize, Deserialize, Serializer, Deserializer, SerdeError};
-
-use ::json::{JsonValue, JsonObject, json_val};
+use ::json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
+use serde_json;
 use ::{Bbox, Crs, Error, FromObject, Geometry, util};
 
 
@@ -38,20 +32,20 @@ pub struct Feature {
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
-        let mut map = BTreeMap::new();
-        map.insert(String::from("type"), json_val(&String::from("Feature")));
-        map.insert(String::from("geometry"), json_val(&feature.geometry));
+        let mut map = JsonObject::new();
+        map.insert(String::from("type"), json!("Feature"));
+        map.insert(String::from("geometry"), serde_json::to_value(&feature.geometry).unwrap());
         if let Some(ref properties) = feature.properties {
-            map.insert(String::from("properties"), json_val(properties));
+            map.insert(String::from("properties"), serde_json::to_value(properties).unwrap());
         }
         if let Some(ref crs) = feature.crs {
-            map.insert(String::from("crs"), json_val(crs));
+            map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
         }
         if let Some(ref bbox) = feature.bbox {
-            map.insert(String::from("bbox"), json_val(bbox));
+            map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
         }
         if let Some(ref id) = feature.id {
-            map.insert(String::from("id"), json_val(id));
+            map.insert(String::from("id"), serde_json::to_value(id).unwrap());
         }
 
         return map;
@@ -70,35 +64,22 @@ impl FromObject for Feature {
     }
 }
 
-#[cfg(not(feature = "with-serde"))]
-impl ToJson for Feature {
-    fn to_json(&self) -> ::rustc_serialize::json::Json {
-        return ::rustc_serialize::json::Json::Object(self.into());
-    }
-}
-
-#[cfg(feature = "with-serde")]
 impl Serialize for Feature {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
         JsonObject::from(self).serialize(serializer)
     }
 }
 
-#[cfg(feature = "with-serde")]
 impl Deserialize for Feature {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Feature, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
     where D: Deserializer {
         use std::error::Error as StdError;
+        use serde::de::Error as SerdeError;
 
-        let val = try!(JsonValue::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        if let Some(feature) = val.as_object() {
-            Feature::from_object(feature).map_err(|e| D::Error::custom(e.description()))
-        }
-        else {
-            Err(D::Error::custom("expected json object"))
-        }
+        Feature::from_object(&val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -111,15 +92,8 @@ mod tests {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\"Feature\"}"
     }
 
-    #[cfg(not(feature = "with-serde"))]
     fn properties() -> Option<::json::JsonObject> {
-        Some(::rustc_serialize::json::Object::new())
-    }
-    #[cfg(feature = "with-serde")]
-    fn properties() -> Option<::json::JsonObject> {
-        use std::collections::BTreeMap;
-
-        Some(BTreeMap::new())
+        Some(::json::JsonObject::new())
     }
 
     fn feature() -> Feature {
@@ -136,24 +110,12 @@ mod tests {
         }
     }
 
-    #[cfg(not(feature = "with-serde"))]
-    fn encode(feature: &Feature) -> String {
-        use rustc_serialize::json::{self, ToJson};
-
-        json::encode(&feature.to_json()).unwrap()
-    }
-    #[cfg(feature = "with-serde")]
     fn encode(feature: &Feature) -> String {
         use serde_json;
 
         serde_json::to_string(&feature).unwrap()
     }
 
-    #[cfg(not(feature = "with-serde"))]
-    fn decode(json_string: String) -> GeoJson {
-        json_string.parse().unwrap()
-    }
-    #[cfg(feature = "with-serde")]
     fn decode(json_string: String) -> GeoJson {
         json_string.parse().unwrap()
     }
