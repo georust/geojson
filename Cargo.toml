@@ -14,5 +14,5 @@ keywords = ["geojson", "gis", "json", "geo"]
 [dependencies]
 serde = "~0.9"
 serde_json = "~0.9"
-geo = "^0.3"
-num = "0.1"
+geo = "^0.4"
+num-traits = "0.1"

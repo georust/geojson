@@ -102,7 +102,7 @@ extern crate serde;
 extern crate serde_json;
 
 extern crate geo;
-extern crate num;
+extern crate num_traits;
 
 /// Bounding Boxes
 ///

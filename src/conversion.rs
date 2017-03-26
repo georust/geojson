@@ -15,7 +15,7 @@
 use geometry;
 use {PointType, LineStringType, PolygonType};
 use geo;
-use num::Float;
+use num_traits::Float;
 use std::convert::From;
 use Error;
 
@@ -363,7 +363,7 @@ impl<'a, T> From<&'a geo::Geometry<T>> for geometry::Value
 
 macro_rules! assert_almost_eq {
     ($x: expr, $y: expr, $epsilon: expr) => {{
-        use num::Zero;
+        use num_traits::Zero;
         let a = $x.abs();
         let b = $y.abs();
         let delta = (a - b).abs();
