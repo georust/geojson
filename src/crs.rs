@@ -106,9 +106,9 @@ impl Serialize for Crs {
     }
 }
 
-impl Deserialize for Crs {
+impl<'de> Deserialize<'de> for Crs {
     fn deserialize<D>(deserializer: D) -> Result<Crs, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;

@@ -241,7 +241,6 @@ impl std::error::Error for Error {
 
 mod json {
     pub use serde::{Serialize, Deserialize, Serializer, Deserializer};
-    pub use serde::error::Error as SerdeError;
     pub use serde_json::{Map, Value as JsonValue};
     pub type JsonObject = Map<String, JsonValue>;
 }

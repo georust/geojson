@@ -91,9 +91,9 @@ impl Serialize for FeatureCollection {
     }
 }
 
-impl Deserialize for FeatureCollection {
+impl<'de> Deserialize<'de> for FeatureCollection {
     fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;

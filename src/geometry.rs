@@ -173,9 +173,9 @@ impl Serialize for Geometry {
     }
 }
 
-impl Deserialize for Geometry {
+impl<'de> Deserialize<'de> for Geometry {
     fn deserialize<D>(deserializer: D) -> Result<Geometry, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
