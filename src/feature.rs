@@ -74,9 +74,9 @@ impl Serialize for Feature {
     }
 }
 
-impl Deserialize for Feature {
+impl<'de> Deserialize<'de> for Feature {
     fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;

@@ -12,7 +12,7 @@ documentation = "https://georust.github.io/rust-geojson/"
 keywords = ["geojson", "gis", "json", "geo"]
 
 [dependencies]
-serde = "~0.9"
-serde_json = "~0.9"
+serde = "~1.0"
+serde_json = "~1.0"
 geo = "^0.4"
 num-traits = "0.1"
