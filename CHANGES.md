@@ -1,5 +1,13 @@
 # Changes
 
+## 0.7.0
+
+* [Upgrade to serde 1.0](https://github.com/georust/rust-geojson/pull/64)
+
+## 0.6.0
+
+* [Upgrade rust-geo dep, use num_traits instead of num](https://github.com/georust/rust-geojson/pull/62)
+
 ## 0.5.0
 
 * [Upgrade to serde 0.9, remove rustc-serialize support, make geo-interop feature mandatory,](https://github.com/georust/rust-geojson/pull/60)
