@@ -1,5 +1,9 @@
 # Changes
 
+## 0.7.1
+
+* [Add missing reference to GeometryCollection](https://github.com/georust/rust-geojson/pull/68)
+
 ## 0.7.0
 
 * [Upgrade to serde 1.0](https://github.com/georust/rust-geojson/pull/64)
