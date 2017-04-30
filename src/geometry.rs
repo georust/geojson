@@ -221,4 +221,27 @@ mod tests {
         };
         assert_eq!(decoded_geometry, geometry);
     }
+
+    #[test]
+    fn encode_decode_geometry_collection() {
+        let geometry_collection = Geometry {
+                bbox: None,
+                value: Value::GeometryCollection(vec![
+                    Geometry { bbox: None, value: Value::Point(vec![100.0, 0.0]), crs: None },
+                    Geometry { bbox: None, value: Value::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
+                crs: None }]),
+            crs: None };
+
+        let geometry_collection_string = "{\"geometries\":[{\"coordinates\":[100.0,0.0],\"type\":\"Point\"},{\"coordinates\":[[101.0,0.0],[102.0,1.0]],\"type\":\"LineString\"}],\"type\":\"GeometryCollection\"}";
+        // Test encode
+        let json_string = encode(&geometry_collection);
+        assert_eq!(json_string, geometry_collection_string);
+
+        // Test decode
+        let decoded_geometry = match decode(geometry_collection_string.into()) {
+            GeoJson::Geometry(g) => g,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_geometry, geometry_collection);
+    }
 }
