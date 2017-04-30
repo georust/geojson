@@ -69,7 +69,8 @@ impl FromObject for GeoJson {
             "LineString" |
             "MultiLineString" |
             "Polygon" |
-            "MultiPolygon" => Geometry::from_object(object).map(GeoJson::Geometry),
+            "MultiPolygon" |
+            "GeometryCollection" => Geometry::from_object(object).map(GeoJson::Geometry),
             "Feature" => Feature::from_object(object).map(GeoJson::Feature),
             "FeatureCollection" => {
                 FeatureCollection::from_object(object).map(GeoJson::FeatureCollection)
