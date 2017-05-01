@@ -95,6 +95,10 @@ pub struct Geometry {
     pub bbox: Option<Bbox>,
     pub value: Value,
     pub crs: Option<Crs>,
+    /// Foreign Members
+    ///
+    /// [RFC7946 § 6]
+    /// (https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>
 }
 
@@ -199,11 +203,10 @@ impl<'de> Deserialize<'de> for Geometry {
 #[cfg(test)]
 mod tests {
     use {GeoJson, Geometry, Value};
-    use serde_json;
     use json::JsonObject;
+    use serde_json;
 
     fn encode(geometry: &Geometry) -> String {
-        use serde_json;
 
         serde_json::to_string(&geometry).unwrap()
     }
@@ -235,10 +238,10 @@ mod tests {
     }
 
     #[test]
-    fn encode_decode_geometry_and_foreign_member() {
-        let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"other_member\":\"some_value\",\"type\":\"Point\"}";
+    fn encode_decode_geometry_with_foreign_member() {
+        let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"other_member\":true,\"type\":\"Point\"}";
         let mut foreign_members = JsonObject::new();
-        foreign_members.insert(String::from("other_member"), serde_json::to_value("some_value").unwrap());
+        foreign_members.insert(String::from("other_member"), serde_json::to_value(true).unwrap());
         let geometry = Geometry {
             value: Value::Point(vec![1.1, 2.1]),
             crs: None,

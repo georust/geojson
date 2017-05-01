@@ -28,6 +28,10 @@ pub struct Feature {
     pub geometry: Option<Geometry>,
     pub id: Option<JsonValue>,
     pub properties: Option<JsonObject>,
+    /// Foreign Members
+    ///
+    /// [RFC7946 § 6]
+    /// (https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>
 }
 
@@ -171,5 +175,37 @@ mod tests {
             Error::FeatureInvalidGeometryValue => (),
             _ => unreachable!(),
         }
+    }
+
+    #[test]
+    fn encode_decode_feature_with_foreign_member() {
+        use serde_json;
+        use ::json::JsonObject;
+        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"other_member\":\"some_value\",\"properties\":{},\"type\":\"Feature\"}";
+        let mut foreign_members = JsonObject::new();
+        foreign_members.insert(String::from("other_member"), serde_json::to_value("some_value").unwrap());
+        let feature = ::Feature {
+            geometry: Some(Geometry {
+                value: Value::Point(vec![1.1, 2.1]),
+                crs: None,
+                bbox: None,
+                foreign_members: None
+            }),
+            properties: properties(),
+            crs: None,
+            bbox: None,
+            id: None,
+            foreign_members: Some(foreign_members)
+        };
+        // Test encode
+        let json_string = encode(&feature);
+        assert_eq!(json_string, feature_json_str);
+
+        // Test decode
+        let decoded_feature = match decode(feature_json_str.into()) {
+            GeoJson::Feature(f) => f,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_feature, feature);
     }
 }
