@@ -28,6 +28,7 @@ pub struct Feature {
     pub geometry: Option<Geometry>,
     pub id: Option<JsonValue>,
     pub properties: Option<JsonObject>,
+    pub foreign_members: Option<JsonObject>
 }
 
 impl<'a> From<&'a Feature> for JsonObject {
@@ -49,7 +50,11 @@ impl<'a> From<&'a Feature> for JsonObject {
         if let Some(ref id) = feature.id {
             map.insert(String::from("id"), serde_json::to_value(id).unwrap());
         }
-
+        if let Some(ref foreign_members) = feature.foreign_members {
+            for key in foreign_members.keys() {
+                map.insert(key.to_string(), foreign_members.get(key.as_str()).unwrap().clone());
+            }
+        }
         return map;
     }
 }
@@ -62,6 +67,7 @@ impl FromObject for Feature {
             id: try!(util::get_id(object)),
             crs: try!(util::get_crs(object)),
             bbox: try!(util::get_bbox(object)),
+            foreign_members: try!(util::get_foreign_members(object, "Feature"))
         });
     }
 }
@@ -107,11 +113,13 @@ mod tests {
                 value: Value::Point(vec![1.1, 2.1]),
                 crs: None,
                 bbox: None,
+                foreign_members: None
             }),
             properties: properties(),
             crs: None,
             bbox: None,
             id: None,
+            foreign_members: None
         }
     }
 

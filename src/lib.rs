@@ -91,6 +91,7 @@
 //!     geometry: Some(geometry),
 //!     id: None,
 //!     properties: Some(properties),
+//!     foreign_members: None
 //! });
 //!
 //! let geojson_string = geojson.to_string();

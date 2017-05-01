@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashSet;
+
 use json::{JsonValue, JsonObject};
 
 use {Bbox, Crs, Error, Feature, FromObject, Geometry, Position};
@@ -59,6 +61,39 @@ pub fn get_crs(object: &JsonObject) -> Result<Option<Crs>, Error> {
     };
 
     return Crs::from_object(crs_object).map(Some);
+}
+
+/// Used by FeatureCollection, Feature, Geometry
+pub fn get_foreign_members(object: &JsonObject, parent: &str) -> Result<Option<JsonObject>, Error> {
+    let mut res = JsonObject::new();
+    let mut ref_keys = HashSet::new();
+    ref_keys.insert("type");
+    ref_keys.insert("bbox");
+    ref_keys.insert("crs");
+    match parent {
+        "Geometry" => {
+            ref_keys.insert("coordinates");
+            ref_keys.insert("geometries");
+        },
+        "Feature" => {
+            ref_keys.insert("properties");
+            ref_keys.insert("geometry");
+        },
+        "FeatureCollection" => {
+            ref_keys.insert("features");
+        },
+        _ => return Ok(None)
+    }
+    for ref key in object.keys() {
+        if !ref_keys.contains(&key.as_str()) {
+            res.insert(key.to_string(), object.get(key.as_str()).unwrap().clone());
+        }
+    }
+    if res.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(res))
+    }
 }
 
 /// Used by Feature

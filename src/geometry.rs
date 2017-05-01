@@ -95,6 +95,7 @@ pub struct Geometry {
     pub bbox: Option<Bbox>,
     pub value: Value,
     pub crs: Option<Crs>,
+    pub foreign_members: Option<JsonObject>
 }
 
 impl Geometry {
@@ -105,6 +106,7 @@ impl Geometry {
             bbox: None,
             value: value,
             crs: None,
+            foreign_members: None
         }
     }
 }
@@ -136,6 +138,11 @@ impl<'a> From<&'a Geometry> for JsonObject {
                        _ => "coordinates",
                    }),
                    ::serde_json::to_value(&geometry.value).unwrap());
+        if let Some(ref foreign_members) = geometry.foreign_members {
+            for key in foreign_members.keys() {
+                map.insert(key.to_string(), foreign_members.get(key.as_str()).unwrap().clone());
+            }
+        }
         return map;
     }
 }
@@ -156,11 +163,13 @@ impl FromObject for Geometry {
 
         let bbox = try!(util::get_bbox(object));
         let crs = try!(util::get_crs(object));
+        let foreign_members = try!(util::get_foreign_members(object, "Geometry"));
 
         return Ok(Geometry {
             bbox: bbox,
             value: value,
             crs: crs,
+            foreign_members: foreign_members
         });
     }
 }
@@ -190,6 +199,8 @@ impl<'de> Deserialize<'de> for Geometry {
 #[cfg(test)]
 mod tests {
     use {GeoJson, Geometry, Value};
+    use serde_json;
+    use json::JsonObject;
 
     fn encode(geometry: &Geometry) -> String {
         use serde_json;
@@ -208,6 +219,7 @@ mod tests {
             value: Value::Point(vec![1.1, 2.1]),
             crs: None,
             bbox: None,
+            foreign_members: None
         };
 
         // Test encode
@@ -223,14 +235,38 @@ mod tests {
     }
 
     #[test]
+    fn encode_decode_geometry_and_foreign_member() {
+        let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"other_member\":\"some_value\",\"type\":\"Point\"}";
+        let mut foreign_members = JsonObject::new();
+        foreign_members.insert(String::from("other_member"), serde_json::to_value("some_value").unwrap());
+        let geometry = Geometry {
+            value: Value::Point(vec![1.1, 2.1]),
+            crs: None,
+            bbox: None,
+            foreign_members: Some(foreign_members)
+        };
+
+        // Test encode
+        let json_string = encode(&geometry);
+        assert_eq!(json_string, geometry_json_str);
+
+        // Test decode
+        let decoded_geometry = match decode(geometry_json_str.into()) {
+            GeoJson::Geometry(g) => g,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_geometry, geometry);
+    }
+
+    #[test]
     fn encode_decode_geometry_collection() {
         let geometry_collection = Geometry {
                 bbox: None,
                 value: Value::GeometryCollection(vec![
-                    Geometry { bbox: None, value: Value::Point(vec![100.0, 0.0]), crs: None },
+                    Geometry { bbox: None, value: Value::Point(vec![100.0, 0.0]), crs: None, foreign_members: None },
                     Geometry { bbox: None, value: Value::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
-                crs: None }]),
-            crs: None };
+                crs: None, foreign_members: None }]),
+            crs: None, foreign_members: None };
 
         let geometry_collection_string = "{\"geometries\":[{\"coordinates\":[100.0,0.0],\"type\":\"Point\"},{\"coordinates\":[[101.0,0.0],[102.0,1.0]],\"type\":\"LineString\"}],\"type\":\"GeometryCollection\"}";
         // Test encode
