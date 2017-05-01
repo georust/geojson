@@ -76,8 +76,8 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
         }
 
         if let Some(ref foreign_members) = fc.foreign_members {
-            for key in foreign_members.keys() {
-                map.insert(key.to_string(), foreign_members.get(key.as_str()).unwrap().clone());
+            for (key, value) in foreign_members {
+                map.insert(key.to_owned(), value.to_owned());
             }
         }
 

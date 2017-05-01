@@ -66,27 +66,15 @@ pub fn get_crs(object: &JsonObject) -> Result<Option<Crs>, Error> {
 /// Used by FeatureCollection, Feature, Geometry
 pub fn get_foreign_members(object: &JsonObject, parent: &str) -> Result<Option<JsonObject>, Error> {
     let mut res = JsonObject::new();
-    let mut ref_keys = HashSet::new();
-    ref_keys.insert("type");
-    ref_keys.insert("bbox");
-    ref_keys.insert("crs");
-    match parent {
-        "Geometry" => {
-            ref_keys.insert("coordinates");
-            ref_keys.insert("geometries");
-        },
-        "Feature" => {
-            ref_keys.insert("properties");
-            ref_keys.insert("geometry");
-        },
-        "FeatureCollection" => {
-            ref_keys.insert("features");
-        },
-        _ => return Ok(None)
-    }
-    for ref key in object.keys() {
+    let ref_keys: HashSet<&str> = match parent {
+        "Geometry" => [ "type", "bbox", "crs", "coordinates", "geometries" ].iter().cloned().collect(),
+        "Feature" =>  [ "type", "bbox", "crs", "properties", "geometry" ].iter().cloned().collect(),
+        "FeatureCollection" => [ "type", "bbox", "crs", "features" ].iter().cloned().collect(),
+        _ => return Err(Error::GeoJsonUnknownType)
+    };
+    for (key, value) in object {
         if !ref_keys.contains(&key.as_str()) {
-            res.insert(key.to_string(), object.get(key.as_str()).unwrap().clone());
+            res.insert(key.to_owned(), value.to_owned());
         }
     }
     if res.is_empty() {
