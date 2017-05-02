@@ -37,6 +37,7 @@ use {Bbox, Crs, Error, Feature, FromObject, util};
 ///     bbox: None,
 ///     crs: None,
 ///     features: vec![],
+///     foreign_members: None,
 /// };
 ///
 /// let serialized = GeoJson::from(feature_collection).to_string();
@@ -52,6 +53,11 @@ pub struct FeatureCollection {
     pub bbox: Option<Bbox>,
     pub crs: Option<Crs>,
     pub features: Vec<Feature>,
+    /// Foreign Members
+    ///
+    /// [RFC7946 § 6]
+    /// (https://tools.ietf.org/html/rfc7946#section-6)
+    pub foreign_members: Option<JsonObject>
 }
 
 impl<'a> From<&'a FeatureCollection> for JsonObject {
@@ -69,6 +75,12 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
             map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
         }
 
+        if let Some(ref foreign_members) = fc.foreign_members {
+            for (key, value) in foreign_members {
+                map.insert(key.to_owned(), value.to_owned());
+            }
+        }
+
         return map;
     }
 }
@@ -79,6 +91,7 @@ impl FromObject for FeatureCollection {
             bbox: try!(util::get_bbox(object)),
             features: try!(util::get_features(object)),
             crs: try!(util::get_crs(object)),
+            foreign_members: try!(util::get_foreign_members(object, "FeatureCollection"))
         });
     }
 }

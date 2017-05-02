@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashSet;
+
 use json::{JsonValue, JsonObject};
 
 use {Bbox, Crs, Error, Feature, FromObject, Geometry, Position};
@@ -59,6 +61,27 @@ pub fn get_crs(object: &JsonObject) -> Result<Option<Crs>, Error> {
     };
 
     return Crs::from_object(crs_object).map(Some);
+}
+
+/// Used by FeatureCollection, Feature, Geometry
+pub fn get_foreign_members(object: &JsonObject, parent: &str) -> Result<Option<JsonObject>, Error> {
+    let mut res = JsonObject::new();
+    let ref_keys: HashSet<&str> = match parent {
+        "Geometry" => [ "type", "bbox", "crs", "coordinates", "geometries" ].iter().cloned().collect(),
+        "Feature" =>  [ "type", "bbox", "crs", "properties", "geometry" ].iter().cloned().collect(),
+        "FeatureCollection" => [ "type", "bbox", "crs", "features" ].iter().cloned().collect(),
+        _ => return Err(Error::GeoJsonUnknownType)
+    };
+    for (key, value) in object {
+        if !ref_keys.contains(&key.as_str()) {
+            res.insert(key.to_owned(), value.to_owned());
+        }
+    }
+    if res.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(res))
+    }
 }
 
 /// Used by Feature
