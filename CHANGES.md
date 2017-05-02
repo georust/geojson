@@ -1,5 +1,10 @@
 # Changes
 
+## 0.8.0
+
+* [Remove `geojson::Crs`](https://github.com/georust/rust-geojson/pull/71)
+* [Support `foreign_members`](https://github.com/georust/rust-geojson/pull/70)
+
 ## 0.7.1
 
 * [Add missing reference to GeometryCollection](https://github.com/georust/rust-geojson/pull/68)
