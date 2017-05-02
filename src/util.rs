@@ -16,7 +16,7 @@ use std::collections::HashSet;
 
 use json::{JsonValue, JsonObject};
 
-use {Bbox, Crs, Error, Feature, FromObject, Geometry, Position};
+use {Bbox, Error, Feature, FromObject, Geometry, Position};
 
 
 pub fn get_coords_value<'a>(object: &JsonObject) -> Result<&JsonValue, Error> {
@@ -49,27 +49,12 @@ pub fn get_bbox(object: &JsonObject) -> Result<Option<Bbox>, Error> {
 }
 
 /// Used by FeatureCollection, Feature, Geometry
-pub fn get_crs(object: &JsonObject) -> Result<Option<Crs>, Error> {
-    let crs_json = match object.get("crs") {
-        Some(b) => b,
-        None => return Ok(None),
-    };
-
-    let crs_object = match crs_json.as_object() {
-        Some(c) => c,
-        None => return Err(Error::CrsExpectedObject),
-    };
-
-    return Crs::from_object(crs_object).map(Some);
-}
-
-/// Used by FeatureCollection, Feature, Geometry
 pub fn get_foreign_members(object: &JsonObject, parent: &str) -> Result<Option<JsonObject>, Error> {
     let mut res = JsonObject::new();
     let ref_keys: HashSet<&str> = match parent {
-        "Geometry" => [ "type", "bbox", "crs", "coordinates", "geometries" ].iter().cloned().collect(),
-        "Feature" =>  [ "type", "bbox", "crs", "properties", "geometry" ].iter().cloned().collect(),
-        "FeatureCollection" => [ "type", "bbox", "crs", "features" ].iter().cloned().collect(),
+        "Geometry" => [ "type", "bbox", "coordinates", "geometries" ].iter().cloned().collect(),
+        "Feature" =>  [ "type", "bbox", "properties", "geometry" ].iter().cloned().collect(),
+        "FeatureCollection" => [ "type", "bbox", "features" ].iter().cloned().collect(),
         _ => return Err(Error::GeoJsonUnknownType)
     };
     for (key, value) in object {

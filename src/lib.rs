@@ -86,7 +86,6 @@
 //! );
 //!
 //! let geojson = GeoJson::Feature(Feature {
-//!     crs: None,
 //!     bbox: None,
 //!     geometry: Some(geometry),
 //!     id: None,
@@ -126,9 +125,6 @@ mod macros;
 
 mod util;
 
-mod crs;
-pub use crs::Crs;
-
 mod geojson;
 pub use geojson::GeoJson;
 
@@ -150,8 +146,6 @@ pub mod conversion;
 pub enum Error {
     BboxExpectedArray,
     BboxExpectedNumericValues,
-    CrsExpectedObject,
-    CrsUnknownType(String),
     GeoJsonExpectedObject,
     GeoJsonUnknownType,
     GeometryUnknownType,
@@ -176,11 +170,6 @@ impl std::fmt::Display for Error {
             Error::BboxExpectedNumericValues =>
                 // FIXME: inform what type we actually found
                 write!(f, "Encountered non-numeric value within 'bbox' array."),
-            Error::CrsExpectedObject =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered non-object type for a 'crs' object."),
-            Error::CrsUnknownType(ref t) =>
-                write!(f, "Encountered unknown type '{}' for a 'crs' object.", t),
             Error::GeoJsonExpectedObject =>
                 // FIXME: inform what type we actually found
                 write!(f, "Encountered non-object type for GeoJSON."),
@@ -219,8 +208,6 @@ impl std::error::Error for Error {
         match *self {
             Error::BboxExpectedArray => "non-array 'bbox' type",
             Error::BboxExpectedNumericValues => "non-numeric 'bbox' array",
-            Error::CrsExpectedObject => "non-object 'crs' type",
-            Error::CrsUnknownType(..) => "unknown 'crs' type",
             Error::GeoJsonExpectedObject => "non-object GeoJSON type",
             Error::GeoJsonUnknownType => "unknown GeoJSON object type",
             Error::GeometryUnknownType => "unknown 'geometry' object type",

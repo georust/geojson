@@ -49,11 +49,11 @@ properties.insert(
 );
 
 let geojson = GeoJson::Feature(Feature {
-    crs: None,
     bbox: None,
     geometry: Some(geometry),
     id: None,
     properties: Some(properties),
+    foreign_members: None,
 });
 
 let geojson_string = geojson.to_string();

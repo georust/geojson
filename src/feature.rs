@@ -14,7 +14,7 @@
 
 use json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
 use serde_json;
-use {Bbox, Crs, Error, FromObject, Geometry, util};
+use {Bbox, Error, FromObject, Geometry, util};
 
 
 /// Feature Objects
@@ -24,7 +24,6 @@ use {Bbox, Crs, Error, FromObject, Geometry, util};
 #[derive(Clone, Debug, PartialEq)]
 pub struct Feature {
     pub bbox: Option<Bbox>,
-    pub crs: Option<Crs>,
     pub geometry: Option<Geometry>,
     pub id: Option<JsonValue>,
     pub properties: Option<JsonObject>,
@@ -44,9 +43,6 @@ impl<'a> From<&'a Feature> for JsonObject {
         if let Some(ref properties) = feature.properties {
             map.insert(String::from("properties"),
                        serde_json::to_value(properties).unwrap());
-        }
-        if let Some(ref crs) = feature.crs {
-            map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
         }
         if let Some(ref bbox) = feature.bbox {
             map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
@@ -69,7 +65,6 @@ impl FromObject for Feature {
             geometry: try!(util::get_geometry(object)),
             properties: try!(util::get_properties(object)),
             id: try!(util::get_id(object)),
-            crs: try!(util::get_crs(object)),
             bbox: try!(util::get_bbox(object)),
             foreign_members: try!(util::get_foreign_members(object, "Feature"))
         });
@@ -115,12 +110,10 @@ mod tests {
         ::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
-                crs: None,
                 bbox: None,
                 foreign_members: None
             }),
             properties: properties(),
-            crs: None,
             bbox: None,
             id: None,
             foreign_members: None
@@ -187,12 +180,10 @@ mod tests {
         let feature = ::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
-                crs: None,
                 bbox: None,
                 foreign_members: None
             }),
             properties: properties(),
-            crs: None,
             bbox: None,
             id: None,
             foreign_members: Some(foreign_members)
