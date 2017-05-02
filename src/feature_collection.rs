@@ -15,7 +15,7 @@
 use json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
 use serde_json;
 
-use {Bbox, Crs, Error, Feature, FromObject, util};
+use {Bbox, Error, Feature, FromObject, util};
 
 
 /// Feature Collection Objects
@@ -35,7 +35,6 @@ use {Bbox, Crs, Error, Feature, FromObject, util};
 ///
 /// let feature_collection = FeatureCollection {
 ///     bbox: None,
-///     crs: None,
 ///     features: vec![],
 ///     foreign_members: None,
 /// };
@@ -51,7 +50,6 @@ use {Bbox, Crs, Error, Feature, FromObject, util};
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeatureCollection {
     pub bbox: Option<Bbox>,
-    pub crs: Option<Crs>,
     pub features: Vec<Feature>,
     /// Foreign Members
     ///
@@ -66,10 +64,6 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
         map.insert(String::from("type"), json!("FeatureCollection"));
         map.insert(String::from("features"),
                    serde_json::to_value(&fc.features).unwrap());
-
-        if let Some(ref crs) = fc.crs {
-            map.insert(String::from("crs"), serde_json::to_value(crs).unwrap());
-        }
 
         if let Some(ref bbox) = fc.bbox {
             map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
@@ -90,7 +84,6 @@ impl FromObject for FeatureCollection {
         return Ok(FeatureCollection {
             bbox: try!(util::get_bbox(object)),
             features: try!(util::get_features(object)),
-            crs: try!(util::get_crs(object)),
             foreign_members: try!(util::get_foreign_members(object, "FeatureCollection"))
         });
     }

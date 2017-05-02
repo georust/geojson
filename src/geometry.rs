@@ -14,7 +14,7 @@
 
 use json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
 
-use {Bbox, Crs, Error, LineStringType, PointType, PolygonType, FromObject, util};
+use {Bbox, Error, LineStringType, PointType, PolygonType, FromObject, util};
 
 
 /// The underlying Geometry value
@@ -94,7 +94,6 @@ impl Serialize for Value {
 pub struct Geometry {
     pub bbox: Option<Bbox>,
     pub value: Value,
-    pub crs: Option<Crs>,
     /// Foreign Members
     ///
     /// [RFC7946 § 6]
@@ -103,13 +102,12 @@ pub struct Geometry {
 }
 
 impl Geometry {
-    /// Returns a new `Geometry` with the specified `value`. `bbox` and `crs` will be set to
-    /// `None`.
+    /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
+    /// set to `None`.
     pub fn new(value: Value) -> Self {
         Geometry {
             bbox: None,
             value: value,
-            crs: None,
             foreign_members: None
         }
     }
@@ -118,9 +116,6 @@ impl Geometry {
 impl<'a> From<&'a Geometry> for JsonObject {
     fn from(geometry: &'a Geometry) -> JsonObject {
         let mut map = JsonObject::new();
-        if let Some(ref crs) = geometry.crs {
-            map.insert(String::from("crs"), ::serde_json::to_value(crs).unwrap());
-        }
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
@@ -166,13 +161,11 @@ impl FromObject for Geometry {
         };
 
         let bbox = try!(util::get_bbox(object));
-        let crs = try!(util::get_crs(object));
         let foreign_members = try!(util::get_foreign_members(object, "Geometry"));
 
         return Ok(Geometry {
             bbox: bbox,
             value: value,
-            crs: crs,
             foreign_members: foreign_members
         });
     }
@@ -220,7 +213,6 @@ mod tests {
         let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"type\":\"Point\"}";
         let geometry = Geometry {
             value: Value::Point(vec![1.1, 2.1]),
-            crs: None,
             bbox: None,
             foreign_members: None
         };
@@ -244,7 +236,6 @@ mod tests {
         foreign_members.insert(String::from("other_member"), serde_json::to_value(true).unwrap());
         let geometry = Geometry {
             value: Value::Point(vec![1.1, 2.1]),
-            crs: None,
             bbox: None,
             foreign_members: Some(foreign_members)
         };
@@ -266,10 +257,10 @@ mod tests {
         let geometry_collection = Geometry {
                 bbox: None,
                 value: Value::GeometryCollection(vec![
-                    Geometry { bbox: None, value: Value::Point(vec![100.0, 0.0]), crs: None, foreign_members: None },
+                    Geometry { bbox: None, value: Value::Point(vec![100.0, 0.0]), foreign_members: None },
                     Geometry { bbox: None, value: Value::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
-                crs: None, foreign_members: None }]),
-            crs: None, foreign_members: None };
+                foreign_members: None }]),
+            foreign_members: None };
 
         let geometry_collection_string = "{\"geometries\":[{\"coordinates\":[100.0,0.0],\"type\":\"Point\"},{\"coordinates\":[[101.0,0.0],[102.0,1.0]],\"type\":\"LineString\"}],\"type\":\"GeometryCollection\"}";
         // Test encode
