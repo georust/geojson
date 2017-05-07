@@ -5,9 +5,7 @@ extern crate serde_json;
 mod roundtrip_tests {
     use std::fs::File;
     use std::io::prelude::*;
-    use std::fs;
     use geojson::GeoJson;
-    use serde_json::Value;
     use serde_json;
 
     macro_rules! roundtrip_test {
@@ -55,7 +53,7 @@ mod roundtrip_tests {
     fn test_round_trip(file_path: &str) {
         let mut file = File::open(&file_path).unwrap();
         let mut file_contents = String::new();
-        file.read_to_string(&mut file_contents);
+        let _ = file.read_to_string(&mut file_contents);
 
         // Read and parse the geojson from the file's contents
         let geojson = file_contents
