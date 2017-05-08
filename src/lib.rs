@@ -68,7 +68,6 @@
 //! ```rust
 //! # extern crate serde_json;
 //! # extern crate geojson;
-//! use std::collections::BTreeMap;
 //! use geojson::{Feature, GeoJson, Geometry, Value};
 //! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
 //! # let mut properties = ::serde_json::Map::new();

@@ -1,0 +1,6 @@
+{ 
+  "type": "Feature",
+  "bbox": [102.0, 0.5, 102.0, 0.5],
+  "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+  "properties": {"prop0": "value0"}
+}

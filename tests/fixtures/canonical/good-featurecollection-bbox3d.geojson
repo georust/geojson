@@ -1,0 +1,13 @@
+{ "type": "FeatureCollection",
+  "bbox": [100.0, 0.5, 15.0, 102.0, 2.5, 25.0],
+  "features": [
+    { "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [102.0, 0.5, 15.0]},
+      "properties": {"prop0": "value0"}
+      },
+    { "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [100.0, 2.5, 25.0]},
+      "properties": {"prop0": "value0"}
+      }
+     ]
+   }
