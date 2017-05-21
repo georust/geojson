@@ -61,9 +61,9 @@ impl From<FeatureCollection> for GeoJson {
 
 
 impl FromObject for GeoJson {
-    fn from_object(object: &mut JsonObject) -> Result<Self, Error> {
+    fn from_object(object: JsonObject) -> Result<Self, Error> {
         let _type = match object.get("type") {
-            Some(t) => t,
+            Some(ref mut t) => t.clone(),
             None => return Err(Error::ExpectedProperty)
 
         };
@@ -74,10 +74,10 @@ impl FromObject for GeoJson {
             "MultiLineString" |
             "Polygon" |
             "MultiPolygon" |
-            "GeometryCollection" => Geometry::from_object(&mut object.to_owned()).map(GeoJson::Geometry),
-            "Feature" => Feature::from_object(&mut object.to_owned()).map(GeoJson::Feature),
+            "GeometryCollection" => Geometry::from_object(object).map(GeoJson::Geometry),
+            "Feature" => Feature::from_object(object).map(GeoJson::Feature),
             "FeatureCollection" => {
-                FeatureCollection::from_object(&mut object.to_owned()).map(GeoJson::FeatureCollection)
+                FeatureCollection::from_object(object).map(GeoJson::FeatureCollection)
             }
             _ => Err(Error::GeoJsonUnknownType),
         };
@@ -99,9 +99,9 @@ impl<'de> Deserialize<'de> for GeoJson {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
-        let mut val = try!(JsonObject::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        GeoJson::from_object(&mut val).map_err(|e| D::Error::custom(e.description()))
+        GeoJson::from_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -111,7 +111,7 @@ impl FromStr for GeoJson {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let object = try!(get_object(s));
 
-        return GeoJson::from_object(&mut object.into());
+        return GeoJson::from_object(object);
     }
 }
 

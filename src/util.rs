@@ -108,7 +108,7 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
     let mut geometries = vec![];
     for json in geometries_array {
         let obj = expect_object!(json);
-        let geometry = try!(Geometry::from_object(&mut obj.to_owned()));
+        let geometry = try!(Geometry::from_object(obj.clone()));
         geometries.push(geometry);
     }
     return Ok(geometries);
@@ -123,8 +123,8 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<JsonValue>, Error> {
 pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> {
     let geometry = expect_property!(object, "geometry", "Missing 'geometry' field");
     match geometry {
-        JsonValue::Object(ref x) => {
-            let geometry_object = try!(Geometry::from_object(&mut x.to_owned()));
+        JsonValue::Object(x) => {
+            let geometry_object = try!(Geometry::from_object(x));
             Ok(Some(geometry_object))
         }
         JsonValue::Null => Ok(None),
@@ -139,7 +139,7 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
     let features_json = expect_array!(prop);
     for feature in features_json {
         let feature = expect_object!(feature);
-        let feature: Feature = try!(Feature::from_object(&mut feature.to_owned()));
+        let feature: Feature = try!(Feature::from_object(feature.clone()));
         features.push(feature);
     }
     return Ok(features);

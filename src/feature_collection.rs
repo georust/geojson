@@ -80,12 +80,12 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 }
 
 impl FromObject for FeatureCollection {
-    fn from_object(object: &mut JsonObject) -> Result<Self, Error> {
+    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
         match expect_type!(object) {
             "FeatureCollection" => Ok(FeatureCollection {
-                    bbox: try!(util::get_bbox(object)),
-                    features: try!(util::get_features(object)),
-                    foreign_members: try!(util::get_foreign_members(object)) }),
+                    bbox: try!(util::get_bbox(&mut object)),
+                    features: try!(util::get_features(&mut object)),
+                    foreign_members: try!(util::get_foreign_members(&mut object)) }),
             &_ => Err(Error::ExpectedProperty)
         }
     }
@@ -106,8 +106,8 @@ impl<'de> Deserialize<'de> for FeatureCollection {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
-        let mut val = try!(JsonObject::deserialize(deserializer));
+        let val = try!(JsonObject::deserialize(deserializer));
 
-        FeatureCollection::from_object(&mut val).map_err(|e| D::Error::custom(e.description()))
+        FeatureCollection::from_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
