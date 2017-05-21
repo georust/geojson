@@ -173,6 +173,33 @@ mod tests {
     }
 
     #[test]
+    fn encode_decode_feature_with_id() {
+        use serde_json;
+        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
+        let feature = ::Feature {
+            geometry: Some(Geometry {
+                value: Value::Point(vec![1.1, 2.1]),
+                bbox: None,
+                foreign_members: None
+            }),
+            properties: properties(),
+            bbox: None,
+            id: Some(serde_json::to_value(0).unwrap()),
+            foreign_members: None
+        };
+        // Test encode
+        let json_string = encode(&feature);
+        assert_eq!(json_string, feature_json_str);
+
+        // Test decode
+        let decoded_feature = match decode(feature_json_str.into()) {
+            GeoJson::Feature(f) => f,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
     fn encode_decode_feature_with_foreign_member() {
         use serde_json;
         use ::json::JsonObject;
