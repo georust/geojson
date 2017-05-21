@@ -60,14 +60,16 @@ impl<'a> From<&'a Feature> for JsonObject {
 }
 
 impl FromObject for Feature {
-    fn from_object(object: &JsonObject) -> Result<Self, Error> {
-        return Ok(Feature {
-            geometry: try!(util::get_geometry(object)),
-            properties: try!(util::get_properties(object)),
-            id: try!(util::get_id(object)),
-            bbox: try!(util::get_bbox(object)),
-            foreign_members: try!(util::get_foreign_members(object, "Feature"))
-        });
+    fn from_object(object: &mut JsonObject) -> Result<Self, Error> {
+        match expect_type!(object) {
+            "Feature" => Ok(Feature {
+                            geometry: try!(util::get_geometry(object)),
+                            properties: try!(util::get_properties(object)),
+                            id: try!(util::get_id(object)),
+                            bbox: try!(util::get_bbox(object)),
+                            foreign_members: try!(util::get_foreign_members(object))}),
+            &_ => Err(Error::GeoJsonUnknownType)
+        }
     }
 }
 
@@ -86,9 +88,9 @@ impl<'de> Deserialize<'de> for Feature {
         use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
 
-        let val = try!(JsonObject::deserialize(deserializer));
+        let mut val = try!(JsonObject::deserialize(deserializer));
 
-        Feature::from_object(&val).map_err(|e| D::Error::custom(e.description()))
+        Feature::from_object(&mut val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 

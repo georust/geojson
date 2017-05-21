@@ -56,7 +56,7 @@ macro_rules! expect_object {
 
 macro_rules! expect_property {
     ($obj:expr, $name:expr, $desc:expr) => (
-        match $obj.get($name) {
+        match $obj.remove($name) {
             Some(v) => v,
             None => return Err({use Error; Error::ExpectedProperty}),
         };
