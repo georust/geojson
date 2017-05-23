@@ -61,9 +61,13 @@ impl From<FeatureCollection> for GeoJson {
 
 
 impl FromObject for GeoJson {
-    fn from_object(object: &JsonObject) -> Result<Self, Error> {
-        let type_ = expect_string!(expect_property!(object, "type", "Missing 'type' field"));
-        return match &type_ as &str {
+    fn from_object(object: JsonObject) -> Result<Self, Error> {
+        let _type = match object.get("type") {
+            Some(ref mut t) => t.clone(),
+            None => return Err(Error::ExpectedProperty)
+
+        };
+        return match expect_string!(_type) {
             "Point" |
             "MultiPoint" |
             "LineString" |
@@ -97,7 +101,7 @@ impl<'de> Deserialize<'de> for GeoJson {
 
         let val = try!(JsonObject::deserialize(deserializer));
 
-        GeoJson::from_object(&val).map_err(|e| D::Error::custom(e.description()))
+        GeoJson::from_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -107,7 +111,7 @@ impl FromStr for GeoJson {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let object = try!(get_object(s));
 
-        return GeoJson::from_object(&object);
+        return GeoJson::from_object(object);
     }
 }
 

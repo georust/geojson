@@ -147,22 +147,19 @@ impl<'a> From<&'a Geometry> for JsonObject {
 }
 
 impl FromObject for Geometry {
-    fn from_object(object: &JsonObject) -> Result<Self, Error> {
-        let type_ = expect_type!(object);
-        let value = match type_ {
-            "Point" => Value::Point(try!(util::get_coords_one_pos(object))),
-            "MultiPoint" => Value::MultiPoint(try!(util::get_coords_1d_pos(object))),
-            "LineString" => Value::LineString(try!(util::get_coords_1d_pos(object))),
-            "MultiLineString" => Value::MultiLineString(try!(util::get_coords_2d_pos(object))),
-            "Polygon" => Value::Polygon(try!(util::get_coords_2d_pos(object))),
-            "MultiPolygon" => Value::MultiPolygon(try!(util::get_coords_3d_pos(object))),
-            "GeometryCollection" => Value::GeometryCollection(try!(util::get_geometries(object))),
+    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+        let value = match expect_type!(object) {
+            "Point" => Value::Point(try!(util::get_coords_one_pos(&mut object))),
+            "MultiPoint" => Value::MultiPoint(try!(util::get_coords_1d_pos(&mut object))),
+            "LineString" => Value::LineString(try!(util::get_coords_1d_pos(&mut object))),
+            "MultiLineString" => Value::MultiLineString(try!(util::get_coords_2d_pos(&mut object))),
+            "Polygon" => Value::Polygon(try!(util::get_coords_2d_pos(&mut object))),
+            "MultiPolygon" => Value::MultiPolygon(try!(util::get_coords_3d_pos(&mut object))),
+            "GeometryCollection" => Value::GeometryCollection(try!(util::get_geometries(&mut object))),
             _ => return Err(Error::GeometryUnknownType),
         };
-
-        let bbox = try!(util::get_bbox(object));
-        let foreign_members = try!(util::get_foreign_members(object, "Geometry"));
-
+        let bbox = try!(util::get_bbox(&mut object));
+        let foreign_members = try!(util::get_foreign_members(&mut object));
         return Ok(Geometry {
             bbox: bbox,
             value: value,
@@ -188,7 +185,7 @@ impl<'de> Deserialize<'de> for Geometry {
 
         let val = try!(JsonObject::deserialize(deserializer));
 
-        Geometry::from_object(&val).map_err(|e| D::Error::custom(e.description()))
+        Geometry::from_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 

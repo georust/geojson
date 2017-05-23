@@ -233,5 +233,5 @@ mod json {
 }
 
 trait FromObject: Sized {
-    fn from_object(object: &json::JsonObject) -> Result<Self, Error>;
+    fn from_object(object: json::JsonObject) -> Result<Self, Error>;
 }

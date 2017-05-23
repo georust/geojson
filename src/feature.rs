@@ -60,14 +60,16 @@ impl<'a> From<&'a Feature> for JsonObject {
 }
 
 impl FromObject for Feature {
-    fn from_object(object: &JsonObject) -> Result<Self, Error> {
-        return Ok(Feature {
-            geometry: try!(util::get_geometry(object)),
-            properties: try!(util::get_properties(object)),
-            id: try!(util::get_id(object)),
-            bbox: try!(util::get_bbox(object)),
-            foreign_members: try!(util::get_foreign_members(object, "Feature"))
-        });
+    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+        match expect_type!(object) {
+            "Feature" => Ok(Feature {
+                            geometry: try!(util::get_geometry(&mut object)),
+                            properties: try!(util::get_properties(&mut object)),
+                            id: try!(util::get_id(&mut object)),
+                            bbox: try!(util::get_bbox(&mut object)),
+                            foreign_members: try!(util::get_foreign_members(&mut object))}),
+            &_ => Err(Error::GeoJsonUnknownType)
+        }
     }
 }
 
@@ -88,7 +90,7 @@ impl<'de> Deserialize<'de> for Feature {
 
         let val = try!(JsonObject::deserialize(deserializer));
 
-        Feature::from_object(&val).map_err(|e| D::Error::custom(e.description()))
+        Feature::from_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -168,6 +170,33 @@ mod tests {
             Error::FeatureInvalidGeometryValue => (),
             _ => unreachable!(),
         }
+    }
+
+    #[test]
+    fn encode_decode_feature_with_id() {
+        use serde_json;
+        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
+        let feature = ::Feature {
+            geometry: Some(Geometry {
+                value: Value::Point(vec![1.1, 2.1]),
+                bbox: None,
+                foreign_members: None
+            }),
+            properties: properties(),
+            bbox: None,
+            id: Some(serde_json::to_value(0).unwrap()),
+            foreign_members: None
+        };
+        // Test encode
+        let json_string = encode(&feature);
+        assert_eq!(json_string, feature_json_str);
+
+        // Test decode
+        let decoded_feature = match decode(feature_json_str.into()) {
+            GeoJson::Feature(f) => f,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_feature, feature);
     }
 
     #[test]
