@@ -8,7 +8,6 @@ authors = ["Corey Farwell <coreyf@rwell.org>",
 license = "MIT/Apache-2.0"
 repository = "https://github.com/georust/rust-geojson"
 readme = "README.md"
-documentation = "https://georust.github.io/rust-geojson/"
 keywords = ["geojson", "gis", "json", "geo"]
 
 [dependencies]
