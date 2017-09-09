@@ -1,5 +1,11 @@
 # Changes
 
+## 0.9.0
+
+* Don't publicize `assert_almost_eq` macro
+* Bump rust-geo: 0.4 → 0.6
+* Use docs.rs for documentation links
+
 ## 0.8.0
 
 * [Remove `geojson::Crs`](https://github.com/georust/rust-geojson/pull/71)

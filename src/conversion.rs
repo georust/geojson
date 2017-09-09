@@ -361,6 +361,7 @@ impl<'a, T> From<&'a geo::Geometry<T>> for geometry::Value
     }
 }
 
+#[cfg(test)]
 macro_rules! assert_almost_eq {
     ($x: expr, $y: expr, $epsilon: expr) => {{
         use num_traits::Zero;
