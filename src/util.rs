@@ -135,11 +135,11 @@ pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> 
 /// Used by FeatureCollection
 pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
     let prop = expect_property!(object, "features", "Missing 'features' field");
-    let features_json = expect_array!(prop);
+    let features_json = expect_owned_array!(prop);
     let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
-        let feature = expect_object!(feature);
-        let feature: Feature = try!(Feature::from_object(feature.clone()));
+        let feature = expect_owned_object!(feature);
+        let feature: Feature = try!(Feature::from_object(feature));
         features.push(feature);
     }
     return Ok(features);
