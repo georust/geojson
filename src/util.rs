@@ -134,9 +134,9 @@ pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> 
 
 /// Used by FeatureCollection
 pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
-    let mut features = vec![];
     let prop = expect_property!(object, "features", "Missing 'features' field");
     let features_json = expect_array!(prop);
+    let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
         let feature = expect_object!(feature);
         let feature: Feature = try!(Feature::from_object(feature.clone()));
@@ -148,7 +148,7 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
 
 fn json_to_position(json: &JsonValue) -> Result<Position, Error> {
     let coords_array = expect_array!(json);
-    let mut coords = vec![];
+    let mut coords = Vec::with_capacity(coords_array.len());
     for position in coords_array {
         coords.push(expect_f64!(position));
     }
@@ -157,7 +157,7 @@ fn json_to_position(json: &JsonValue) -> Result<Position, Error> {
 
 fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
     let coords_array = expect_array!(json);
-    let mut coords = vec![];
+    let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
         coords.push(try!(json_to_position(item)));
     }
@@ -166,7 +166,7 @@ fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
 
 fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
     let coords_array = expect_array!(json);
-    let mut coords = vec![];
+    let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
         coords.push(try!(json_to_1d_positions(item)));
     }
@@ -175,7 +175,7 @@ fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
 
 fn json_to_3d_positions(json: &JsonValue) -> Result<Vec<Vec<Vec<Position>>>, Error> {
     let coords_array = expect_array!(json);
-    let mut coords = vec![];
+    let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
         coords.push(try!(json_to_2d_positions(item)));
     }
