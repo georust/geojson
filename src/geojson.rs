@@ -121,8 +121,8 @@ fn get_object(s: &str) -> Result<JsonObject, Error> {
         Err(..) => return Err(Error::MalformedJson),
     };
 
-    if let Some(geo) = decoded_json.as_object() {
-        return Ok(geo.clone());
+    if let ::serde_json::Value::Object(geo) = decoded_json {
+        return Ok(geo);
     } else {
         return Err(Error::MalformedJson);
     }

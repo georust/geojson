@@ -62,3 +62,21 @@ macro_rules! expect_property {
         };
     )
 }
+
+macro_rules! expect_owned_array {
+    ($value:expr) => (try!(
+        match $value {
+            JsonValue::Array(v) => Ok(v),
+            _ => Err({use Error; Error::ExpectedArrayValue})
+        }
+    ))
+}
+
+macro_rules! expect_owned_object {
+    ($value:expr) => (try!(
+        match $value {
+            JsonValue::Object(o) => Ok(o),
+            _ => Err({use Error; Error::ExpectedObjectValue})
+        }
+    ))
+}
