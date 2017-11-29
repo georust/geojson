@@ -1,5 +1,9 @@
 # Changes
 
+## 0.9.1
+
+* [Deserialize Optimizations](https://github.com/georust/rust-geojson/pull/82)
+
 ## 0.9.0
 
 * Don't publicize `assert_almost_eq` macro
