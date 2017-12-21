@@ -110,12 +110,12 @@
 //! ```rust
 //! use geojson::{GeoJson, Geometry, Value};
 //! 
-//! /// Process GeoJSON geometries  
+//! /// Process GeoJSON geometries
 //! fn match_geometry(geom: &Geometry) {
-//!     match &geom.value {
-//!         &Value::Polygon(_) => println!("Matched a Polygon"),
-//!         &Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
-//!         &Value::GeometryCollection(ref gc) => {
+//!     match geom.value {
+//!         Value::Polygon(_) => println!("Matched a Polygon"),
+//!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
+//!         Value::GeometryCollection(ref gc) => {
 //!             println!("Matched a GeometryCollection");
 //!             // GeometryCollections contain other Geometry types, and can nest
 //!             // we deal with this by recursively processing each geometry
@@ -130,18 +130,18 @@
 //! 
 //! /// Process top-level GeoJSON items
 //! fn process_geojson(gj: &GeoJson) {
-//!     match gj {
-//!         &GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
-//!             if let &Some(ref geom) = &feature.geometry {
-//!                 match_geometry(&geom)
+//!     match *gj {
+//!         GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
+//!             if let Some(ref geom) = feature.geometry {
+//!                 match_geometry(geom)
 //!             }
 //!         },
-//!         &GeoJson::Feature(ref feature) => {
-//!             if let &Some(ref geom) = &feature.geometry {
-//!                 match_geometry(&geom)
+//!         GeoJson::Feature(ref feature) => {
+//!             if let Some(ref geom) = feature.geometry {
+//!                 match_geometry(geom)
 //!             }
 //!         }
-//!         &GeoJson::Geometry(ref geometry) => match_geometry(&geometry),
+//!         GeoJson::Geometry(ref geometry) => match_geometry(geometry),
 //!     }
 //! }
 //! 
