@@ -181,6 +181,15 @@
 //!     process_geojson(&geojson);
 //! }
 //! ```
+//!
+//! ## Conversion to Geo objects
+//!
+//! The [try_into](file:///Users/sth/dev/rust-geojson/target/doc/geojson/conversion/index.html) trait provides *fallible* conversions from GeoJSON Value structs
+//! to [Geo](https://docs.rs/geo) types, allowing them to be measured or used in calculations. Note that
+//! this conversion consumes the GeoJSON object, so you will not be able to match
+//! by reference as in the example above. The [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crate contains an
+//! implementation which may be useful if you wish to perfom these conversions.
+
 
 extern crate serde;
 #[macro_use]
@@ -222,8 +231,7 @@ pub use feature::Feature;
 mod feature_collection;
 pub use feature_collection::FeatureCollection;
 
-/// Convert geo::types to geometry::Geometry
-#[doc(hidden)]
+/// Convert Geometries into [Geo](https://docs.rs/geo) types
 pub mod conversion;
 
 /// Error when reading a GeoJSON object from a str or Object

@@ -122,6 +122,7 @@ fn create_geo_multi_polygon<T>(multi_polygon_type: &Vec<PolygonType>) -> geo::Mu
         .collect())
 }
 
+/// This trait provides fallible conversions from GeoJSON values to [Geo](https://docs.rs/geo) types
 pub trait TryInto<T> {
     type Err;
     fn try_into(self) -> Result<T, Self::Err>;
