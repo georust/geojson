@@ -188,7 +188,7 @@
 //! to [Geo](https://docs.rs/geo) types, allowing them to be measured or used in calculations. Note that
 //! this conversion consumes the GeoJSON object, so you will not be able to match
 //! by reference as in the example above. The [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crate contains an
-//! implementation which may be useful if you wish to perfom these conversions.
+//! implementation which may be useful if you wish to perform these conversions.
 
 
 extern crate serde;
