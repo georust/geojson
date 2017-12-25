@@ -184,7 +184,7 @@
 //!
 //! ## Conversion to Geo objects
 //!
-//! The [try_into](file:///Users/sth/dev/rust-geojson/target/doc/geojson/conversion/index.html) trait provides *fallible* conversions from GeoJSON Value structs
+//! The [try_into](conversion/trait.TryInto.html) trait provides *fallible* conversions from GeoJSON Value structs
 //! to [Geo](https://docs.rs/geo) types, allowing them to be measured or used in calculations. Note that
 //! this conversion consumes the GeoJSON object, so you will not be able to match
 //! by reference as in the example above. The [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crate contains an
