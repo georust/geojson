@@ -43,6 +43,9 @@ impl<'a> From<&'a Feature> for JsonObject {
         if let Some(ref properties) = feature.properties {
             map.insert(String::from("properties"),
                        serde_json::to_value(properties).unwrap());
+        } else {
+            map.insert(String::from("properties"),
+                serde_json::to_value(Some(serde_json::Map::new())).unwrap());
         }
         if let Some(ref bbox) = feature.bbox {
             map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
