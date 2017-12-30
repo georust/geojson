@@ -22,44 +22,44 @@ use {Bbox, Error, LineStringType, PointType, PolygonType, FromObject, util};
 pub enum Value {
     /// Point
     ///
-    /// [GeoJSON Format Specification § 2.1.2]
-    /// (http://geojson.org/geojson-spec.html#point)
+    /// [GeoJSON Format Specification § 3.1.2]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.2
     Point(PointType),
 
     /// MultiPoint
     ///
-    /// [GeoJSON Format Specification § 2.1.3]
-    /// (http://geojson.org/geojson-spec.html#multipoint)
+    /// [GeoJSON Format Specification § 3.1.3]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.3
     MultiPoint(Vec<PointType>),
 
     /// LineString
     ///
-    /// [GeoJSON Format Specification § 2.1.4]
-    /// (http://geojson.org/geojson-spec.html#linestring)
+    /// [GeoJSON Format Specification § 3.1.4]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.4
     LineString(LineStringType),
 
     /// MultiLineString
     ///
-    /// [GeoJSON Format Specification § 2.1.5]
-    /// (http://geojson.org/geojson-spec.html#multilinestring)
+    /// [GeoJSON Format Specification § 3.1.5]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.5)
     MultiLineString(Vec<LineStringType>),
 
     /// Polygon
     ///
-    /// [GeoJSON Format Specification § 2.1.6]
-    /// (http://geojson.org/geojson-spec.html#polygon)
+    /// [GeoJSON Format Specification § 3.1.6]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.6)
     Polygon(PolygonType),
 
     /// MultiPolygon
     ///
-    /// [GeoJSON Format Specification § 2.1.7]
-    /// (http://geojson.org/geojson-spec.html#multipolygon)
+    /// [GeoJSON Format Specification § 3.1.7]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.7)
     MultiPolygon(Vec<PolygonType>),
 
     /// GeometryCollection
     ///
-    /// [GeoJSON Format Specification § 2.1.8]
-    /// (http://geojson.org/geojson-spec.html#geometry-collection)
+    /// [GeoJSON Format Specification § 3.1.8]
+    /// (https://tools.ietf.org/html/rfc7946#section-3.1.8)
     GeometryCollection(Vec<Geometry>),
 }
 
@@ -88,8 +88,8 @@ impl Serialize for Value {
 
 /// Geometry Objects
 ///
-/// [GeoJSON Format Specification § 2.1]
-/// (http://geojson.org/geojson-spec.html#geometry-objects)
+/// [GeoJSON Format Specification § 3.1]
+/// (https://tools.ietf.org/html/rfc7946#section-3.1)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Geometry {
     pub bbox: Option<Bbox>,

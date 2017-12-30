@@ -200,14 +200,14 @@ extern crate num_traits;
 
 /// Bounding Boxes
 ///
-/// [GeoJSON Format Specification § 4]
-/// (http://geojson.org/geojson-spec.html#bounding-boxes)
+/// [GeoJSON Format Specification § 5]
+/// (https://tools.ietf.org/html/rfc7946#section-5)
 pub type Bbox = Vec<f64>;
 
 /// Positions
 ///
-/// [GeoJSON Format Specification § 2.1.1]
-/// (http://geojson.org/geojson-spec.html#positions)
+/// [GeoJSON Format Specification § 3.1.1]
+/// (https://tools.ietf.org/html/rfc7946#section-3.1.1)
 pub type Position = Vec<f64>;
 
 pub type PointType = Position;

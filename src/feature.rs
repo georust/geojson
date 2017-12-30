@@ -19,8 +19,8 @@ use {Bbox, Error, FromObject, Geometry, util};
 
 /// Feature Objects
 ///
-/// [GeoJSON Format Specification § 2.2]
-/// (http://geojson.org/geojson-spec.html#feature-objects)
+/// [GeoJSON Format Specification § 3.2]
+/// (https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Feature {
     pub bbox: Option<Bbox>,

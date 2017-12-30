@@ -20,8 +20,8 @@ use {Bbox, Error, Feature, FromObject, util};
 
 /// Feature Collection Objects
 ///
-/// [GeoJSON Format Specification § 2.3]
-/// (http://geojson.org/geojson-spec.html#feature-collection-objects)
+/// [GeoJSON Format Specification § 3.3]
+/// (https://tools.ietf.org/html/rfc7946#section-3.3)
 ///
 /// # Examples
 ///
