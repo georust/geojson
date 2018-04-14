@@ -198,6 +198,8 @@ extern crate serde_json;
 extern crate geo;
 extern crate num_traits;
 
+use serde::ser::{Serialize, Serializer, SerializeSeq};
+
 /// Bounding Boxes
 ///
 /// [GeoJSON Format Specification § 5]
@@ -208,7 +210,58 @@ pub type Bbox = Vec<f64>;
 ///
 /// [GeoJSON Format Specification § 3.1.1]
 /// (https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub type Position = Vec<f64>;
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Position {
+    Two(f64, f64),
+    Three(f64, f64, f64),
+}
+
+impl Position {
+    /// Longitude. Also called ‘northing’ in the spec.
+    pub fn lng(&self) -> f64 {
+        match self {
+            Position::Two(lng, _) => *lng,
+            Position::Three(lng, _, _) => *lng,
+        }
+    }
+    /// Latitude. Also called ‘easting’ in the spec.
+    pub fn lat(&self) -> f64 {
+        match self {
+            Position::Two(_, lat) => *lat,
+            Position::Three(_, lat, _) => *lat,
+        }
+    }
+
+    /// Altitude. Also called ‘elevation’ in the spec.
+    pub fn alt(&self) -> Option<f64> {
+        if let Position::Three(_, _, alt) = self {
+            Some(*alt)
+        } else {
+            None
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Position::Two(..) => 2,
+            Position::Three(..) => 3,
+        }
+    }
+}
+
+impl Serialize for Position {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(self.len()))?;
+        seq.serialize_element(&self.lng())?;
+        seq.serialize_element(&self.lat())?;
+        if let Some(alt) = self.alt() {
+            seq.serialize_element(&alt)?;
+        }
+        seq.end()
+    }
+}
 
 pub type PointType = Position;
 pub type LineStringType = Vec<Position>;

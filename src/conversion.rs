@@ -14,6 +14,7 @@
 
 use geometry;
 use {PointType, LineStringType, PolygonType};
+use Position;
 use geo;
 use num_traits::Float;
 use std::convert::From;
@@ -22,10 +23,10 @@ use Error;
 fn create_point_type<T>(point: &geo::Point<T>) -> PointType
     where T: Float
 {
-    let x: f64 = point.x().to_f64().unwrap();
-    let y: f64 = point.y().to_f64().unwrap();
-
-    vec![x, y]
+    Position::Two(
+        point.x().to_f64().unwrap(),
+        point.y().to_f64().unwrap(),
+    )
 }
 
 fn create_line_string_type<T>(line_string: &geo::LineString<T>) -> LineStringType
@@ -75,8 +76,8 @@ fn create_multi_polygon_type<T>(multi_polygon: &geo::MultiPolygon<T>) -> Vec<Pol
 fn create_geo_point<T>(point_type: &PointType) -> geo::Point<T>
     where T: Float
 {
-    geo::Point::new(T::from(point_type[0]).unwrap(),
-                    T::from(point_type[1]).unwrap())
+    geo::Point::new(T::from(point_type.lng()).unwrap(),
+                    T::from(point_type.lat()).unwrap())
 }
 
 fn create_geo_line_string<T>(line_type: &LineStringType) -> geo::LineString<T>
