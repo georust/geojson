@@ -1,5 +1,18 @@
 # Changes
 
+## 0.10.0
+
+* Deserialize Optimizations
+  * <https://github.com/georust/rust-geojson/pull/82>
+* Expand docs with parsing examples and corner cases, and enable conversion docs
+  * <https://github.com/georust/rust-geojson/pull/85>
+* Update GeoJSON spec links to point to published standard
+  * <https://github.com/georust/rust-geojson/pull/87>
+* Bump geo and num-traits crates.
+  * <https://github.com/georust/rust-geojson/pull/89>
+* Bump geo dependency: 0.7 -> 0.8.
+  * <https://github.com/georust/rust-geojson/pull/91>
+
 ## 0.9.0
 
 * Don't publicize `assert_almost_eq` macro
