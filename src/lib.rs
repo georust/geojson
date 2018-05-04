@@ -195,7 +195,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
-extern crate geo;
+extern crate geo_types;
 extern crate num_traits;
 
 /// Bounding Boxes
