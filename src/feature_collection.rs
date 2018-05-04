@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 use serde_json;
 
-use {Bbox, Error, Feature, FromObject, util};
-
+use {util, Bbox, Error, Feature, FromObject};
 
 /// Feature Collection Objects
 ///
@@ -55,15 +54,17 @@ pub struct FeatureCollection {
     ///
     /// [RFC7946 § 6]
     /// (https://tools.ietf.org/html/rfc7946#section-6)
-    pub foreign_members: Option<JsonObject>
+    pub foreign_members: Option<JsonObject>,
 }
 
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("FeatureCollection"));
-        map.insert(String::from("features"),
-                   serde_json::to_value(&fc.features).unwrap());
+        map.insert(
+            String::from("features"),
+            serde_json::to_value(&fc.features).unwrap(),
+        );
 
         if let Some(ref bbox) = fc.bbox {
             map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
@@ -83,17 +84,19 @@ impl FromObject for FeatureCollection {
     fn from_object(mut object: JsonObject) -> Result<Self, Error> {
         match expect_type!(object) {
             "FeatureCollection" => Ok(FeatureCollection {
-                    bbox: try!(util::get_bbox(&mut object)),
-                    features: try!(util::get_features(&mut object)),
-                    foreign_members: try!(util::get_foreign_members(&mut object)) }),
-            &_ => Err(Error::ExpectedProperty)
+                bbox: try!(util::get_bbox(&mut object)),
+                features: try!(util::get_features(&mut object)),
+                foreign_members: try!(util::get_foreign_members(&mut object)),
+            }),
+            &_ => Err(Error::ExpectedProperty),
         }
     }
 }
 
 impl Serialize for FeatureCollection {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         JsonObject::from(self).serialize(serializer)
     }
@@ -101,10 +104,11 @@ impl Serialize for FeatureCollection {
 
 impl<'de> Deserialize<'de> for FeatureCollection {
     fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
-        use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
+        use std::error::Error as StdError;
 
         let val = try!(JsonObject::deserialize(deserializer));
 

@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geometry;
-use {PointType, LineStringType, PolygonType};
 use geo_types;
+use geometry;
 use num_traits::Float;
 use std::convert::From;
 use Error;
+use {LineStringType, PointType, PolygonType};
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
-    where T: Float
+where
+    T: Float,
 {
     let x: f64 = point.x().to_f64().unwrap();
     let y: f64 = point.y().to_f64().unwrap();
@@ -29,76 +30,105 @@ fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 }
 
 fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType
-    where T: Float
+where
+    T: Float,
 {
-    line_string.0
+    line_string
+        .0
         .iter()
         .map(|point| create_point_type(point))
         .collect()
 }
 
-fn create_multi_line_string_type<T>(multi_line_string: &geo_types::MultiLineString<T>)
-                                    -> Vec<LineStringType>
-    where T: Float
+fn create_multi_line_string_type<T>(
+    multi_line_string: &geo_types::MultiLineString<T>,
+) -> Vec<LineStringType>
+where
+    T: Float,
 {
-    multi_line_string.0
+    multi_line_string
+        .0
         .iter()
         .map(|line_string| create_line_string_type(line_string))
         .collect()
 }
 
 fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
-    where T: Float
+where
+    T: Float,
 {
-    let mut coords = vec![polygon.exterior
-                              .0
-                              .iter()
-                              .map(|point| create_point_type(point))
-                              .collect()];
+    let mut coords = vec![
+        polygon
+            .exterior
+            .0
+            .iter()
+            .map(|point| create_point_type(point))
+            .collect(),
+    ];
 
-    coords.extend(polygon.interiors
-        .iter()
-        .map(|line_string| create_line_string_type(&line_string)));
+    coords.extend(
+        polygon
+            .interiors
+            .iter()
+            .map(|line_string| create_line_string_type(&line_string)),
+    );
 
     return coords;
 }
 
 fn create_multi_polygon_type<T>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<PolygonType>
-    where T: Float
+where
+    T: Float,
 {
-    multi_polygon.0
+    multi_polygon
+        .0
         .iter()
         .map(|polygon| create_polygon_type(&polygon))
         .collect()
 }
 
 fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
-    where T: Float
+where
+    T: Float,
 {
-    geo_types::Point::new(T::from(point_type[0]).unwrap(),
-                    T::from(point_type[1]).unwrap())
+    geo_types::Point::new(
+        T::from(point_type[0]).unwrap(),
+        T::from(point_type[1]).unwrap(),
+    )
 }
 
 fn create_geo_line_string<T>(line_type: &LineStringType) -> geo_types::LineString<T>
-    where T: Float
+where
+    T: Float,
 {
-    geo_types::LineString(line_type.iter()
-        .map(|point_type| create_geo_point(&point_type))
-        .collect())
+    geo_types::LineString(
+        line_type
+            .iter()
+            .map(|point_type| create_geo_point(&point_type))
+            .collect(),
+    )
 }
 
-fn create_geo_multi_line_string<T>(multi_line_type: &Vec<LineStringType>) -> geo_types::MultiLineString<T>
-    where T: Float
+fn create_geo_multi_line_string<T>(
+    multi_line_type: &Vec<LineStringType>,
+) -> geo_types::MultiLineString<T>
+where
+    T: Float,
 {
-    geo_types::MultiLineString(multi_line_type.iter()
-        .map(|point_type| create_geo_line_string(&point_type))
-        .collect())
+    geo_types::MultiLineString(
+        multi_line_type
+            .iter()
+            .map(|point_type| create_geo_line_string(&point_type))
+            .collect(),
+    )
 }
 
 fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
-    where T: Float
+where
+    T: Float,
 {
-    let exterior = polygon_type.get(0)
+    let exterior = polygon_type
+        .get(0)
         .map(|e| create_geo_line_string(e))
         .unwrap_or(create_geo_line_string(&vec![]));
 
@@ -115,11 +145,15 @@ fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
 }
 
 fn create_geo_multi_polygon<T>(multi_polygon_type: &Vec<PolygonType>) -> geo_types::MultiPolygon<T>
-    where T: Float
+where
+    T: Float,
 {
-    geo_types::MultiPolygon(multi_polygon_type.iter()
-        .map(|polygon_type| create_geo_polygon(&polygon_type))
-        .collect())
+    geo_types::MultiPolygon(
+        multi_polygon_type
+            .iter()
+            .map(|polygon_type| create_geo_polygon(&polygon_type))
+            .collect(),
+    )
 }
 
 /// This trait provides fallible conversions from GeoJSON values to [Geo](https://docs.rs/geo) types
@@ -129,7 +163,8 @@ pub trait TryInto<T> {
 }
 
 impl<T> TryInto<geo_types::Point<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
@@ -142,7 +177,8 @@ impl<T> TryInto<geo_types::Point<T>> for geometry::Value
 }
 
 impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(point: &geo_types::Point<T>) -> Self {
         let coords = create_point_type(point);
@@ -152,27 +188,31 @@ impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::MultiPoint<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
     fn try_into(self) -> Result<geo_types::MultiPoint<T>, Self::Err> {
         match self {
-            geometry::Value::MultiPoint(multi_point_type) => {
-                Ok(geo_types::MultiPoint(multi_point_type.iter()
+            geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
+                multi_point_type
+                    .iter()
                     .map(|point_type| create_geo_point(&point_type))
-                    .collect()))
-            }
+                    .collect(),
+            )),
             _ => Err(Error::GeometryUnknownType),
         }
     }
 }
 
 impl<'a, T> From<&'a geo_types::MultiPoint<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(multi_point: &geo_types::MultiPoint<T>) -> Self {
-        let coords = multi_point.0
+        let coords = multi_point
+            .0
             .iter()
             .map(|point| create_point_type(point))
             .collect();
@@ -182,7 +222,8 @@ impl<'a, T> From<&'a geo_types::MultiPoint<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::LineString<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
@@ -197,7 +238,8 @@ impl<T> TryInto<geo_types::LineString<T>> for geometry::Value
 }
 
 impl<'a, T> From<&'a geo_types::LineString<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(line_string: &geo_types::LineString<T>) -> Self {
         let coords = create_line_string_type(line_string);
@@ -207,7 +249,8 @@ impl<'a, T> From<&'a geo_types::LineString<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::MultiLineString<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
@@ -222,7 +265,8 @@ impl<T> TryInto<geo_types::MultiLineString<T>> for geometry::Value
 }
 
 impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(multi_line_string: &geo_types::MultiLineString<T>) -> Self {
         let coords = create_multi_line_string_type(multi_line_string);
@@ -232,7 +276,8 @@ impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::Polygon<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
@@ -245,7 +290,8 @@ impl<T> TryInto<geo_types::Polygon<T>> for geometry::Value
 }
 
 impl<'a, T> From<&'a geo_types::Polygon<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(polygon: &geo_types::Polygon<T>) -> Self {
         let coords = create_polygon_type(polygon);
@@ -255,7 +301,8 @@ impl<'a, T> From<&'a geo_types::Polygon<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::MultiPolygon<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
@@ -270,7 +317,8 @@ impl<T> TryInto<geo_types::MultiPolygon<T>> for geometry::Value
 }
 
 impl<'a, T> From<&'a geo_types::MultiPolygon<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(multi_polygon: &geo_types::MultiPolygon<T>) -> Self {
         let coords = create_multi_polygon_type(multi_polygon);
@@ -280,14 +328,16 @@ impl<'a, T> From<&'a geo_types::MultiPolygon<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::GeometryCollection<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
     fn try_into(self) -> Result<geo_types::GeometryCollection<T>, Self::Err> {
         match self {
             geometry::Value::GeometryCollection(geometries) => {
-                let geojson_geometries = geometries.iter()
+                let geojson_geometries = geometries
+                    .iter()
                     .map(|geometry| geometry.value.clone().try_into().unwrap())
                     .collect();
 
@@ -299,7 +349,8 @@ impl<T> TryInto<geo_types::GeometryCollection<T>> for geometry::Value
 }
 
 impl<T> TryInto<geo_types::Geometry<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     type Err = Error;
 
@@ -309,33 +360,39 @@ impl<T> TryInto<geo_types::Geometry<T>> for geometry::Value
                 Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
             }
             geometry::Value::MultiPoint(ref multi_point_type) => {
-                Ok(geo_types::Geometry::MultiPoint(geo_types::MultiPoint(multi_point_type.iter()
-                    .map(|point_type| create_geo_point(&point_type))
-                    .collect())))
+                Ok(geo_types::Geometry::MultiPoint(geo_types::MultiPoint(
+                    multi_point_type
+                        .iter()
+                        .map(|point_type| create_geo_point(&point_type))
+                        .collect(),
+                )))
             }
-            geometry::Value::LineString(ref line_string_type) => {
-                Ok(geo_types::Geometry::LineString(create_geo_line_string(line_string_type)))
-            }
+            geometry::Value::LineString(ref line_string_type) => Ok(
+                geo_types::Geometry::LineString(create_geo_line_string(line_string_type)),
+            ),
             geometry::Value::MultiLineString(ref multi_line_string_type) => {
                 Ok(geo_types::Geometry::MultiLineString(
-                    create_geo_multi_line_string(multi_line_string_type)))
+                    create_geo_multi_line_string(multi_line_string_type),
+                ))
             }
-            geometry::Value::Polygon(ref polygon_type) => {
-                Ok(geo_types::Geometry::Polygon(create_geo_polygon(polygon_type)))
-            }
-            geometry::Value::MultiPolygon(ref multi_polygon_type) => {
-                Ok(geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)))
-            }
+            geometry::Value::Polygon(ref polygon_type) => Ok(geo_types::Geometry::Polygon(
+                create_geo_polygon(polygon_type),
+            )),
+            geometry::Value::MultiPolygon(ref multi_polygon_type) => Ok(
+                geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
+            ),
             _ => Err(Error::GeometryUnknownType),
         }
     }
 }
 
 impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(geometry_collection: &geo_types::GeometryCollection<T>) -> Self {
-        let coords = geometry_collection.0
+        let coords = geometry_collection
+            .0
             .iter()
             .map(|geometry| geometry::Geometry::new(geometry::Value::from(geometry)))
             .collect();
@@ -345,7 +402,8 @@ impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for geometry::Value
 }
 
 impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
-    where T: Float
+where
+    T: Float,
 {
     fn from(geometry: &'a geo_types::Geometry<T>) -> Self {
         match *geometry {
@@ -356,7 +414,9 @@ impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
                 geometry::Value::from(multi_line_string)
             }
             geo_types::Geometry::Polygon(ref polygon) => geometry::Value::from(polygon),
-            geo_types::Geometry::MultiPolygon(ref multi_polygon) => geometry::Value::from(multi_polygon),
+            geo_types::Geometry::MultiPolygon(ref multi_polygon) => {
+                geometry::Value::from(multi_polygon)
+            }
             _ => panic!("GeometryCollection not allowed"),
         }
     }
@@ -364,40 +424,55 @@ impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
 
 #[cfg(test)]
 macro_rules! assert_almost_eq {
-    ($x: expr, $y: expr, $epsilon: expr) => {{
+    ($x:expr, $y:expr, $epsilon:expr) => {{
         use num_traits::Zero;
         let a = $x.abs();
         let b = $y.abs();
         let delta = (a - b).abs();
 
-        if a.is_infinite() ||
-            a.is_nan() ||
-            b.is_infinite() ||
-            b.is_nan() {
-            panic!("Assertion failed: Non comparable value ({} = {}, {} = {})",
-                    stringify!($x), $x, stringify!($y), $y);
+        if a.is_infinite() || a.is_nan() || b.is_infinite() || b.is_nan() {
+            panic!(
+                "Assertion failed: Non comparable value ({} = {}, {} = {})",
+                stringify!($x),
+                $x,
+                stringify!($y),
+                $y
+            );
         } else if a.is_zero() || b.is_zero() {
             if delta > $epsilon {
-                panic!("Assertion failed: ({} = {}, {} = {}, delta = {})",
-                    stringify!($x), $x, stringify!($y), $y, delta / b);
+                panic!(
+                    "Assertion failed: ({} = {}, {} = {}, delta = {})",
+                    stringify!($x),
+                    $x,
+                    stringify!($y),
+                    $y,
+                    delta / b
+                );
             }
         } else {
             let normalized_delta = delta / b;
             if normalized_delta > $epsilon {
-                panic!("Assertion failed: ({} = {}, {} = {}, delta = {})",
-                    stringify!($x), $x, stringify!($y), $y, normalized_delta);
+                panic!(
+                    "Assertion failed: ({} = {}, {} = {}, delta = {})",
+                    stringify!($x),
+                    $x,
+                    stringify!($y),
+                    $y,
+                    normalized_delta
+                );
             }
         }
-    }}
+    }};
 }
 
 #[cfg(test)]
 mod tests {
-    use {Geometry, Value};
-    use geo_types;
-    use geo_types::{Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon,
-              GeometryCollection};
     use conversion::TryInto;
+    use geo_types;
+    use geo_types::{
+        GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
+    };
+    use {Geometry, Value};
 
     #[test]
     fn geo_point_conversion_test() {
@@ -563,15 +638,17 @@ mod tests {
         let p4 = Point::new(102.0f64, 0.0f64);
         let p5 = Point::new(101.0f64, 0.0f64);
         let geo_multi_point = MultiPoint(vec![p1, p2]);
-        let geo_multi_line_string = MultiLineString(vec![LineString(vec![p1, p2]),
-                                                         LineString(vec![p2, p3])]);
-        let geo_multi_polygon =
-            MultiPolygon(vec![Polygon::new(LineString(vec![p3, p4, p5, p3]), vec![]),
-                              Polygon::new(LineString(vec![p1, p5, p3, p1]), vec![])]);
-        let geo_geometry_collection =
-            GeometryCollection(vec![geo_types::Geometry::MultiPoint(geo_multi_point),
-                                    geo_types::Geometry::MultiLineString(geo_multi_line_string),
-                                    geo_types::Geometry::MultiPolygon(geo_multi_polygon)]);
+        let geo_multi_line_string =
+            MultiLineString(vec![LineString(vec![p1, p2]), LineString(vec![p2, p3])]);
+        let geo_multi_polygon = MultiPolygon(vec![
+            Polygon::new(LineString(vec![p3, p4, p5, p3]), vec![]),
+            Polygon::new(LineString(vec![p1, p5, p3, p1]), vec![]),
+        ]);
+        let geo_geometry_collection = GeometryCollection(vec![
+            geo_types::Geometry::MultiPoint(geo_multi_point),
+            geo_types::Geometry::MultiLineString(geo_multi_line_string),
+            geo_types::Geometry::MultiPolygon(geo_multi_polygon),
+        ]);
 
         let geojson_geometry_collection = Value::from(&geo_geometry_collection);
 
@@ -636,11 +713,12 @@ mod tests {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![102.0, 0.8];
-        let geojson_multi_line_string =
-            Value::MultiLineString(vec![vec![coord1.clone(), coord2.clone()],
-                                        vec![coord2.clone(), coord3.clone()]]);
-        let geo_multi_line_string: geo_types::MultiLineString<f64> = geojson_multi_line_string.try_into()
-            .unwrap();
+        let geojson_multi_line_string = Value::MultiLineString(vec![
+            vec![coord1.clone(), coord2.clone()],
+            vec![coord2.clone(), coord3.clone()],
+        ]);
+        let geo_multi_line_string: geo_types::MultiLineString<f64> =
+            geojson_multi_line_string.try_into().unwrap();
 
         let ref geo_line_string1 = geo_multi_line_string.0[0];
         assert_almost_eq!(geo_line_string1.0[0].x(), coord1[0], 1e-6);
@@ -664,9 +742,20 @@ mod tests {
         let coord5 = vec![100.9, 0.2];
         let coord6 = vec![100.9, 0.7];
 
-        let geojson_multi_line_string_type1 =
-            vec![vec![coord1.clone(), coord2.clone(), coord3.clone(), coord1.clone()],
-                 vec![coord4.clone(), coord5.clone(), coord6.clone(), coord4.clone()]];
+        let geojson_multi_line_string_type1 = vec![
+            vec![
+                coord1.clone(),
+                coord2.clone(),
+                coord3.clone(),
+                coord1.clone(),
+            ],
+            vec![
+                coord4.clone(),
+                coord5.clone(),
+                coord6.clone(),
+                coord4.clone(),
+            ],
+        ];
         let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
@@ -705,8 +794,12 @@ mod tests {
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![101.0, 1.0];
 
-        let geojson_multi_line_string_type1 =
-            vec![vec![coord1.clone(), coord2.clone(), coord3.clone(), coord1.clone()]];
+        let geojson_multi_line_string_type1 = vec![vec![
+            coord1.clone(),
+            coord2.clone(),
+            coord3.clone(),
+            coord1.clone(),
+        ]];
         let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
@@ -730,14 +823,25 @@ mod tests {
         let coord5 = vec![100.9, 0.2];
         let coord6 = vec![100.9, 0.7];
 
-        let geojson_line_string_type1 =
-            vec![coord1.clone(), coord2.clone(), coord3.clone(), coord1.clone()];
+        let geojson_line_string_type1 = vec![
+            coord1.clone(),
+            coord2.clone(),
+            coord3.clone(),
+            coord1.clone(),
+        ];
 
-        let geojson_line_string_type2 =
-            vec![coord4.clone(), coord5.clone(), coord6.clone(), coord4.clone()];
-        let geojson_multi_polygon = Value::MultiPolygon(vec![vec![geojson_line_string_type1],
-                                                             vec![geojson_line_string_type2]]);
-        let geo_multi_polygon: geo_types::MultiPolygon<f64> = geojson_multi_polygon.try_into().unwrap();
+        let geojson_line_string_type2 = vec![
+            coord4.clone(),
+            coord5.clone(),
+            coord6.clone(),
+            coord4.clone(),
+        ];
+        let geojson_multi_polygon = Value::MultiPolygon(vec![
+            vec![geojson_line_string_type1],
+            vec![geojson_line_string_type2],
+        ]);
+        let geo_multi_polygon: geo_types::MultiPolygon<f64> =
+            geojson_multi_polygon.try_into().unwrap();
 
         let ref geo_line_string1 = geo_multi_polygon.0[0].exterior;
         assert_almost_eq!(geo_line_string1.0[0].x(), coord1[0], 1e-6);
@@ -769,22 +873,30 @@ mod tests {
         let coord5 = vec![101.0, 0.0];
 
         let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
-        let geojson_multi_line_string =
-            Value::MultiLineString(vec![vec![coord1.clone(), coord2.clone()],
-                                        vec![coord2.clone(), coord3.clone()]]);
-        let geojson_multi_polygon = Value::MultiPolygon(vec![vec![vec![coord3.clone(),
-                                                                       coord4.clone(),
-                                                                       coord5.clone(),
-                                                                       coord3.clone()]],
-                                                             vec![vec![coord1.clone(),
-                                                                       coord5.clone(),
-                                                                       coord3.clone(),
-                                                                       coord1.clone()]]]);
+        let geojson_multi_line_string = Value::MultiLineString(vec![
+            vec![coord1.clone(), coord2.clone()],
+            vec![coord2.clone(), coord3.clone()],
+        ]);
+        let geojson_multi_polygon = Value::MultiPolygon(vec![
+            vec![vec![
+                coord3.clone(),
+                coord4.clone(),
+                coord5.clone(),
+                coord3.clone(),
+            ]],
+            vec![vec![
+                coord1.clone(),
+                coord5.clone(),
+                coord3.clone(),
+                coord1.clone(),
+            ]],
+        ]);
 
-        let geojson_geometry_collection =
-            Value::GeometryCollection(vec![Geometry::new(geojson_multi_point),
-                                           Geometry::new(geojson_multi_line_string),
-                                           Geometry::new(geojson_multi_polygon)]);
+        let geojson_geometry_collection = Value::GeometryCollection(vec![
+            Geometry::new(geojson_multi_point),
+            Geometry::new(geojson_multi_line_string),
+            Geometry::new(geojson_multi_polygon),
+        ]);
 
         let geo_geometry_collection: geo_types::GeometryCollection<f64> =
             geojson_geometry_collection.try_into().unwrap();

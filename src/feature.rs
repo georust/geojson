@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Serialize, Deserialize, Serializer, Deserializer, JsonValue, JsonObject};
+use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use serde_json;
-use {Bbox, Error, FromObject, Geometry, util};
-
+use {util, Bbox, Error, FromObject, Geometry};
 
 /// Feature Objects
 ///
@@ -31,21 +30,27 @@ pub struct Feature {
     ///
     /// [RFC7946 § 6]
     /// (https://tools.ietf.org/html/rfc7946#section-6)
-    pub foreign_members: Option<JsonObject>
+    pub foreign_members: Option<JsonObject>,
 }
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("Feature"));
-        map.insert(String::from("geometry"),
-                   serde_json::to_value(&feature.geometry).unwrap());
+        map.insert(
+            String::from("geometry"),
+            serde_json::to_value(&feature.geometry).unwrap(),
+        );
         if let Some(ref properties) = feature.properties {
-            map.insert(String::from("properties"),
-                       serde_json::to_value(properties).unwrap());
+            map.insert(
+                String::from("properties"),
+                serde_json::to_value(properties).unwrap(),
+            );
         } else {
-            map.insert(String::from("properties"),
-                serde_json::to_value(Some(serde_json::Map::new())).unwrap());
+            map.insert(
+                String::from("properties"),
+                serde_json::to_value(Some(serde_json::Map::new())).unwrap(),
+            );
         }
         if let Some(ref bbox) = feature.bbox {
             map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
@@ -66,19 +71,21 @@ impl FromObject for Feature {
     fn from_object(mut object: JsonObject) -> Result<Self, Error> {
         match expect_type!(object) {
             "Feature" => Ok(Feature {
-                            geometry: try!(util::get_geometry(&mut object)),
-                            properties: try!(util::get_properties(&mut object)),
-                            id: try!(util::get_id(&mut object)),
-                            bbox: try!(util::get_bbox(&mut object)),
-                            foreign_members: try!(util::get_foreign_members(&mut object))}),
-            &_ => Err(Error::GeoJsonUnknownType)
+                geometry: try!(util::get_geometry(&mut object)),
+                properties: try!(util::get_properties(&mut object)),
+                id: try!(util::get_id(&mut object)),
+                bbox: try!(util::get_bbox(&mut object)),
+                foreign_members: try!(util::get_foreign_members(&mut object)),
+            }),
+            &_ => Err(Error::GeoJsonUnknownType),
         }
     }
 }
 
 impl Serialize for Feature {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         JsonObject::from(self).serialize(serializer)
     }
@@ -86,10 +93,11 @@ impl Serialize for Feature {
 
 impl<'de> Deserialize<'de> for Feature {
     fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
-        use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
+        use std::error::Error as StdError;
 
         let val = try!(JsonObject::deserialize(deserializer));
 
@@ -97,10 +105,9 @@ impl<'de> Deserialize<'de> for Feature {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use {Error, Feature, Geometry, Value, GeoJson};
+    use {Error, Feature, GeoJson, Geometry, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -116,12 +123,12 @@ mod tests {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,
-                foreign_members: None
+                foreign_members: None,
             }),
             properties: properties(),
             bbox: None,
             id: None,
-            foreign_members: None
+            foreign_members: None,
         }
     }
 
@@ -183,12 +190,12 @@ mod tests {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,
-                foreign_members: None
+                foreign_members: None,
             }),
             properties: properties(),
             bbox: None,
             id: Some(serde_json::to_value(0).unwrap()),
-            foreign_members: None
+            foreign_members: None,
         };
         // Test encode
         let json_string = encode(&feature);
@@ -204,21 +211,24 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_foreign_member() {
+        use json::JsonObject;
         use serde_json;
-        use ::json::JsonObject;
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"other_member\":\"some_value\",\"properties\":{},\"type\":\"Feature\"}";
         let mut foreign_members = JsonObject::new();
-        foreign_members.insert(String::from("other_member"), serde_json::to_value("some_value").unwrap());
+        foreign_members.insert(
+            String::from("other_member"),
+            serde_json::to_value("some_value").unwrap(),
+        );
         let feature = ::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,
-                foreign_members: None
+                foreign_members: None,
             }),
             properties: properties(),
             bbox: None,
             id: None,
-            foreign_members: Some(foreign_members)
+            foreign_members: Some(foreign_members),
         };
         // Test encode
         let json_string = encode(&feature);

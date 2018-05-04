@@ -13,70 +13,93 @@
 // limitations under the License.
 
 macro_rules! expect_type {
-    ($value:expr) => (
+    ($value:expr) => {
         expect_string!(expect_property!($value, "type", "Missing 'type' field"))
-    )
+    };
 }
 
 macro_rules! expect_string {
-    ($value:expr) => (try!(
-        match $value.as_str() {
+    ($value:expr) => {
+        try!(match $value.as_str() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::ExpectedStringValue})
-        }
-    ))
+            None => Err({
+                use Error;
+                Error::ExpectedStringValue
+            }),
+        })
+    };
 }
 
 macro_rules! expect_f64 {
-    ($value:expr) => (try!(
-        match $value.as_f64() {
+    ($value:expr) => {
+        try!(match $value.as_f64() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::ExpectedF64Value})
-        }
-    ))
+            None => Err({
+                use Error;
+                Error::ExpectedF64Value
+            }),
+        })
+    };
 }
 
 macro_rules! expect_array {
-    ($value:expr) => (try!(
-        match $value.as_array() {
+    ($value:expr) => {
+        try!(match $value.as_array() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::ExpectedArrayValue})
-        }
-    ))
+            None => Err({
+                use Error;
+                Error::ExpectedArrayValue
+            }),
+        })
+    };
 }
 
 macro_rules! expect_object {
-    ($value:expr) => (try!(
-        match $value.as_object() {
+    ($value:expr) => {
+        try!(match $value.as_object() {
             Some(v) => Ok(v),
-            None => Err({use Error; Error::ExpectedObjectValue})
-        }
-    ))
+            None => Err({
+                use Error;
+                Error::ExpectedObjectValue
+            }),
+        })
+    };
 }
 
 macro_rules! expect_property {
-    ($obj:expr, $name:expr, $desc:expr) => (
+    ($obj:expr, $name:expr, $desc:expr) => {
         match $obj.remove($name) {
             Some(v) => v,
-            None => return Err({use Error; Error::ExpectedProperty}),
+            None => {
+                return Err({
+                    use Error;
+                    Error::ExpectedProperty
+                })
+            }
         };
-    )
+    };
 }
 
 macro_rules! expect_owned_array {
-    ($value:expr) => (try!(
-        match $value {
+    ($value:expr) => {
+        try!(match $value {
             JsonValue::Array(v) => Ok(v),
-            _ => Err({use Error; Error::ExpectedArrayValue})
-        }
-    ))
+            _ => Err({
+                use Error;
+                Error::ExpectedArrayValue
+            }),
+        })
+    };
 }
 
 macro_rules! expect_owned_object {
-    ($value:expr) => (try!(
-        match $value {
+    ($value:expr) => {
+        try!(match $value {
             JsonValue::Object(o) => Ok(o),
-            _ => Err({use Error; Error::ExpectedObjectValue})
-        }
-    ))
+            _ => Err({
+                use Error;
+                Error::ExpectedObjectValue
+            }),
+        })
+    };
 }
