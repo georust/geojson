@@ -15,10 +15,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use json::{Serialize, Deserialize, Serializer, Deserializer, JsonObject};
+use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
-use {Error, Geometry, Feature, FeatureCollection, FromObject};
-
+use {Error, Feature, FeatureCollection, FromObject, Geometry};
 
 /// GeoJSON Objects
 ///
@@ -59,22 +58,17 @@ impl From<FeatureCollection> for GeoJson {
     }
 }
 
-
 impl FromObject for GeoJson {
     fn from_object(object: JsonObject) -> Result<Self, Error> {
         let _type = match object.get("type") {
             Some(ref mut t) => t.clone(),
-            None => return Err(Error::ExpectedProperty)
-
+            None => return Err(Error::ExpectedProperty),
         };
         return match expect_string!(_type) {
-            "Point" |
-            "MultiPoint" |
-            "LineString" |
-            "MultiLineString" |
-            "Polygon" |
-            "MultiPolygon" |
-            "GeometryCollection" => Geometry::from_object(object).map(GeoJson::Geometry),
+            "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
+            | "MultiPolygon" | "GeometryCollection" => {
+                Geometry::from_object(object).map(GeoJson::Geometry)
+            }
             "Feature" => Feature::from_object(object).map(GeoJson::Feature),
             "FeatureCollection" => {
                 FeatureCollection::from_object(object).map(GeoJson::FeatureCollection)
@@ -86,7 +80,8 @@ impl FromObject for GeoJson {
 
 impl Serialize for GeoJson {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         JsonObject::from(self).serialize(serializer)
     }
@@ -94,10 +89,11 @@ impl Serialize for GeoJson {
 
 impl<'de> Deserialize<'de> for GeoJson {
     fn deserialize<D>(deserializer: D) -> Result<GeoJson, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
-        use std::error::Error as StdError;
         use serde::de::Error as SerdeError;
+        use std::error::Error as StdError;
 
         let val = try!(JsonObject::deserialize(deserializer));
 

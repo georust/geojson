@@ -3,13 +3,13 @@ extern crate serde_json;
 
 #[cfg(test)]
 mod roundtrip_tests {
-    use std::fs::File;
-    use std::io::prelude::*;
     use geojson::GeoJson;
     use serde_json;
+    use std::fs::File;
+    use std::io::prelude::*;
 
     macro_rules! roundtrip_test {
-        ($name:ident: $file_name:expr) => {
+        ($name:ident : $file_name:expr) => {
             #[test]
             fn $name() {
                 let fixture_dir_path = "tests/fixtures/canonical/";
@@ -18,7 +18,7 @@ mod roundtrip_tests {
 
                 test_round_trip(&file_path);
             }
-        }
+        };
     }
 
     macro_rules! roundtrip_tests {
@@ -56,9 +56,7 @@ mod roundtrip_tests {
         let _ = file.read_to_string(&mut file_contents);
 
         // Read and parse the geojson from the file's contents
-        let geojson = file_contents
-            .parse::<GeoJson>()
-            .expect("unable to parse");
+        let geojson = file_contents.parse::<GeoJson>().expect("unable to parse");
 
         // Now that we've successfully decoded the geojson, re-encode it and compare to the
         // original to make sure nothing was lost.

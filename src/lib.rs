@@ -97,10 +97,10 @@
 //! ```
 //!
 //! ## Parsing
-//! 
+//!
 //! GeoJSON's [spec](https://tools.ietf.org/html/rfc7946) is quite simple, but
 //! it has several subtleties that must be taken into account when parsing it:  
-//! 
+//!
 //! - The `geometry` field of a `Feature` is an `Option`
 //! - `GeometryCollection`s contain other `Geometry` objects, and can nest.
 //!
@@ -109,7 +109,7 @@
 //!
 //! ```rust
 //! use geojson::{GeoJson, Geometry, Value};
-//! 
+//!
 //! /// Process GeoJSON geometries
 //! fn match_geometry(geom: &Geometry) {
 //!     match geom.value {
@@ -127,7 +127,7 @@
 //!         _ => println!("Matched some other geometry"),
 //!     }
 //! }
-//! 
+//!
 //! /// Process top-level GeoJSON items
 //! fn process_geojson(gj: &GeoJson) {
 //!     match *gj {
@@ -144,7 +144,7 @@
 //!         GeoJson::Geometry(ref geometry) => match_geometry(geometry),
 //!     }
 //! }
-//! 
+//!
 //! fn main() {
 //!     let geojson_str = r#"
 //!     {
@@ -189,7 +189,6 @@
 //! this conversion consumes the GeoJSON object, so you will not be able to match
 //! by reference as in the example above. The [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crate contains an
 //! implementation which may be useful if you wish to perform these conversions.
-
 
 extern crate serde;
 #[macro_use]
@@ -321,7 +320,7 @@ impl std::error::Error for Error {
 }
 
 mod json {
-    pub use serde::{Serialize, Deserialize, Serializer, Deserializer};
+    pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
     pub use serde_json::{Map, Value as JsonValue};
     pub type JsonObject = Map<String, JsonValue>;
 }

@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{JsonValue, JsonObject};
+use json::{JsonObject, JsonValue};
 
 use {Bbox, Error, Feature, FromObject, Geometry, Position};
 
-
 pub fn get_coords_value<'a>(object: &mut JsonObject) -> Result<JsonValue, Error> {
-    return Ok(expect_property!(object,
-                               "coordinates",
-                               "Encountered Geometry object without 'coordinates' member"));
+    return Ok(expect_property!(
+        object,
+        "coordinates",
+        "Encountered Geometry object without 'coordinates' member"
+    ));
 }
 
 /// Used by FeatureCollection, Feature, Geometry
@@ -100,10 +101,12 @@ pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position
 
 /// Used by Value::GeometryCollection
 pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
-    let geometries_json = expect_property!(object,
-                                           "geometries",
-                                           "Encountered GeometryCollection without 'geometries' \
-                                            property");
+    let geometries_json = expect_property!(
+        object,
+        "geometries",
+        "Encountered GeometryCollection without 'geometries' \
+         property"
+    );
     let geometries_array = expect_array!(geometries_json);
     let mut geometries = vec![];
     for json in geometries_array {
@@ -144,7 +147,6 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
     }
     return Ok(features);
 }
-
 
 fn json_to_position(json: &JsonValue) -> Result<Position, Error> {
     let coords_array = expect_array!(json);
