@@ -19,7 +19,7 @@ use std::convert::From;
 use Error;
 use {LineStringType, PointType, PolygonType};
 
-fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
+pub fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
     T: Float,
 {
@@ -29,7 +29,7 @@ where
     vec![x, y]
 }
 
-fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType
+pub fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType
 where
     T: Float,
 {
@@ -40,7 +40,7 @@ where
         .collect()
 }
 
-fn create_multi_line_string_type<T>(
+pub fn create_multi_line_string_type<T>(
     multi_line_string: &geo_types::MultiLineString<T>,
 ) -> Vec<LineStringType>
 where
@@ -53,7 +53,7 @@ where
         .collect()
 }
 
-fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
+pub fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
 where
     T: Float,
 {
@@ -76,7 +76,7 @@ where
     return coords;
 }
 
-fn create_multi_polygon_type<T>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<PolygonType>
+pub fn create_multi_polygon_type<T>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<PolygonType>
 where
     T: Float,
 {
@@ -87,7 +87,7 @@ where
         .collect()
 }
 
-fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
+pub fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
 where
     T: Float,
 {
@@ -97,7 +97,7 @@ where
     )
 }
 
-fn create_geo_line_string<T>(line_type: &LineStringType) -> geo_types::LineString<T>
+pub fn create_geo_line_string<T>(line_type: &LineStringType) -> geo_types::LineString<T>
 where
     T: Float,
 {
@@ -109,7 +109,7 @@ where
     )
 }
 
-fn create_geo_multi_line_string<T>(
+pub fn create_geo_multi_line_string<T>(
     multi_line_type: &Vec<LineStringType>,
 ) -> geo_types::MultiLineString<T>
 where
@@ -123,7 +123,7 @@ where
     )
 }
 
-fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
+pub fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
 where
     T: Float,
 {
@@ -144,7 +144,7 @@ where
     geo_types::Polygon::new(exterior, interiors)
 }
 
-fn create_geo_multi_polygon<T>(multi_polygon_type: &Vec<PolygonType>) -> geo_types::MultiPolygon<T>
+pub fn create_geo_multi_polygon<T>(multi_polygon_type: &Vec<PolygonType>) -> geo_types::MultiPolygon<T>
 where
     T: Float,
 {
