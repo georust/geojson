@@ -17,6 +17,22 @@ use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializ
 use {util, Bbox, Error, FromObject, LineStringType, PointType, PolygonType};
 
 /// The underlying Geometry value
+///
+/// # Conversion from `geo_types`
+///
+/// `From` is implemented for `Value` for converting from `geo_types` geospatial
+/// types:
+///
+/// ```rust
+/// extern crate geo_types;
+/// extern crate geojson;
+///
+/// let point = geo_types::Point::new(2., 9.);
+/// assert_eq!(
+///     geojson::Value::from(&point),
+///     geojson::Value::Point(vec![2., 9.]),
+/// );
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     /// Point
