@@ -673,7 +673,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_point_conversion_test() {
+    fn geojson_point_conversion_test() {
         let coords = vec![100.0, 0.2];
         let geojson_point = Value::Point(coords.clone());
         let geo_point: geo_types::Point<f64> = geojson_point.try_into().unwrap();
@@ -683,7 +683,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_multi_point_conversion_test() {
+    fn geojson_multi_point_conversion_test() {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
         let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
@@ -696,7 +696,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_line_string_conversion_test() {
+    fn geojson_line_string_conversion_test() {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
         let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
@@ -709,7 +709,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_multi_line_string_conversion_test() {
+    fn geojson_multi_line_string_conversion_test() {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![102.0, 0.8];
@@ -734,7 +734,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_polygon_conversion_test() {
+    fn geojson_polygon_conversion_test() {
         let coord1 = vec![100.0, 0.0];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![101.0, 1.0];
@@ -781,7 +781,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_empty_polygon_conversion_test() {
+    fn geojson_empty_polygon_conversion_test() {
         let geojson_polygon = Value::Polygon(vec![]);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
@@ -789,7 +789,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_polygon_without_exterior_conversion_test() {
+    fn geojson_polygon_without_interiors_conversion_test() {
         let coord1 = vec![100.0, 0.0];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![101.0, 1.0];
@@ -815,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_multi_polygon_conversion_test() {
+    fn geojson_multi_polygon_conversion_test() {
         let coord1 = vec![100.0, 0.0];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![101.0, 1.0];
@@ -865,7 +865,7 @@ mod tests {
     }
 
     #[test]
-    fn geoson_geometry_collection_conversion_test() {
+    fn geojson_geometry_collection_conversion_test() {
         let coord1 = vec![100.0, 0.0];
         let coord2 = vec![100.0, 1.0];
         let coord3 = vec![101.0, 1.0];
