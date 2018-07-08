@@ -1,5 +1,15 @@
 # Changes
 
+## 0.11.1
+
+* Don't inject empty interior rings when converting to geo Polygons
+  * <https://github.com/georust/rust-geojson/pull/99>
+
+## 0.11.0
+
+* Switch 'geo' dependency to 'geo-types'
+  * <https://github.com/georust/rust-geojson/pull/93>
+
 ## 0.10.0
 
 * Deserialize Optimizations
