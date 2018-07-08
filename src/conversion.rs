@@ -133,7 +133,7 @@ where
         .unwrap_or(create_geo_line_string(&vec![]));
 
     let interiors = if polygon_type.len() < 2 {
-        vec![create_geo_line_string(&vec![])]
+        vec![]
     } else {
         polygon_type[1..]
             .iter()
@@ -812,6 +812,8 @@ mod tests {
         assert_almost_eq!(geo_line_string1.0[2].y(), coord3[1], 1e-6);
         assert_almost_eq!(geo_line_string1.0[3].x(), coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[3].y(), coord1[1], 1e-6);
+
+        assert_eq!(0, geo_polygon.interiors.len());
     }
 
     #[test]
