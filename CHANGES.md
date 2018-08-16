@@ -1,5 +1,10 @@
 # Changes
 
+## 0.12.0
+
+* Bump geo-types to 0.2.0.
+  * <https://github.com/georust/geojson/pull/100>
+
 ## 0.11.1
 
 * Don't inject empty interior rings when converting to geo Polygons
