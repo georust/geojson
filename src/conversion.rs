@@ -34,9 +34,8 @@ where
     T: Float,
 {
     line_string
-        .0
-        .iter()
-        .map(|point| create_point_type(point))
+        .points_iter()
+        .map(|point| create_point_type(&point))
         .collect()
 }
 
@@ -60,9 +59,8 @@ where
     let mut coords = vec![
         polygon
             .exterior
-            .0
-            .iter()
-            .map(|point| create_point_type(point))
+            .points_iter()
+            .map(|point| create_point_type(&point))
             .collect(),
     ];
 
@@ -87,6 +85,16 @@ where
         .collect()
 }
 
+fn create_geo_coordinate<T>(point_type: &PointType) -> geo_types::Coordinate<T>
+where
+    T: Float,
+{
+    geo_types::Coordinate {
+        x: T::from(point_type[0]).unwrap(),
+        y: T::from(point_type[1]).unwrap(),
+    }
+}
+
 fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
 where
     T: Float,
@@ -104,7 +112,7 @@ where
     geo_types::LineString(
         line_type
             .iter()
-            .map(|point_type| create_geo_point(&point_type))
+            .map(|point_type| create_geo_coordinate(point_type))
             .collect(),
     )
 }
@@ -522,7 +530,7 @@ mod tests {
         let p1 = Point::new(40.02f64, 116.34f64);
         let p2 = Point::new(13.02f64, 24.34f64);
 
-        let geo_line_string = LineString(vec![p1, p2]);
+        let geo_line_string = LineString::from(vec![p1, p2]);
         let geojson_line_point = Value::from(&geo_line_string);
 
         if let Value::LineString(c) = geojson_line_point {
@@ -542,8 +550,8 @@ mod tests {
         let p3 = Point::new(46.84f64, 160.95f64);
         let p4 = Point::new(42.02f64, 96.34f64);
 
-        let geo_line_string1 = LineString(vec![p1, p2]);
-        let geo_line_string2 = LineString(vec![p3, p4]);
+        let geo_line_string1 = LineString::from(vec![p1, p2]);
+        let geo_line_string2 = LineString::from(vec![p3, p4]);
 
         let geo_multi_line_string = MultiLineString(vec![geo_line_string1, geo_line_string2]);
         let geojson_multi_line_point = Value::from(&geo_multi_line_string);
@@ -571,8 +579,8 @@ mod tests {
         let p5 = Point::new(100.9f64, 0.2f64);
         let p6 = Point::new(100.9f64, 0.7f64);
 
-        let geo_line_string1 = LineString(vec![p1, p2, p3, p1]);
-        let geo_line_string2 = LineString(vec![p4, p5, p6, p4]);
+        let geo_line_string1 = LineString::from(vec![p1, p2, p3, p1]);
+        let geo_line_string2 = LineString::from(vec![p4, p5, p6, p4]);
 
         let geo_polygon = Polygon::new(geo_line_string1, vec![geo_line_string2]);
         let geojson_polygon = Value::from(&geo_polygon);
@@ -604,8 +612,8 @@ mod tests {
         let p5 = Point::new(101.0f64, 0.0f64);
         let p6 = Point::new(101.0f64, 1.0f64);
 
-        let geo_line_string1 = LineString(vec![p1, p2, p3, p1]);
-        let geo_line_string2 = LineString(vec![p4, p5, p6, p4]);
+        let geo_line_string1 = LineString::from(vec![p1, p2, p3, p1]);
+        let geo_line_string2 = LineString::from(vec![p4, p5, p6, p4]);
 
         let geo_polygon1 = Polygon::new(geo_line_string1, vec![]);
         let geo_polygon2 = Polygon::new(geo_line_string2, vec![]);
@@ -639,10 +647,10 @@ mod tests {
         let p5 = Point::new(101.0f64, 0.0f64);
         let geo_multi_point = MultiPoint(vec![p1, p2]);
         let geo_multi_line_string =
-            MultiLineString(vec![LineString(vec![p1, p2]), LineString(vec![p2, p3])]);
+            MultiLineString(vec![LineString::from(vec![p1, p2]), LineString::from(vec![p2, p3])]);
         let geo_multi_polygon = MultiPolygon(vec![
-            Polygon::new(LineString(vec![p3, p4, p5, p3]), vec![]),
-            Polygon::new(LineString(vec![p1, p5, p3, p1]), vec![]),
+            Polygon::new(LineString::from(vec![p3, p4, p5, p3]), vec![]),
+            Polygon::new(LineString::from(vec![p1, p5, p3, p1]), vec![]),
         ]);
         let geo_geometry_collection = GeometryCollection(vec![
             geo_types::Geometry::MultiPoint(geo_multi_point),
@@ -702,10 +710,10 @@ mod tests {
         let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
         let geo_line_string: geo_types::LineString<f64> = geojson_line_string.try_into().unwrap();
 
-        assert_almost_eq!(geo_line_string.0[0].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string.0[0].y(), coord1[1], 1e-6);
-        assert_almost_eq!(geo_line_string.0[1].x(), coord2[0], 1e-6);
-        assert_almost_eq!(geo_line_string.0[1].y(), coord2[1], 1e-6);
+        assert_almost_eq!(geo_line_string.0[0].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string.0[0].y, coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string.0[1].x, coord2[0], 1e-6);
+        assert_almost_eq!(geo_line_string.0[1].y, coord2[1], 1e-6);
     }
 
     #[test]
@@ -721,16 +729,16 @@ mod tests {
             geojson_multi_line_string.try_into().unwrap();
 
         let ref geo_line_string1 = geo_multi_line_string.0[0];
-        assert_almost_eq!(geo_line_string1.0[0].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[0].y(), coord1[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].x(), coord2[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].y(), coord2[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].y, coord2[1], 1e-6);
 
         let ref geo_line_string2 = geo_multi_line_string.0[1];
-        assert_almost_eq!(geo_line_string2.0[0].x(), coord2[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[0].y(), coord2[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].x(), coord3[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].y(), coord3[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[0].x, coord2[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[0].y, coord2[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].x, coord3[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].y, coord3[1], 1e-6);
     }
 
     #[test]
@@ -760,24 +768,24 @@ mod tests {
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
         let ref geo_line_string1 = geo_polygon.exterior;
-        assert_almost_eq!(geo_line_string1.0[0].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[0].y(), coord1[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].x(), coord2[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].y(), coord2[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[2].x(), coord3[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[2].y(), coord3[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[3].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[3].y(), coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].y, coord2[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[2].x, coord3[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[2].y, coord3[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[3].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[3].y, coord1[1], 1e-6);
 
         let ref geo_line_string2 = geo_polygon.interiors[0];
-        assert_almost_eq!(geo_line_string2.0[0].x(), coord4[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[0].y(), coord4[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].x(), coord5[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].y(), coord5[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[2].x(), coord6[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[2].y(), coord6[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[3].x(), coord4[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[3].y(), coord4[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[0].x, coord4[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[0].y, coord4[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].x, coord5[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].y, coord5[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[2].x, coord6[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[2].y, coord6[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[3].x, coord4[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[3].y, coord4[1], 1e-6);
     }
 
     #[test]
@@ -804,14 +812,14 @@ mod tests {
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
         let ref geo_line_string1 = geo_polygon.exterior;
-        assert_almost_eq!(geo_line_string1.0[0].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[0].y(), coord1[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].x(), coord2[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].y(), coord2[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[2].x(), coord3[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[2].y(), coord3[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[3].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[3].y(), coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].y, coord2[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[2].x, coord3[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[2].y, coord3[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[3].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[3].y, coord1[1], 1e-6);
 
         assert_eq!(0, geo_polygon.interiors.len());
     }
@@ -846,24 +854,24 @@ mod tests {
             geojson_multi_polygon.try_into().unwrap();
 
         let ref geo_line_string1 = geo_multi_polygon.0[0].exterior;
-        assert_almost_eq!(geo_line_string1.0[0].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[0].y(), coord1[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].x(), coord2[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[1].y(), coord2[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[2].x(), coord3[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[2].y(), coord3[1], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[3].x(), coord1[0], 1e-6);
-        assert_almost_eq!(geo_line_string1.0[3].y(), coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[1].y, coord2[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[2].x, coord3[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[2].y, coord3[1], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[3].x, coord1[0], 1e-6);
+        assert_almost_eq!(geo_line_string1.0[3].y, coord1[1], 1e-6);
 
         let ref geo_line_string2 = geo_multi_polygon.0[1].exterior;
-        assert_almost_eq!(geo_line_string2.0[0].x(), coord4[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[0].y(), coord4[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].x(), coord5[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].y(), coord5[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[2].x(), coord6[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[2].y(), coord6[1], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[3].x(), coord4[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[3].y(), coord4[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[0].x, coord4[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[0].y, coord4[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].x, coord5[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].y, coord5[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[2].x, coord6[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[2].y, coord6[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[3].x, coord4[0], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[3].y, coord4[1], 1e-6);
     }
 
     #[test]
