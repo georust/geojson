@@ -257,40 +257,54 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
             Error::BboxExpectedArray =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered non-array type for a 'bbox' object."),
+            // FIXME: inform what type we actually found
+            {
+                write!(f, "Encountered non-array type for a 'bbox' object.")
+            }
             Error::BboxExpectedNumericValues =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered non-numeric value within 'bbox' array."),
+            // FIXME: inform what type we actually found
+            {
+                write!(f, "Encountered non-numeric value within 'bbox' array.")
+            }
             Error::GeoJsonExpectedObject =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered non-object type for GeoJSON."),
+            // FIXME: inform what type we actually found
+            {
+                write!(f, "Encountered non-object type for GeoJSON.")
+            }
             Error::GeoJsonUnknownType =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered unknown GeoJSON object type."),
-            Error::GeometryUnknownType =>
-                write!(f, "Encountered unknown 'geometry' object type."),
+            // FIXME: inform what type we actually found
+            {
+                write!(f, "Encountered unknown GeoJSON object type.")
+            }
+            Error::GeometryUnknownType => write!(f, "Encountered unknown 'geometry' object type."),
             Error::MalformedJson =>
-                // FIXME: can we report specific serialization error?
-                write!(f, "Encountered malformed JSON."),
+            // FIXME: can we report specific serialization error?
+            {
+                write!(f, "Encountered malformed JSON.")
+            }
             Error::PropertiesExpectedObjectOrNull =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered neither object type nor null type for \
-                           'properties' object."),
+            // FIXME: inform what type we actually found
+            {
+                write!(
+                    f,
+                    "Encountered neither object type nor null type for \
+                     'properties' object."
+                )
+            }
             Error::FeatureInvalidGeometryValue =>
-                // FIXME: inform what type we actually found
-                write!(f, "Encountered neither object type nor null type for \
-                           'geometry' field on 'feature' object."),
-            Error::ExpectedStringValue =>
-                write!(f, "Expected a string value."),
-            Error::ExpectedProperty =>
-                write!(f, "Expected a GeoJSON 'property'."),
-            Error::ExpectedF64Value =>
-                write!(f, "Expected a floating-point value."),
-            Error::ExpectedArrayValue =>
-                write!(f, "Expected an array."),
-            Error::ExpectedObjectValue =>
-                write!(f, "Expected an object."),
+            // FIXME: inform what type we actually found
+            {
+                write!(
+                    f,
+                    "Encountered neither object type nor null type for \
+                     'geometry' field on 'feature' object."
+                )
+            }
+            Error::ExpectedStringValue => write!(f, "Expected a string value."),
+            Error::ExpectedProperty => write!(f, "Expected a GeoJSON 'property'."),
+            Error::ExpectedF64Value => write!(f, "Expected a floating-point value."),
+            Error::ExpectedArrayValue => write!(f, "Expected an array."),
+            Error::ExpectedObjectValue => write!(f, "Expected an object."),
         }
     }
 }

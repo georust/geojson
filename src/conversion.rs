@@ -646,8 +646,10 @@ mod tests {
         let p4 = Point::new(102.0f64, 0.0f64);
         let p5 = Point::new(101.0f64, 0.0f64);
         let geo_multi_point = MultiPoint(vec![p1, p2]);
-        let geo_multi_line_string =
-            MultiLineString(vec![LineString::from(vec![p1, p2]), LineString::from(vec![p2, p3])]);
+        let geo_multi_line_string = MultiLineString(vec![
+            LineString::from(vec![p1, p2]),
+            LineString::from(vec![p2, p3]),
+        ]);
         let geo_multi_polygon = MultiPolygon(vec![
             Polygon::new(LineString::from(vec![p3, p4, p5, p3]), vec![]),
             Polygon::new(LineString::from(vec![p1, p5, p3, p1]), vec![]),
