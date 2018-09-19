@@ -60,21 +60,61 @@ impl From<FeatureCollection> for GeoJson {
 
 impl FromObject for GeoJson {
     fn from_object(object: JsonObject) -> Result<Self, Error> {
-        let _type = match object.get("type") {
-            Some(ref mut t) => t.clone(),
+        let type_ = match object.get("type") {
+            Some(ref t) => Type::from_str(expect_string!(t)),
             None => return Err(Error::ExpectedProperty),
         };
-        return match expect_string!(_type) {
-            "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
-            | "MultiPolygon" | "GeometryCollection" => {
+        match type_ {
+            Some(ref t) if t.is_geometry_type() => {
                 Geometry::from_object(object).map(GeoJson::Geometry)
             }
-            "Feature" => Feature::from_object(object).map(GeoJson::Feature),
-            "FeatureCollection" => {
+            Some(Type::Feature) => {
+                Feature::from_object(object).map(GeoJson::Feature)
+            }
+            Some(Type::FeatureCollection) => {
                 FeatureCollection::from_object(object).map(GeoJson::FeatureCollection)
             }
             _ => Err(Error::GeoJsonUnknownType),
-        };
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Copy)]
+enum Type {
+    Point,
+    MultiPoint,
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    GeometryCollection,
+    Feature,
+    FeatureCollection,
+}
+
+impl Type {
+    fn is_geometry_type(self) -> bool {
+        match self {
+            Type::Point | Type::MultiPoint |
+            Type::LineString | Type::MultiLineString | Type::Polygon |
+            Type::MultiPolygon | Type::GeometryCollection => true,
+            _ => false,
+        }
+    }
+
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "Point" => Some(Type::Point),
+            "MultiPoint" => Some(Type::MultiPoint),
+            "LineString" => Some(Type::LineString),
+            "MultiLineString" => Some(Type::MultiLineString),
+            "Polygon" => Some(Type::Polygon),
+            "MultiPolygon" => Some(Type::MultiPolygon),
+            "GeometryCollection" => Some(Type::GeometryCollection),
+            "Feature" => Some(Type::Feature),
+            "FeatureCollection" => Some(Type::FeatureCollection),
+            _ => None,
+        }
     }
 }
 
