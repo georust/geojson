@@ -1,13 +1,22 @@
 #![feature(test)]
 
+#[macro_use]
+extern crate criterion;
+
+use criterion::Criterion;
+
 extern crate geojson;
 extern crate test;
 
-#[bench]
-fn bench_read(bencher: &mut test::Bencher) {
-    let geojson_str = include_str!("../tests/fixtures/countries.geojson");
+fn parse_benchmark(c: &mut Criterion) {
+    c.bench_function("parse", |b| {
+        let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
-    bencher.iter(|| {
-        test::black_box(geojson_str.parse::<geojson::GeoJson>());
+        b.iter(|| {
+            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson>());
+        });
     });
 }
+
+criterion_group!(benches, parse_benchmark);
+criterion_main!(benches);
