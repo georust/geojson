@@ -69,7 +69,7 @@ impl<'a> From<&'a Feature> for JsonObject {
 
 impl FromObject for Feature {
     fn from_object(mut object: JsonObject) -> Result<Self, Error> {
-        match expect_type!(object) {
+        match expect_type!(object)? {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,

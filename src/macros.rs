@@ -26,7 +26,7 @@ macro_rules! expect_string {
                 use Error;
                 Error::ExpectedStringValue
             }),
-        }?
+        }
     };
 }
 
@@ -38,7 +38,7 @@ macro_rules! expect_f64 {
                 use Error;
                 Error::ExpectedF64Value
             }),
-        }?
+        }
     };
 }
 
@@ -50,7 +50,7 @@ macro_rules! expect_array {
                 use Error;
                 Error::ExpectedArrayValue
             }),
-        }?
+        }
     };
 }
 
@@ -62,7 +62,7 @@ macro_rules! expect_object {
                 use Error;
                 Error::ExpectedObjectValue
             }),
-        }?
+        }
     };
 }
 
@@ -88,7 +88,7 @@ macro_rules! expect_owned_array {
                 use Error;
                 Error::ExpectedArrayValue
             }),
-        }?
+        }
     };
 }
 
@@ -100,6 +100,6 @@ macro_rules! expect_owned_object {
                 use Error;
                 Error::ExpectedObjectValue
             }),
-        }?
+        }
     };
 }
