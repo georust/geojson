@@ -61,7 +61,7 @@ pub fn get_foreign_members(object: &JsonObject) -> Result<Option<JsonObject>, Er
 pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Error> {
     let properties = expect_property!(object, "properties", "missing 'properties' field");
     return match properties {
-        JsonValue::Object(ref x) => Ok(Some(x.to_owned())),
+        JsonValue::Object(x) => Ok(Some(x)),
         JsonValue::Null => Ok(None),
         _ => return Err(Error::PropertiesExpectedObjectOrNull),
     };
