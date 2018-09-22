@@ -71,7 +71,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Err
 ///
 /// Used by Value::Point
 pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position, Error> {
-    let coords_json = try!(get_coords_value(object));
+    let coords_json = get_coords_value(object)?;
     return json_to_position(&coords_json);
 }
 
@@ -79,7 +79,7 @@ pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position, Error> {
 ///
 /// Used by Value::MultiPoint and Value::LineString
 pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>, Error> {
-    let coords_json = try!(get_coords_value(object));
+    let coords_json = get_coords_value(object)?;
     return json_to_1d_positions(&coords_json);
 }
 
@@ -87,7 +87,7 @@ pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>, Error
 ///
 /// Used by Value::MultiLineString and Value::Polygon
 pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>, Error> {
-    let coords_json = try!(get_coords_value(object));
+    let coords_json = get_coords_value(object)?;
     return json_to_2d_positions(&coords_json);
 }
 
@@ -95,7 +95,7 @@ pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>, 
 ///
 /// Used by Value::MultiPolygon
 pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position>>>, Error> {
-    let coords_json = try!(get_coords_value(object));
+    let coords_json = get_coords_value(object)?;
     return json_to_3d_positions(&coords_json);
 }
 
@@ -111,7 +111,7 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
     let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
         let obj = expect_object!(json);
-        let geometry = try!(Geometry::from_object(obj.clone()));
+        let geometry = Geometry::from_object(obj.clone())?;
         geometries.push(geometry);
     }
     return Ok(geometries);
@@ -127,7 +127,7 @@ pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> 
     let geometry = expect_property!(object, "geometry", "Missing 'geometry' field");
     match geometry {
         JsonValue::Object(x) => {
-            let geometry_object = try!(Geometry::from_object(x));
+            let geometry_object = Geometry::from_object(x)?;
             Ok(Some(geometry_object))
         }
         JsonValue::Null => Ok(None),
@@ -142,7 +142,7 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
     let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
         let feature = expect_owned_object!(feature);
-        let feature: Feature = try!(Feature::from_object(feature));
+        let feature: Feature = Feature::from_object(feature)?;
         features.push(feature);
     }
     return Ok(features);
@@ -161,7 +161,7 @@ fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
     let coords_array = expect_array!(json);
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
-        coords.push(try!(json_to_position(item)));
+        coords.push(json_to_position(item)?);
     }
     return Ok(coords);
 }
@@ -170,7 +170,7 @@ fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
     let coords_array = expect_array!(json);
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
-        coords.push(try!(json_to_1d_positions(item)));
+        coords.push(json_to_1d_positions(item)?);
     }
     return Ok(coords);
 }
@@ -179,7 +179,7 @@ fn json_to_3d_positions(json: &JsonValue) -> Result<Vec<Vec<Vec<Position>>>, Err
     let coords_array = expect_array!(json);
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
-        coords.push(try!(json_to_2d_positions(item)));
+        coords.push(json_to_2d_positions(item)?);
     }
     return Ok(coords);
 }

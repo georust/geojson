@@ -20,49 +20,49 @@ macro_rules! expect_type {
 
 macro_rules! expect_string {
     ($value:expr) => {
-        try!(match $value.as_str() {
+        match $value.as_str() {
             Some(v) => Ok(v),
             None => Err({
                 use Error;
                 Error::ExpectedStringValue
             }),
-        })
+        }?
     };
 }
 
 macro_rules! expect_f64 {
     ($value:expr) => {
-        try!(match $value.as_f64() {
+        match $value.as_f64() {
             Some(v) => Ok(v),
             None => Err({
                 use Error;
                 Error::ExpectedF64Value
             }),
-        })
+        }?
     };
 }
 
 macro_rules! expect_array {
     ($value:expr) => {
-        try!(match $value.as_array() {
+        match $value.as_array() {
             Some(v) => Ok(v),
             None => Err({
                 use Error;
                 Error::ExpectedArrayValue
             }),
-        })
+        }?
     };
 }
 
 macro_rules! expect_object {
     ($value:expr) => {
-        try!(match $value.as_object() {
+        match $value.as_object() {
             Some(v) => Ok(v),
             None => Err({
                 use Error;
                 Error::ExpectedObjectValue
             }),
-        })
+        }?
     };
 }
 
@@ -82,24 +82,24 @@ macro_rules! expect_property {
 
 macro_rules! expect_owned_array {
     ($value:expr) => {
-        try!(match $value {
+        match $value {
             JsonValue::Array(v) => Ok(v),
             _ => Err({
                 use Error;
                 Error::ExpectedArrayValue
             }),
-        })
+        }?
     };
 }
 
 macro_rules! expect_owned_object {
     ($value:expr) => {
-        try!(match $value {
+        match $value {
             JsonValue::Object(o) => Ok(o),
             _ => Err({
                 use Error;
                 Error::ExpectedObjectValue
             }),
-        })
+        }?
     };
 }

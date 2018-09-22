@@ -95,7 +95,7 @@ impl<'de> Deserialize<'de> for GeoJson {
         use serde::de::Error as SerdeError;
         use std::error::Error as StdError;
 
-        let val = try!(JsonObject::deserialize(deserializer));
+        let val = JsonObject::deserialize(deserializer)?;
 
         GeoJson::from_object(val).map_err(|e| D::Error::custom(e.description()))
     }
@@ -105,7 +105,7 @@ impl FromStr for GeoJson {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let object = try!(get_object(s));
+        let object = get_object(s)?;
 
         return GeoJson::from_object(object);
     }
