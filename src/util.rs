@@ -108,7 +108,7 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
          property"
     );
     let geometries_array = expect_array!(geometries_json);
-    let mut geometries = vec![];
+    let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
         let obj = expect_object!(json);
         let geometry = try!(Geometry::from_object(obj.clone()));
