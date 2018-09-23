@@ -17,7 +17,7 @@ use std::str::FromStr;
 
 use json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
-use {util, Error, Feature, FeatureCollection, Geometry};
+use {Error, Feature, FeatureCollection, Geometry};
 
 /// GeoJSON Objects
 ///
@@ -59,12 +59,12 @@ impl From<FeatureCollection> for GeoJson {
 }
 
 impl GeoJson {
-    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
-        let type_ = match object.remove("type") {
-            Some(t) => t,
-            None => return Err(Error::ExpectedProperty("type".to_owned())),
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+        let type_ = match object.get("type") {
+            Some(json::JsonValue::String(t)) => t.clone(),
+            _ => return Err(Error::ExpectedProperty("type".to_owned())),
         };
-        return match &*util::expect_string(type_)? {
+        return match &*type_ {
             "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
             | "MultiPolygon" | "GeometryCollection" => {
                 Geometry::from_json_object(object).map(GeoJson::Geometry)
