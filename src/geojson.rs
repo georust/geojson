@@ -61,20 +61,53 @@ impl From<FeatureCollection> for GeoJson {
 impl GeoJson {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         let type_ = match object.get("type") {
-            Some(json::JsonValue::String(t)) => t.clone(),
+            Some(json::JsonValue::String(t)) => Type::from_str(t),
             _ => return Err(Error::ExpectedProperty("type".to_owned())),
         };
-        return match &*type_ {
-            "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
-            | "MultiPolygon" | "GeometryCollection" => {
+        let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
+        match type_ {
+            Type::Point | Type::MultiPoint |
+            Type::LineString | Type::MultiLineString | Type::Polygon |
+            Type::MultiPolygon | Type::GeometryCollection => {
                 Geometry::from_json_object(object).map(GeoJson::Geometry)
             }
-            "Feature" => Feature::from_json_object(object).map(GeoJson::Feature),
-            "FeatureCollection" => {
+            Type::Feature => {
+                Feature::from_json_object(object).map(GeoJson::Feature)
+            }
+            Type::FeatureCollection => {
                 FeatureCollection::from_json_object(object).map(GeoJson::FeatureCollection)
             }
-            _ => Err(Error::GeoJsonUnknownType),
-        };
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Copy)]
+enum Type {
+    Point,
+    MultiPoint,
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    GeometryCollection,
+    Feature,
+    FeatureCollection,
+}
+
+impl Type {
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "Point" => Some(Type::Point),
+            "MultiPoint" => Some(Type::MultiPoint),
+            "LineString" => Some(Type::LineString),
+            "MultiLineString" => Some(Type::MultiLineString),
+            "Polygon" => Some(Type::Polygon),
+            "MultiPolygon" => Some(Type::MultiPolygon),
+            "GeometryCollection" => Some(Type::GeometryCollection),
+            "Feature" => Some(Type::Feature),
+            "FeatureCollection" => Some(Type::FeatureCollection),
+            _ => None,
+        }
     }
 }
 
