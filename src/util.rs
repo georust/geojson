@@ -110,11 +110,11 @@ pub fn get_foreign_members(object: &JsonObject) -> Result<Option<JsonObject>, Er
 /// Used by Feature
 pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Error> {
     let properties = expect_property(object, "properties")?;
-    return match properties {
+    match properties {
         JsonValue::Object(x) => Ok(Some(x)),
         JsonValue::Null => Ok(None),
-        _ => return Err(Error::PropertiesExpectedObjectOrNull),
-    };
+        _ => Err(Error::PropertiesExpectedObjectOrNull),
+    }
 }
 
 /// Retrieve a single Position from the value of the "coordinates" key
@@ -122,7 +122,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Err
 /// Used by Value::Point
 pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position, Error> {
     let coords_json = get_coords_value(object)?;
-    return json_to_position(&coords_json);
+    json_to_position(&coords_json)
 }
 
 /// Retrieve a one dimensional Vec of Positions from the value of the "coordinates" key
@@ -130,7 +130,7 @@ pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position, Error> {
 /// Used by Value::MultiPoint and Value::LineString
 pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>, Error> {
     let coords_json = get_coords_value(object)?;
-    return json_to_1d_positions(&coords_json);
+    json_to_1d_positions(&coords_json)
 }
 
 /// Retrieve a two dimensional Vec of Positions from the value of the "coordinates" key
@@ -138,7 +138,7 @@ pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>, Error
 /// Used by Value::MultiLineString and Value::Polygon
 pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>, Error> {
     let coords_json = get_coords_value(object)?;
-    return json_to_2d_positions(&coords_json);
+    json_to_2d_positions(&coords_json)
 }
 
 /// Retrieve a three dimensional Vec of Positions from the value of the "coordinates" key
@@ -146,7 +146,7 @@ pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>, 
 /// Used by Value::MultiPolygon
 pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position>>>, Error> {
     let coords_json = get_coords_value(object)?;
-    return json_to_3d_positions(&coords_json);
+    json_to_3d_positions(&coords_json)
 }
 
 /// Used by Value::GeometryCollection
@@ -159,12 +159,12 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
         let geometry = Geometry::from_json_object(obj.clone())?;
         geometries.push(geometry);
     }
-    return Ok(geometries);
+    Ok(geometries)
 }
 
 /// Used by Feature
 pub fn get_id(object: &mut JsonObject) -> Result<Option<JsonValue>, Error> {
-    return Ok(object.remove("id"));
+    Ok(object.remove("id"))
 }
 
 /// Used by Feature
@@ -190,7 +190,7 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
         let feature: Feature = Feature::from_json_object(feature)?;
         features.push(feature);
     }
-    return Ok(features);
+    Ok(features)
 }
 
 fn json_to_position(json: &JsonValue) -> Result<Position, Error> {
@@ -199,7 +199,7 @@ fn json_to_position(json: &JsonValue) -> Result<Position, Error> {
     for position in coords_array {
         coords.push(expect_f64(position)?);
     }
-    return Ok(coords);
+    Ok(coords)
 }
 
 fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
@@ -208,7 +208,7 @@ fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
     for item in coords_array {
         coords.push(json_to_position(item)?);
     }
-    return Ok(coords);
+    Ok(coords)
 }
 
 fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
@@ -217,7 +217,7 @@ fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
     for item in coords_array {
         coords.push(json_to_1d_positions(item)?);
     }
-    return Ok(coords);
+    Ok(coords)
 }
 
 fn json_to_3d_positions(json: &JsonValue) -> Result<Vec<Vec<Vec<Position>>>, Error> {
@@ -226,5 +226,5 @@ fn json_to_3d_positions(json: &JsonValue) -> Result<Vec<Vec<Vec<Position>>>, Err
     for item in coords_array {
         coords.push(json_to_2d_positions(item)?);
     }
-    return Ok(coords);
+    Ok(coords)
 }
