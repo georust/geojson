@@ -17,7 +17,7 @@ use std::str::FromStr;
 
 use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
-use {Error, Feature, FeatureCollection, FromObject, Geometry, util};
+use {util, Error, Feature, FeatureCollection, FromObject, Geometry};
 
 /// GeoJSON Objects
 ///

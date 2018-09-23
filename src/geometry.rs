@@ -172,9 +172,7 @@ impl FromObject for Geometry {
             "MultiLineString" => Value::MultiLineString(util::get_coords_2d_pos(&mut object)?),
             "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
             "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
-            "GeometryCollection" => {
-                Value::GeometryCollection(util::get_geometries(&mut object)?)
-            }
+            "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
             _ => return Err(Error::GeometryUnknownType),
         };
         let bbox = util::get_bbox(&mut object)?;
