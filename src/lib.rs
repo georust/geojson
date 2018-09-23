@@ -241,10 +241,14 @@ pub enum Error {
     MalformedJson,
     PropertiesExpectedObjectOrNull,
     FeatureInvalidGeometryValue,
+    ExpectedType {
+        expected: String,
+        actual: String,
+    },
 
     // FIXME: make these types more specific
     ExpectedStringValue,
-    ExpectedProperty,
+    ExpectedProperty(String),
     ExpectedF64Value,
     ExpectedArrayValue,
     ExpectedObjectValue,
@@ -297,8 +301,18 @@ impl std::fmt::Display for Error {
                      'geometry' field on 'feature' object."
                 )
             }
+            Error::ExpectedType { ref expected, ref actual } => {
+                write!(
+                    f,
+                    "Expected GeoJSON type '{}', found '{}'",
+                    expected,
+                    actual,
+                )
+            }
             Error::ExpectedStringValue => write!(f, "Expected a string value."),
-            Error::ExpectedProperty => write!(f, "Expected a GeoJSON 'property'."),
+            Error::ExpectedProperty(ref prop_name) => {
+                write!(f, "Expected GeoJSON property '{}'.", prop_name)
+            },
             Error::ExpectedF64Value => write!(f, "Expected a floating-point value."),
             Error::ExpectedArrayValue => write!(f, "Expected an array."),
             Error::ExpectedObjectValue => write!(f, "Expected an object."),
@@ -321,8 +335,9 @@ impl std::error::Error for Error {
             Error::FeatureInvalidGeometryValue => {
                 "neither object type nor null type for 'geometry' field on 'feature' object."
             }
+            Error::ExpectedType { .. } => "mismatched GeoJSON type",
             Error::ExpectedStringValue => "expected a string value",
-            Error::ExpectedProperty => "expected a GeoJSON 'property'",
+            Error::ExpectedProperty(..) => "expected a GeoJSON property",
             Error::ExpectedF64Value => "expected a floating-point value",
             Error::ExpectedArrayValue => "expected an array",
             Error::ExpectedObjectValue => "expected an object",

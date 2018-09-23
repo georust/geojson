@@ -52,7 +52,7 @@ pub fn expect_object(value: &JsonValue) -> Result<&JsonObject, Error> {
 fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue, Error> {
     match obj.remove(name) {
         Some(v) => Ok(v),
-        None => Err(Error::ExpectedProperty),
+        None => Err(Error::ExpectedProperty(name.to_string())),
     }
 }
 
