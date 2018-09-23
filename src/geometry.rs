@@ -14,7 +14,7 @@
 
 use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 
-use {util, Bbox, Error, FromObject, LineStringType, PointType, PolygonType};
+use {util, Bbox, Error, LineStringType, PointType, PolygonType};
 
 /// The underlying Geometry value
 ///
@@ -163,8 +163,8 @@ impl<'a> From<&'a Geometry> for JsonObject {
     }
 }
 
-impl FromObject for Geometry {
-    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+impl Geometry {
+    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
         let value = match &*util::expect_type(&mut object)? {
             "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
             "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
@@ -204,7 +204,7 @@ impl<'de> Deserialize<'de> for Geometry {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        Geometry::from_object(val).map_err(|e| D::Error::custom(e.description()))
+        Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 

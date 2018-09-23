@@ -15,7 +15,7 @@
 use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 use serde_json;
 
-use {util, Bbox, Error, Feature, FromObject};
+use {util, Bbox, Error, Feature};
 
 /// Feature Collection Objects
 ///
@@ -80,8 +80,8 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
     }
 }
 
-impl FromObject for FeatureCollection {
-    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+impl FeatureCollection {
+    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
         match &*util::expect_type(&mut object)? {
             "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
@@ -112,6 +112,6 @@ impl<'de> Deserialize<'de> for FeatureCollection {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        FeatureCollection::from_object(val).map_err(|e| D::Error::custom(e.description()))
+        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }

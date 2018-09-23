@@ -17,7 +17,7 @@ use std::str::FromStr;
 
 use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
-use {util, Error, Feature, FeatureCollection, FromObject, Geometry};
+use {util, Error, Feature, FeatureCollection, Geometry};
 
 /// GeoJSON Objects
 ///
@@ -58,8 +58,8 @@ impl From<FeatureCollection> for GeoJson {
     }
 }
 
-impl FromObject for GeoJson {
-    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+impl GeoJson {
+    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
         let type_ = match object.remove("type") {
             Some(t) => t,
             None => return Err(Error::ExpectedProperty),
@@ -67,11 +67,11 @@ impl FromObject for GeoJson {
         return match &*util::expect_string(type_)? {
             "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
             | "MultiPolygon" | "GeometryCollection" => {
-                Geometry::from_object(object).map(GeoJson::Geometry)
+                Geometry::from_json_object(object).map(GeoJson::Geometry)
             }
-            "Feature" => Feature::from_object(object).map(GeoJson::Feature),
+            "Feature" => Feature::from_json_object(object).map(GeoJson::Feature),
             "FeatureCollection" => {
-                FeatureCollection::from_object(object).map(GeoJson::FeatureCollection)
+                FeatureCollection::from_json_object(object).map(GeoJson::FeatureCollection)
             }
             _ => Err(Error::GeoJsonUnknownType),
         };
@@ -97,7 +97,7 @@ impl<'de> Deserialize<'de> for GeoJson {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        GeoJson::from_object(val).map_err(|e| D::Error::custom(e.description()))
+        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
@@ -107,7 +107,7 @@ impl FromStr for GeoJson {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let object = get_object(s)?;
 
-        return GeoJson::from_object(object);
+        return GeoJson::from_json_object(object);
     }
 }
 

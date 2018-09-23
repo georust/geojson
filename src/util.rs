@@ -14,7 +14,7 @@
 
 use json::{JsonObject, JsonValue};
 
-use {Bbox, Error, Feature, FromObject, Geometry, Position};
+use {Bbox, Error, Feature, Geometry, Position};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;
@@ -156,7 +156,7 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
     let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
         let obj = expect_object(json)?;
-        let geometry = Geometry::from_object(obj.clone())?;
+        let geometry = Geometry::from_json_object(obj.clone())?;
         geometries.push(geometry);
     }
     return Ok(geometries);
@@ -172,7 +172,7 @@ pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> 
     let geometry = expect_property(object, "geometry")?;
     match geometry {
         JsonValue::Object(x) => {
-            let geometry_object = Geometry::from_object(x)?;
+            let geometry_object = Geometry::from_json_object(x)?;
             Ok(Some(geometry_object))
         }
         JsonValue::Null => Ok(None),
@@ -187,7 +187,7 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
     let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
         let feature = expect_owned_object(feature)?;
-        let feature: Feature = Feature::from_object(feature)?;
+        let feature: Feature = Feature::from_json_object(feature)?;
         features.push(feature);
     }
     return Ok(features);

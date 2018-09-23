@@ -335,7 +335,3 @@ mod json {
     pub use serde_json::{Map, Value as JsonValue};
     pub type JsonObject = Map<String, JsonValue>;
 }
-
-trait FromObject: Sized {
-    fn from_object(object: json::JsonObject) -> Result<Self, Error>;
-}

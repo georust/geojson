@@ -14,7 +14,7 @@
 
 use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use serde_json;
-use {util, Bbox, Error, FromObject, Geometry};
+use {util, Bbox, Error, Geometry};
 
 /// Feature Objects
 ///
@@ -67,8 +67,8 @@ impl<'a> From<&'a Feature> for JsonObject {
     }
 }
 
-impl FromObject for Feature {
-    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+impl Feature {
+    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
         match &*util::expect_type(&mut object)? {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
@@ -101,7 +101,7 @@ impl<'de> Deserialize<'de> for Feature {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        Feature::from_object(val).map_err(|e| D::Error::custom(e.description()))
+        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
     }
 }
 
