@@ -15,7 +15,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
 use {util, Error, Feature, FeatureCollection, Geometry};
 
@@ -111,16 +111,18 @@ impl FromStr for GeoJson {
     }
 }
 
-fn get_object(s: &str) -> Result<JsonObject, Error> {
-    let decoded_json: ::serde_json::Value = match ::serde_json::from_str(s) {
-        Ok(j) => j,
-        Err(..) => return Err(Error::MalformedJson),
-    };
+fn get_object(s: &str) -> Result<json::JsonObject, Error> {
+    ::serde_json::from_str(s)
+        .ok()
+        .and_then(|v| json_value_into_json_object(v))
+        .ok_or(Error::MalformedJson)
+}
 
-    if let ::serde_json::Value::Object(geo) = decoded_json {
-        return Ok(geo);
+fn json_value_into_json_object(json_value: json::JsonValue) -> Option<json::JsonObject> {
+    if let json::JsonValue::Object(geo) = json_value {
+        Some(geo)
     } else {
-        return Err(Error::MalformedJson);
+        None
     }
 }
 
