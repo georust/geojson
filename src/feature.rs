@@ -69,7 +69,7 @@ impl<'a> From<&'a Feature> for JsonObject {
 
 impl FromObject for Feature {
     fn from_object(mut object: JsonObject) -> Result<Self, Error> {
-        match expect_type!(object)? {
+        match &*util::expect_type(&mut object)? {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,
@@ -77,7 +77,7 @@ impl FromObject for Feature {
                 bbox: util::get_bbox(&mut object)?,
                 foreign_members: util::get_foreign_members(&mut object)?,
             }),
-            &_ => Err(Error::GeoJsonUnknownType),
+            _ => Err(Error::GeoJsonUnknownType),
         }
     }
 }

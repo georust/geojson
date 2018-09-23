@@ -82,13 +82,13 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 
 impl FromObject for FeatureCollection {
     fn from_object(mut object: JsonObject) -> Result<Self, Error> {
-        match expect_type!(object)? {
+        match &*util::expect_type(&mut object)? {
             "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
                 foreign_members: util::get_foreign_members(&mut object)?,
             }),
-            &_ => Err(Error::ExpectedProperty),
+            _ => Err(Error::ExpectedProperty),
         }
     }
 }

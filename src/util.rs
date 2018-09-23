@@ -16,12 +16,62 @@ use json::{JsonObject, JsonValue};
 
 use {Bbox, Error, Feature, FromObject, Geometry, Position};
 
+pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
+    let prop = expect_property(value, "type")?;
+    expect_string(prop)
+}
+
+pub fn expect_string(value: JsonValue) -> Result<String, Error> {
+    match value {
+        JsonValue::String(s) => Ok(s),
+        _ => Err(Error::ExpectedStringValue),
+    }
+}
+
+pub fn expect_f64(value: &JsonValue) -> Result<f64, Error> {
+    match value.as_f64() {
+        Some(v) => Ok(v),
+        None => Err(Error::ExpectedF64Value),
+    }
+}
+
+pub fn expect_array(value: &JsonValue) -> Result<&Vec<JsonValue>, Error> {
+    match value.as_array() {
+        Some(v) => Ok(v),
+        None => Err(Error::ExpectedArrayValue),
+    }
+}
+
+pub fn expect_object(value: &JsonValue) -> Result<&JsonObject, Error> {
+    match value.as_object() {
+        Some(v) => Ok(v),
+        None => Err(Error::ExpectedObjectValue),
+    }
+}
+
+fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue, Error> {
+    match obj.remove(name) {
+        Some(v) => Ok(v),
+        None => Err(Error::ExpectedProperty)
+    }
+}
+
+fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>, Error> {
+    match value {
+        JsonValue::Array(v) => Ok(v),
+        _ => Err(Error::ExpectedArrayValue),
+    }
+}
+
+fn expect_owned_object(value: JsonValue) -> Result<JsonObject, Error> {
+    match value {
+        JsonValue::Object(o) => Ok(o),
+        _ => Err(Error::ExpectedObjectValue),
+    }
+}
+
 pub fn get_coords_value<'a>(object: &mut JsonObject) -> Result<JsonValue, Error> {
-    return Ok(expect_property!(
-        object,
-        "coordinates",
-        "Encountered Geometry object without 'coordinates' member"
-    ));
+    expect_property(object, "coordinates")
 }
 
 /// Used by FeatureCollection, Feature, Geometry
@@ -59,7 +109,7 @@ pub fn get_foreign_members(object: &JsonObject) -> Result<Option<JsonObject>, Er
 
 /// Used by Feature
 pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Error> {
-    let properties = expect_property!(object, "properties", "missing 'properties' field");
+    let properties = expect_property(object, "properties")?;
     return match properties {
         JsonValue::Object(x) => Ok(Some(x)),
         JsonValue::Null => Ok(None),
@@ -101,16 +151,11 @@ pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position
 
 /// Used by Value::GeometryCollection
 pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
-    let geometries_json = expect_property!(
-        object,
-        "geometries",
-        "Encountered GeometryCollection without 'geometries' \
-         property"
-    );
-    let geometries_array = expect_array!(geometries_json)?;
+    let geometries_json = expect_property(object, "geometries")?;
+    let geometries_array = expect_array(&geometries_json)?;
     let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
-        let obj = expect_object!(json)?;
+        let obj = expect_object(json)?;
         let geometry = Geometry::from_object(obj.clone())?;
         geometries.push(geometry);
     }
@@ -124,7 +169,7 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<JsonValue>, Error> {
 
 /// Used by Feature
 pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> {
-    let geometry = expect_property!(object, "geometry", "Missing 'geometry' field");
+    let geometry = expect_property(object, "geometry")?;
     match geometry {
         JsonValue::Object(x) => {
             let geometry_object = Geometry::from_object(x)?;
@@ -137,11 +182,11 @@ pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>, Error> 
 
 /// Used by FeatureCollection
 pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
-    let prop = expect_property!(object, "features", "Missing 'features' field");
-    let features_json = expect_owned_array!(prop)?;
+    let prop = expect_property(object, "features")?;
+    let features_json = expect_owned_array(prop)?;
     let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
-        let feature = expect_owned_object!(feature)?;
+        let feature = expect_owned_object(feature)?;
         let feature: Feature = Feature::from_object(feature)?;
         features.push(feature);
     }
@@ -149,16 +194,16 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>, Error> {
 }
 
 fn json_to_position(json: &JsonValue) -> Result<Position, Error> {
-    let coords_array = expect_array!(json)?;
+    let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for position in coords_array {
-        coords.push(expect_f64!(position)?);
+        coords.push(expect_f64(position)?);
     }
     return Ok(coords);
 }
 
 fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
-    let coords_array = expect_array!(json)?;
+    let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
         coords.push(json_to_position(item)?);
@@ -167,7 +212,7 @@ fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>, Error> {
 }
 
 fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
-    let coords_array = expect_array!(json)?;
+    let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
         coords.push(json_to_1d_positions(item)?);
@@ -176,7 +221,7 @@ fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>, Error> {
 }
 
 fn json_to_3d_positions(json: &JsonValue) -> Result<Vec<Vec<Vec<Position>>>, Error> {
-    let coords_array = expect_array!(json)?;
+    let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
         coords.push(json_to_2d_positions(item)?);

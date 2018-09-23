@@ -165,7 +165,7 @@ impl<'a> From<&'a Geometry> for JsonObject {
 
 impl FromObject for Geometry {
     fn from_object(mut object: JsonObject) -> Result<Self, Error> {
-        let value = match expect_type!(object)? {
+        let value = match &*util::expect_type(&mut object)? {
             "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
             "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
             "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),

@@ -213,9 +213,6 @@ pub type PointType = Position;
 pub type LineStringType = Vec<Position>;
 pub type PolygonType = Vec<Vec<Position>>;
 
-#[macro_use]
-mod macros;
-
 mod util;
 
 mod geojson;

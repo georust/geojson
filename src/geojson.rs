@@ -17,7 +17,7 @@ use std::str::FromStr;
 
 use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
-use {Error, Feature, FeatureCollection, FromObject, Geometry};
+use {Error, Feature, FeatureCollection, FromObject, Geometry, util};
 
 /// GeoJSON Objects
 ///
@@ -64,7 +64,7 @@ impl FromObject for GeoJson {
             Some(ref mut t) => t.clone(),
             None => return Err(Error::ExpectedProperty),
         };
-        return match expect_string!(_type)? {
+        return match &*util::expect_string(_type)? {
             "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
             | "MultiPolygon" | "GeometryCollection" => {
                 Geometry::from_object(object).map(GeoJson::Geometry)
