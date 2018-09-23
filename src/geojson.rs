@@ -59,12 +59,12 @@ impl From<FeatureCollection> for GeoJson {
 }
 
 impl FromObject for GeoJson {
-    fn from_object(object: JsonObject) -> Result<Self, Error> {
-        let _type = match object.get("type") {
-            Some(ref mut t) => t.clone(),
+    fn from_object(mut object: JsonObject) -> Result<Self, Error> {
+        let type_ = match object.remove("type") {
+            Some(t) => t,
             None => return Err(Error::ExpectedProperty),
         };
-        return match &*util::expect_string(_type)? {
+        return match &*util::expect_string(type_)? {
             "Point" | "MultiPoint" | "LineString" | "MultiLineString" | "Polygon"
             | "MultiPolygon" | "GeometryCollection" => {
                 Geometry::from_object(object).map(GeoJson::Geometry)
