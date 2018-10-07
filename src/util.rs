@@ -80,17 +80,14 @@ pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>, Error> {
         Some(b) => b,
         None => return Ok(None),
     };
-    let bbox_array = match bbox_json.as_array() {
-        Some(b) => b,
-        None => return Err(Error::BboxExpectedArray),
+    let bbox_array = match bbox_json {
+        JsonValue::Array(a) => a,
+        _ => return Err(Error::BboxExpectedArray),
     };
-    let mut bbox = vec![];
-    for item_json in bbox_array {
-        match item_json.as_f64() {
-            Some(item_f64) => bbox.push(item_f64),
-            None => return Err(Error::BboxExpectedNumericValues),
-        }
-    }
+    let bbox = bbox_array
+        .into_iter()
+        .map(|i| i.as_f64().ok_or(Error::BboxExpectedNumericValues))
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(Some(bbox))
 }
 
