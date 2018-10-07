@@ -88,7 +88,8 @@ impl<'a> From<&'a Value> for JsonValue {
             Value::Polygon(ref x) => ::serde_json::to_value(x),
             Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
             Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
-        }.unwrap()
+        }
+        .unwrap()
     }
 }
 

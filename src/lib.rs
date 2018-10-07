@@ -241,10 +241,7 @@ pub enum Error {
     MalformedJson,
     PropertiesExpectedObjectOrNull,
     FeatureInvalidGeometryValue,
-    ExpectedType {
-        expected: String,
-        actual: String,
-    },
+    ExpectedType { expected: String, actual: String },
 
     // FIXME: make these types more specific
     ExpectedStringValue,
@@ -301,18 +298,18 @@ impl std::fmt::Display for Error {
                      'geometry' field on 'feature' object."
                 )
             }
-            Error::ExpectedType { ref expected, ref actual } => {
-                write!(
-                    f,
-                    "Expected GeoJSON type '{}', found '{}'",
-                    expected,
-                    actual,
-                )
-            }
+            Error::ExpectedType {
+                ref expected,
+                ref actual,
+            } => write!(
+                f,
+                "Expected GeoJSON type '{}', found '{}'",
+                expected, actual,
+            ),
             Error::ExpectedStringValue => write!(f, "Expected a string value."),
             Error::ExpectedProperty(ref prop_name) => {
                 write!(f, "Expected GeoJSON property '{}'.", prop_name)
-            },
+            }
             Error::ExpectedF64Value => write!(f, "Expected a floating-point value."),
             Error::ExpectedArrayValue => write!(f, "Expected an array."),
             Error::ExpectedObjectValue => write!(f, "Expected an object."),

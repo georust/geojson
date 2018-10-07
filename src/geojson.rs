@@ -66,14 +66,14 @@ impl GeoJson {
         };
         let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
         match type_ {
-            Type::Point | Type::MultiPoint |
-            Type::LineString | Type::MultiLineString | Type::Polygon |
-            Type::MultiPolygon | Type::GeometryCollection => {
-                Geometry::from_json_object(object).map(GeoJson::Geometry)
-            }
-            Type::Feature => {
-                Feature::from_json_object(object).map(GeoJson::Feature)
-            }
+            Type::Point
+            | Type::MultiPoint
+            | Type::LineString
+            | Type::MultiLineString
+            | Type::Polygon
+            | Type::MultiPolygon
+            | Type::GeometryCollection => Geometry::from_json_object(object).map(GeoJson::Geometry),
+            Type::Feature => Feature::from_json_object(object).map(GeoJson::Feature),
             Type::FeatureCollection => {
                 FeatureCollection::from_json_object(object).map(GeoJson::FeatureCollection)
             }
