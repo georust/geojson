@@ -76,7 +76,7 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
             }
         }
 
-        return map;
+        map
     }
 }
 

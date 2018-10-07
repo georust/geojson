@@ -123,7 +123,7 @@ impl Geometry {
     pub fn new(value: Value) -> Self {
         Geometry {
             bbox: None,
-            value: value,
+            value,
             foreign_members: None,
         }
     }
@@ -160,7 +160,7 @@ impl<'a> From<&'a Geometry> for JsonObject {
                 map.insert(key.to_owned(), value.to_owned());
             }
         }
-        return map;
+        map
     }
 }
 
@@ -178,11 +178,11 @@ impl Geometry {
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
-        return Ok(Geometry {
-            bbox: bbox,
-            value: value,
-            foreign_members: foreign_members,
-        });
+        Ok(Geometry {
+            bbox,
+            value,
+            foreign_members,
+        })
     }
 }
 

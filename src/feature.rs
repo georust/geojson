@@ -63,7 +63,7 @@ impl<'a> From<&'a Feature> for JsonObject {
                 map.insert(key.to_owned(), value.to_owned());
             }
         }
-        return map;
+        map
     }
 }
 

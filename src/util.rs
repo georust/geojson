@@ -70,7 +70,7 @@ fn expect_owned_object(value: JsonValue) -> Result<JsonObject, Error> {
     }
 }
 
-pub fn get_coords_value<'a>(object: &mut JsonObject) -> Result<JsonValue, Error> {
+pub fn get_coords_value(object: &mut JsonObject) -> Result<JsonValue, Error> {
     expect_property(object, "coordinates")
 }
 

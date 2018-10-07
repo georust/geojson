@@ -71,7 +71,7 @@ where
             .map(|line_string| create_line_string_type(&line_string)),
     );
 
-    return coords;
+    coords
 }
 
 fn create_multi_polygon_type<T>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<PolygonType>
@@ -118,7 +118,7 @@ where
 }
 
 fn create_geo_multi_line_string<T>(
-    multi_line_type: &Vec<LineStringType>,
+    multi_line_type: &[LineStringType],
 ) -> geo_types::MultiLineString<T>
 where
     T: Float,

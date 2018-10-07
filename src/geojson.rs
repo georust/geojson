@@ -32,11 +32,11 @@ pub enum GeoJson {
 
 impl<'a> From<&'a GeoJson> for JsonObject {
     fn from(geojson: &'a GeoJson) -> JsonObject {
-        return match *geojson {
+        match *geojson {
             GeoJson::Geometry(ref geometry) => geometry.into(),
             GeoJson::Feature(ref feature) => feature.into(),
             GeoJson::FeatureCollection(ref fc) => fc.into(),
-        };
+        }
     }
 }
 
@@ -140,14 +140,14 @@ impl FromStr for GeoJson {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let object = get_object(s)?;
 
-        return GeoJson::from_json_object(object);
+        GeoJson::from_json_object(object)
     }
 }
 
 fn get_object(s: &str) -> Result<json::JsonObject, Error> {
     ::serde_json::from_str(s)
         .ok()
-        .and_then(|v| json_value_into_json_object(v))
+        .and_then(json_value_into_json_object)
         .ok_or(Error::MalformedJson)
 }
 
