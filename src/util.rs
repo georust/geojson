@@ -92,15 +92,11 @@ pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>, Error> {
 }
 
 /// Used by FeatureCollection, Feature, Geometry
-pub fn get_foreign_members(object: &JsonObject) -> Result<Option<JsonObject>, Error> {
+pub fn get_foreign_members(object: JsonObject) -> Result<Option<JsonObject>, Error> {
     if object.is_empty() {
         Ok(None)
     } else {
-        let mut res = JsonObject::new();
-        for (key, value) in object {
-            res.insert(key.to_owned(), value.to_owned());
-        }
-        Ok(Some(res))
+        Ok(Some(object))
     }
 }
 

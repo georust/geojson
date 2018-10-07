@@ -177,7 +177,7 @@ impl Geometry {
             _ => return Err(Error::GeometryUnknownType),
         };
         let bbox = util::get_bbox(&mut object)?;
-        let foreign_members = util::get_foreign_members(&mut object)?;
+        let foreign_members = util::get_foreign_members(object)?;
         return Ok(Geometry {
             bbox: bbox,
             value: value,

@@ -75,7 +75,7 @@ impl Feature {
                 properties: util::get_properties(&mut object)?,
                 id: util::get_id(&mut object)?,
                 bbox: util::get_bbox(&mut object)?,
-                foreign_members: util::get_foreign_members(&mut object)?,
+                foreign_members: util::get_foreign_members(object)?,
             }),
             _ => Err(Error::GeoJsonUnknownType),
         }

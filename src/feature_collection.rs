@@ -86,7 +86,7 @@ impl FeatureCollection {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
-                foreign_members: util::get_foreign_members(&mut object)?,
+                foreign_members: util::get_foreign_members(object)?,
             }),
             type_ => Err(Error::ExpectedType {
                 expected: "FeatureCollection".to_owned(),
