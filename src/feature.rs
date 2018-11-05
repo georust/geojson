@@ -18,8 +18,7 @@ use {util, Bbox, Error, Geometry};
 
 /// Feature Objects
 ///
-/// [GeoJSON Format Specification § 3.2]
-/// (https://tools.ietf.org/html/rfc7946#section-3.2)
+/// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Feature {
     pub bbox: Option<Bbox>,
@@ -28,8 +27,7 @@ pub struct Feature {
     pub properties: Option<JsonObject>,
     /// Foreign Members
     ///
-    /// [RFC7946 § 6]
-    /// (https://tools.ietf.org/html/rfc7946#section-6)
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 

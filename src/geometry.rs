@@ -37,44 +37,37 @@ use {util, Bbox, Error, LineStringType, PointType, PolygonType};
 pub enum Value {
     /// Point
     ///
-    /// [GeoJSON Format Specification § 3.1.2]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.2
+    /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2
     Point(PointType),
 
     /// MultiPoint
     ///
-    /// [GeoJSON Format Specification § 3.1.3]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.3
+    /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3
     MultiPoint(Vec<PointType>),
 
     /// LineString
     ///
-    /// [GeoJSON Format Specification § 3.1.4]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.4
+    /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4
     LineString(LineStringType),
 
     /// MultiLineString
     ///
-    /// [GeoJSON Format Specification § 3.1.5]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.5)
+    /// [GeoJSON Format Specification § 3.1.5](https://tools.ietf.org/html/rfc7946#section-3.1.5)
     MultiLineString(Vec<LineStringType>),
 
     /// Polygon
     ///
-    /// [GeoJSON Format Specification § 3.1.6]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.6)
+    /// [GeoJSON Format Specification § 3.1.6](https://tools.ietf.org/html/rfc7946#section-3.1.6)
     Polygon(PolygonType),
 
     /// MultiPolygon
     ///
-    /// [GeoJSON Format Specification § 3.1.7]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.7)
+    /// [GeoJSON Format Specification § 3.1.7](https://tools.ietf.org/html/rfc7946#section-3.1.7)
     MultiPolygon(Vec<PolygonType>),
 
     /// GeometryCollection
     ///
-    /// [GeoJSON Format Specification § 3.1.8]
-    /// (https://tools.ietf.org/html/rfc7946#section-3.1.8)
+    /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
     GeometryCollection(Vec<Geometry>),
 }
 
@@ -104,16 +97,14 @@ impl Serialize for Value {
 
 /// Geometry Objects
 ///
-/// [GeoJSON Format Specification § 3.1]
-/// (https://tools.ietf.org/html/rfc7946#section-3.1)
+/// [GeoJSON Format Specification § 3.1](https://tools.ietf.org/html/rfc7946#section-3.1)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Geometry {
     pub bbox: Option<Bbox>,
     pub value: Value,
     /// Foreign Members
     ///
-    /// [RFC7946 § 6]
-    /// (https://tools.ietf.org/html/rfc7946#section-6)
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 
