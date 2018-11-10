@@ -19,8 +19,7 @@ use {util, Bbox, Error, Feature};
 
 /// Feature Collection Objects
 ///
-/// [GeoJSON Format Specification § 3.3]
-/// (https://tools.ietf.org/html/rfc7946#section-3.3)
+/// [GeoJSON Format Specification § 3.3](https://tools.ietf.org/html/rfc7946#section-3.3)
 ///
 /// # Examples
 ///
@@ -52,8 +51,7 @@ pub struct FeatureCollection {
     pub features: Vec<Feature>,
     /// Foreign Members
     ///
-    /// [RFC7946 § 6]
-    /// (https://tools.ietf.org/html/rfc7946#section-6)
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 

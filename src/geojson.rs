@@ -21,8 +21,7 @@ use {Error, Feature, FeatureCollection, Geometry};
 
 /// GeoJSON Objects
 ///
-/// [GeoJSON Format Specification § 3]
-/// (https://tools.ietf.org/html/rfc7946#section-3)
+/// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq)]
 pub enum GeoJson {
     Geometry(Geometry),
