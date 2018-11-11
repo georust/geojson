@@ -219,7 +219,7 @@ pub use geojson::GeoJson;
 mod geometry;
 pub use geometry::{Geometry, Value};
 
-mod feature;
+pub mod feature;
 pub use feature::Feature;
 
 mod feature_collection;
@@ -239,6 +239,7 @@ pub enum Error {
     MalformedJson,
     PropertiesExpectedObjectOrNull,
     FeatureInvalidGeometryValue,
+    FeatureInvalidIdentifierType,
     ExpectedType { expected: String, actual: String },
 
     // FIXME: make these types more specific
@@ -296,6 +297,15 @@ impl std::fmt::Display for Error {
                      'geometry' field on 'feature' object."
                 )
             }
+            Error::FeatureInvalidIdentifierType =>
+            // FIXME: inform what type we actually found
+            {
+                write!(
+                    f,
+                    "Encountered neither number type nor string type for \
+                     'id' field on 'feature' object."
+                )
+            }
             Error::ExpectedType {
                 ref expected,
                 ref actual,
@@ -329,6 +339,9 @@ impl std::error::Error for Error {
             }
             Error::FeatureInvalidGeometryValue => {
                 "neither object type nor null type for 'geometry' field on 'feature' object."
+            }
+            Error::FeatureInvalidIdentifierType => {
+                "neither number type nor string type for 'id' field on 'feature' object."
             }
             Error::ExpectedType { .. } => "mismatched GeoJSON type",
             Error::ExpectedStringValue => "expected a string value",

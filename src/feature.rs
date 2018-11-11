@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
+use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 use serde_json;
 use {util, Bbox, Error, Geometry};
 
@@ -23,7 +23,7 @@ use {util, Bbox, Error, Geometry};
 pub struct Feature {
     pub bbox: Option<Bbox>,
     pub geometry: Option<Geometry>,
-    pub id: Option<JsonValue>,
+    pub id: Option<Id>,
     pub properties: Option<JsonObject>,
     /// Foreign Members
     ///
@@ -103,9 +103,30 @@ impl<'de> Deserialize<'de> for Feature {
     }
 }
 
+/// Feature identifier
+///
+/// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+#[derive(Clone, Debug, PartialEq)]
+pub enum Id {
+    String(String),
+    Number(serde_json::Number),
+}
+
+impl Serialize for Id {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Id::String(ref s) => s.serialize(serializer),
+            Id::Number(ref n) => n.serialize(serializer),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use {Error, Feature, GeoJson, Geometry, Value};
+    use {feature, Error, Feature, GeoJson, Geometry, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -181,8 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn encode_decode_feature_with_id() {
-        use serde_json;
+    fn encode_decode_feature_with_id_number() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
         let feature = ::Feature {
             geometry: Some(Geometry {
@@ -192,7 +212,7 @@ mod tests {
             }),
             properties: properties(),
             bbox: None,
-            id: Some(serde_json::to_value(0).unwrap()),
+            id: Some(feature::Id::Number(0.into())),
             foreign_members: None,
         };
         // Test encode
@@ -205,6 +225,50 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn encode_decode_feature_with_id_string() {
+        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":\"foo\",\"properties\":{},\"type\":\"Feature\"}";
+        let feature = ::Feature {
+            geometry: Some(Geometry {
+                value: Value::Point(vec![1.1, 2.1]),
+                bbox: None,
+                foreign_members: None,
+            }),
+            properties: properties(),
+            bbox: None,
+            id: Some(feature::Id::String("foo".into())),
+            foreign_members: None,
+        };
+        // Test encode
+        let json_string = encode(&feature);
+        assert_eq!(json_string, feature_json_str);
+
+        // Test decode
+        let decoded_feature = match decode(feature_json_str.into()) {
+            GeoJson::Feature(f) => f,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn decode_feature_with_invalid_id_type_object() {
+        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
+        assert_eq!(
+            feature_json_str.parse::<GeoJson>(),
+            Err(Error::FeatureInvalidIdentifierType),
+        )
+    }
+
+    #[test]
+    fn decode_feature_with_invalid_id_type_null() {
+        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
+        assert_eq!(
+            feature_json_str.parse::<GeoJson>(),
+            Err(Error::FeatureInvalidIdentifierType),
+        )
     }
 
     #[test]
