@@ -1,5 +1,15 @@
 # Changes
 
+## 0.13.0
+
+* Feature::id should either be a string or number; introduce `feature::Id`
+  * <https://github.com/georust/geojson/pull/107>
+* Fix broken GeoJSON links in docs
+  * <https://github.com/georust/geojson/pull/105>
+* Improve error message for mismatched type
+  * <https://github.com/georust/geojson/commit/1c5d174>
+* Performance improvements
+
 ## 0.12.0
 
 * Bump geo-types to 0.2.0.
