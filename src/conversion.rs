@@ -56,13 +56,11 @@ fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
 where
     T: Float,
 {
-    let mut coords = vec![
-        polygon
-            .exterior
-            .points_iter()
-            .map(|point| create_point_type(&point))
-            .collect(),
-    ];
+    let mut coords = vec![polygon
+        .exterior
+        .points_iter()
+        .map(|point| create_point_type(&point))
+        .collect()];
 
     coords.extend(
         polygon

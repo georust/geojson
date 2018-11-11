@@ -219,14 +219,28 @@ pub use geojson::GeoJson;
 mod geometry;
 pub use geometry::{Geometry, Value};
 
-mod feature;
-pub use feature::Feature;
+pub mod feature;
 
 mod feature_collection;
 pub use feature_collection::FeatureCollection;
 
 /// Convert Geometries into [Geo](https://docs.rs/geo) types
 pub mod conversion;
+
+/// Feature Objects
+///
+/// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+#[derive(Clone, Debug, PartialEq)]
+pub struct Feature {
+    pub bbox: Option<Bbox>,
+    pub geometry: Option<Geometry>,
+    pub id: Option<feature::Id>,
+    pub properties: Option<json::JsonObject>,
+    /// Foreign Members
+    ///
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    pub foreign_members: Option<json::JsonObject>,
+}
 
 /// Error when reading a GeoJSON object from a str or Object
 #[derive(Debug, PartialEq, Eq)]
@@ -239,6 +253,7 @@ pub enum Error {
     MalformedJson,
     PropertiesExpectedObjectOrNull,
     FeatureInvalidGeometryValue,
+    FeatureInvalidIdentifierType,
     ExpectedType { expected: String, actual: String },
 
     // FIXME: make these types more specific
@@ -296,6 +311,15 @@ impl std::fmt::Display for Error {
                      'geometry' field on 'feature' object."
                 )
             }
+            Error::FeatureInvalidIdentifierType =>
+            // FIXME: inform what type we actually found
+            {
+                write!(
+                    f,
+                    "Encountered neither number type nor string type for \
+                     'id' field on 'feature' object."
+                )
+            }
             Error::ExpectedType {
                 ref expected,
                 ref actual,
@@ -329,6 +353,9 @@ impl std::error::Error for Error {
             }
             Error::FeatureInvalidGeometryValue => {
                 "neither object type nor null type for 'geometry' field on 'feature' object."
+            }
+            Error::FeatureInvalidIdentifierType => {
+                "neither number type nor string type for 'id' field on 'feature' object."
             }
             Error::ExpectedType { .. } => "mismatched GeoJSON type",
             Error::ExpectedStringValue => "expected a string value",

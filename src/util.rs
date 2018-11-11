@@ -14,7 +14,7 @@
 
 use json::{JsonObject, JsonValue};
 
-use {Bbox, Error, Feature, Geometry, Position};
+use {feature, Bbox, Error, Feature, Geometry, Position};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;
@@ -156,8 +156,13 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
 }
 
 /// Used by Feature
-pub fn get_id(object: &mut JsonObject) -> Result<Option<JsonValue>, Error> {
-    Ok(object.remove("id"))
+pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, Error> {
+    match object.remove("id") {
+        Some(JsonValue::Number(x)) => Ok(Some(feature::Id::Number(x))),
+        Some(JsonValue::String(s)) => Ok(Some(feature::Id::String(s))),
+        Some(_) => Err(Error::FeatureInvalidIdentifierType),
+        None => Ok(None),
+    }
 }
 
 /// Used by Feature
