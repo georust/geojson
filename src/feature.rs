@@ -14,22 +14,7 @@
 
 use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 use serde_json;
-use {util, Bbox, Error, Geometry};
-
-/// Feature Objects
-///
-/// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq)]
-pub struct Feature {
-    pub bbox: Option<Bbox>,
-    pub geometry: Option<Geometry>,
-    pub id: Option<Id>,
-    pub properties: Option<JsonObject>,
-    /// Foreign Members
-    ///
-    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    pub foreign_members: Option<JsonObject>,
-}
+use {util, Error, Feature};
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
