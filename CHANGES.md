@@ -1,5 +1,10 @@
 # Changes
 
+## 0.14.0
+
+* Bump geo-types to 0.3.0.
+  * <https://github.com/georust/geojson/pull/109>
+
 ## 0.13.0
 
 * Feature::id should either be a string or number; introduce `feature::Id`
