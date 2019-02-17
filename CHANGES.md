@@ -1,5 +1,10 @@
 # Changes
 
+## 0.15.0
+
+* Bump geo-types to 0.4.0.
+  * <https://github.com/georust/geojson/commit/c1681347b4bc49c9085ac3f86fe0488849063913>
+
 ## 0.14.0
 
 * Bump geo-types to 0.3.0.
