@@ -137,7 +137,7 @@ where
     let exterior = polygon_type
         .get(0)
         .map(|e| create_geo_line_string(e))
-        .unwrap_or(create_geo_line_string(&vec![]));
+        .unwrap_or_else(|| create_geo_line_string(&vec![]));
 
     let interiors = if polygon_type.len() < 2 {
         vec![]
@@ -151,7 +151,7 @@ where
     geo_types::Polygon::new(exterior, interiors)
 }
 
-fn create_geo_multi_polygon<T>(multi_polygon_type: &Vec<PolygonType>) -> geo_types::MultiPolygon<T>
+fn create_geo_multi_polygon<T>(multi_polygon_type: &[PolygonType]) -> geo_types::MultiPolygon<T>
 where
     T: Float,
 {
