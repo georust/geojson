@@ -16,8 +16,9 @@ use geo_types;
 use geometry;
 use num_traits::Float;
 use std::convert::From;
-use Error;
+use Error as GJError;
 use {LineStringType, PointType, PolygonType};
+use std::convert::TryInto;
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
@@ -162,22 +163,16 @@ where
     )
 }
 
-/// This trait provides fallible conversions from GeoJSON values to [Geo](https://docs.rs/geo) types
-pub trait TryInto<T> {
-    type Err;
-    fn try_into(self) -> Result<T, Self::Err>;
-}
-
 impl<T> TryInto<geo_types::Point<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::Point<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::Point<T>, Self::Error> {
         match self {
             geometry::Value::Point(point_type) => Ok(create_geo_point(&point_type)),
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -197,9 +192,9 @@ impl<T> TryInto<geo_types::MultiPoint<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::MultiPoint<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::MultiPoint<T>, Self::Error> {
         match self {
             geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
                 multi_point_type
@@ -207,7 +202,7 @@ where
                     .map(|point_type| create_geo_point(&point_type))
                     .collect(),
             )),
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -231,14 +226,14 @@ impl<T> TryInto<geo_types::LineString<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::LineString<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::LineString<T>, Self::Error> {
         match self {
             geometry::Value::LineString(multi_point_type) => {
                 Ok(create_geo_line_string(&multi_point_type))
             }
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -258,14 +253,14 @@ impl<T> TryInto<geo_types::MultiLineString<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::MultiLineString<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::MultiLineString<T>, Self::Error> {
         match self {
             geometry::Value::MultiLineString(multi_line_string_type) => {
                 Ok(create_geo_multi_line_string(&multi_line_string_type))
             }
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -285,12 +280,12 @@ impl<T> TryInto<geo_types::Polygon<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::Polygon<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::Polygon<T>, Self::Error> {
         match self {
             geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(&polygon_type)),
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -310,14 +305,14 @@ impl<T> TryInto<geo_types::MultiPolygon<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::MultiPolygon<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::MultiPolygon<T>, Self::Error> {
         match self {
             geometry::Value::MultiPolygon(multi_polygon_type) => {
                 Ok(create_geo_multi_polygon(&multi_polygon_type))
             }
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -337,9 +332,9 @@ impl<T> TryInto<geo_types::GeometryCollection<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::GeometryCollection<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::GeometryCollection<T>, Self::Error> {
         match self {
             geometry::Value::GeometryCollection(geometries) => {
                 let geojson_geometries = geometries
@@ -349,7 +344,7 @@ where
 
                 Ok(geo_types::GeometryCollection(geojson_geometries))
             }
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -358,9 +353,9 @@ impl<T> TryInto<geo_types::Geometry<T>> for geometry::Value
 where
     T: Float,
 {
-    type Err = Error;
+    type Error = GJError;
 
-    fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Err> {
+    fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
         match self {
             geometry::Value::Point(ref point_type) => {
                 Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
@@ -387,7 +382,7 @@ where
             geometry::Value::MultiPolygon(ref multi_polygon_type) => Ok(
                 geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
             ),
-            _ => Err(Error::GeometryUnknownType),
+            _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
@@ -473,7 +468,7 @@ macro_rules! assert_almost_eq {
 
 #[cfg(test)]
 mod tests {
-    use conversion::TryInto;
+    use std::convert::TryInto;
     use geo_types;
     use geo_types::{
         GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
