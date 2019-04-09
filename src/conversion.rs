@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-// 	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@ use geo_types;
 use geometry;
 use num_traits::Float;
 use std::convert::From;
+use std::convert::TryInto;
 use Error as GJError;
 use {LineStringType, PointType, PolygonType};
-use std::convert::TryInto;
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
@@ -468,11 +468,11 @@ macro_rules! assert_almost_eq {
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryInto;
     use geo_types;
     use geo_types::{
         GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
     };
+    use std::convert::TryInto;
     use {Geometry, Value};
 
     #[test]
