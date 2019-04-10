@@ -10,6 +10,7 @@ repository = "https://github.com/georust/geojson"
 readme = "README.md"
 documentation = "https://docs.rs/geojson/"
 keywords = ["geojson", "gis", "json", "geo"]
+edition = "2018"
 
 [dependencies]
 serde = "~1.0"

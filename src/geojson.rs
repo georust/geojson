@@ -15,9 +15,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use crate::json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 
-use {Error, Feature, FeatureCollection, Geometry};
+use crate::{Error, Feature, FeatureCollection, Geometry};
 
 /// GeoJSON Objects
 ///

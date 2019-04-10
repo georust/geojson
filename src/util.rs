@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{JsonObject, JsonValue};
+use crate::json::{JsonObject, JsonValue};
 
-use {feature, Bbox, Error, Feature, Geometry, Position};
+use crate::{feature, Bbox, Error, Feature, Geometry, Position};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;

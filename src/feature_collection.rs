@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use crate::json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
 use serde_json;
 
-use {util, Bbox, Error, Feature};
+use crate::{util, Bbox, Error, Feature};
 
 /// Feature Collection Objects
 ///

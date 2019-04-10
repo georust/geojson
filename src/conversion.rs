@@ -13,12 +13,12 @@
 // limitations under the License.
 
 use geo_types;
-use geometry;
+use crate::geometry;
 use num_traits::Float;
 use std::convert::From;
 use std::convert::TryInto;
-use Error as GJError;
-use {LineStringType, PointType, PolygonType};
+use crate::Error as GJError;
+use crate::{LineStringType, PointType, PolygonType};
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
@@ -473,7 +473,7 @@ mod tests {
         GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
     };
     use std::convert::TryInto;
-    use {Geometry, Value};
+    use crate::{Geometry, Value};
 
     #[test]
     fn geo_point_conversion_test() {

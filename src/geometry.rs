@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
+use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 
-use {util, Bbox, Error, LineStringType, PointType, PolygonType};
+use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
 
 /// The underlying Geometry value
 ///
@@ -202,9 +202,9 @@ impl<'de> Deserialize<'de> for Geometry {
 
 #[cfg(test)]
 mod tests {
-    use json::JsonObject;
+    use crate::json::JsonObject;
     use serde_json;
-    use {GeoJson, Geometry, Value};
+    use crate::{GeoJson, Geometry, Value};
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()

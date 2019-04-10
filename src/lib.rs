@@ -214,15 +214,15 @@ pub type PolygonType = Vec<Vec<Position>>;
 mod util;
 
 mod geojson;
-pub use geojson::GeoJson;
+pub use crate::geojson::GeoJson;
 
 mod geometry;
-pub use geometry::{Geometry, Value};
+pub use crate::geometry::{Geometry, Value};
 
 pub mod feature;
 
 mod feature_collection;
-pub use feature_collection::FeatureCollection;
+pub use crate::feature_collection::FeatureCollection;
 
 /// Convert Geometries into [Geo](https://docs.rs/geo) types
 pub mod conversion;
