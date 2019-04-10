@@ -49,10 +49,8 @@
 //! (like `Feature`) use json values for properties.
 //!
 //! ```
-//! # extern crate geojson;
-//! extern crate serde_json;
+//! use serde_json;
 //!
-//! # fn main () {
 //! use serde_json::{Map, to_value};
 //!
 //! let mut properties = Map::new();
@@ -60,14 +58,11 @@
 //!     String::from("name"),
 //!     to_value("Firestone Grill").unwrap(),
 //! );
-//! # }
 //! ```
 //!
 //! `GeoJson` can then be serialized by calling `to_string`:
 //!
 //! ```rust
-//! # extern crate serde_json;
-//! # extern crate geojson;
 //! use geojson::{Feature, GeoJson, Geometry, Value};
 //! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
 //! # let mut properties = ::serde_json::Map::new();
