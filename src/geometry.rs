@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -203,8 +203,8 @@ impl<'de> Deserialize<'de> for Geometry {
 #[cfg(test)]
 mod tests {
     use crate::json::JsonObject;
-    use serde_json;
     use crate::{GeoJson, Geometry, Value};
+    use serde_json;
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()

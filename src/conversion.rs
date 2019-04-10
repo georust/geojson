@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_types;
 use crate::geometry;
+use crate::Error as GJError;
+use crate::{LineStringType, PointType, PolygonType};
+use geo_types;
 use num_traits::Float;
 use std::convert::From;
 use std::convert::TryInto;
-use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType};
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
@@ -468,12 +468,12 @@ macro_rules! assert_almost_eq {
 
 #[cfg(test)]
 mod tests {
+    use crate::{Geometry, Value};
     use geo_types;
     use geo_types::{
         GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
     };
     use std::convert::TryInto;
-    use crate::{Geometry, Value};
 
     #[test]
     fn geo_point_conversion_test() {
