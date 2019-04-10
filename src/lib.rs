@@ -184,11 +184,11 @@
 //!
 //! ## Conversion to Geo objects
 //!
-//! The [try_into](conversion/trait.TryInto.html) trait provides *fallible* conversions from GeoJSON Value structs
-//! to [Geo](https://docs.rs/geo) types, allowing them to be measured or used in calculations. Note that
+//! The [`TryFrom`](https://doc.rust-lang.org/stable/std/convert/trait.TryFrom.html) trait provides *fallible* conversions from GeoJSON Value structs
+//! to [Geo](https://docs.rs/geo) types and vice versa, allowing them to be measured or used in calculations. Note that
 //! this conversion consumes the GeoJSON object, so you will not be able to match
-//! by reference as in the example above. The [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crate contains an
-//! implementation which may be useful if you wish to perform these conversions.
+//! by reference as in the example above. The [`geojson_example`](https://github.com/urschrei/geojson_example) and [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
+//! implementations which may be useful if you wish to perform these conversions.
 
 extern crate serde;
 #[macro_use]
