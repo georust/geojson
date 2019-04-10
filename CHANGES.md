@@ -1,5 +1,10 @@
 # Changes
 
+## 0.16.0
+
+* Switch to 2018 edition
+* Switch to `std::TryFrom` trait
+
 ## 0.15.0
 
 * Bump geo-types to 0.4.0.
