@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use crate::serde_json::json;
 use crate::{util, Error, Feature};
-use serde_json;
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {

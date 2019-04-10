@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use crate::json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
-use serde_json;
-
+use crate::serde_json::json;
 use crate::{util, Bbox, Error, Feature};
 
 /// Feature Collection Objects

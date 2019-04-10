@@ -190,10 +190,8 @@
 //! by reference as in the example above. The [`geojson_example`](https://github.com/urschrei/geojson_example) and [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
 //! implementations which may be useful if you wish to perform these conversions.
 
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
-
+use serde;
+use serde_json;
 extern crate geo_types;
 extern crate num_traits;
 

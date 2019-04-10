@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use crate::serde;
+use crate::{Error, Feature, FeatureCollection, Geometry};
 use std::fmt;
 use std::str::FromStr;
-
-use crate::json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
-
-use crate::{Error, Feature, FeatureCollection, Geometry};
 
 /// GeoJSON Objects
 ///

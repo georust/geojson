@@ -1,11 +1,6 @@
 #![feature(test)]
-
-#[macro_use]
-extern crate criterion;
-
-use criterion::Criterion;
-
-extern crate geojson;
+use criterion::{criterion_group, criterion_main, Criterion};
+use geojson;
 extern crate test;
 
 fn parse_benchmark(c: &mut Criterion) {

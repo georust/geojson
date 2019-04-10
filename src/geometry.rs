@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
-
+use crate::serde;
 use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
 
 /// The underlying Geometry value
