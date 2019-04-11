@@ -15,7 +15,7 @@
 use crate::geometry;
 use crate::Error as GJError;
 use crate::{LineStringType, PointType, PolygonType};
-use geo_types;
+use crate::geo_types;
 use num_traits::Float;
 use std::convert::From;
 use std::convert::TryInto;

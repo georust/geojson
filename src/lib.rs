@@ -185,10 +185,9 @@
 //! by reference as in the example above. The [`geojson_example`](https://github.com/urschrei/geojson_example) and [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
 //! implementations which may be useful if you wish to perform these conversions.
 
+use geo_types;
 use serde;
 use serde_json;
-extern crate geo_types;
-extern crate num_traits;
 
 /// Bounding Boxes
 ///
@@ -258,7 +257,7 @@ pub enum Error {
 }
 
 impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             Error::BboxExpectedArray =>
             // FIXME: inform what type we actually found

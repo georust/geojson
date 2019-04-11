@@ -158,7 +158,7 @@ fn json_value_into_json_object(json_value: json::JsonValue) -> Option<json::Json
 }
 
 impl fmt::Display for GeoJson {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
             .and_then(|s| f.write_str(&s))
