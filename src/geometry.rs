@@ -37,17 +37,17 @@ use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
 pub enum Value {
     /// Point
     ///
-    /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2
+    /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
     Point(PointType),
 
     /// MultiPoint
     ///
-    /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3
+    /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3)
     MultiPoint(Vec<PointType>),
 
     /// LineString
     ///
-    /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4
+    /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4)
     LineString(LineStringType),
 
     /// MultiLineString
