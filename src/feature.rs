@@ -137,8 +137,6 @@ mod tests {
     }
 
     fn encode(feature: &Feature) -> String {
-        use serde_json;
-
         serde_json::to_string(&feature).unwrap()
     }
 
