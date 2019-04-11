@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::geo_types;
 use crate::geometry;
 use crate::Error as GJError;
 use crate::{LineStringType, PointType, PolygonType};
-use crate::geo_types;
 use num_traits::Float;
 use std::convert::From;
 use std::convert::TryInto;
