@@ -179,10 +179,10 @@
 //!
 //! ## Conversion to Geo objects
 //!
-//! The [`TryFrom`](https://doc.rust-lang.org/stable/std/convert/trait.TryFrom.html) trait provides *fallible* conversions from GeoJSON Value structs
-//! to [Geo](https://docs.rs/geo) types and vice versa, allowing them to be measured or used in calculations. Note that
-//! this conversion consumes the GeoJSON object, so you will not be able to match
-//! by reference as in the example above. The [`geojson_example`](https://github.com/urschrei/geojson_example) and [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
+//! The [`TryFrom`](https://doc.rust-lang.org/stable/std/convert/trait.TryFrom.html) trait provides **fallible** conversions _to_ [Geo](https://docs.rs/geo) types from GeoJSON [`Value`](enum.Value.html) structs,
+//! allowing them to be measured or used in calculations. Conversely, `From` is implemented for the [`Value`](enum.Value.html) variants to allow conversion _from_ `Geo` types.
+//!
+//! The [`geojson_example`](https://github.com/urschrei/geojson_example) and [`polylabel_cmd`](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
 //! implementations which may be useful if you wish to perform these conversions.
 
 use geo_types;
