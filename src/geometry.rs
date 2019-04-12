@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
-
-use {util, Bbox, Error, LineStringType, PointType, PolygonType};
+use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
+use crate::serde;
+use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
 
 /// The underlying Geometry value
 ///
@@ -37,17 +37,17 @@ use {util, Bbox, Error, LineStringType, PointType, PolygonType};
 pub enum Value {
     /// Point
     ///
-    /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2
+    /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
     Point(PointType),
 
     /// MultiPoint
     ///
-    /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3
+    /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3)
     MultiPoint(Vec<PointType>),
 
     /// LineString
     ///
-    /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4
+    /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4)
     LineString(LineStringType),
 
     /// MultiLineString
@@ -202,9 +202,9 @@ impl<'de> Deserialize<'de> for Geometry {
 
 #[cfg(test)]
 mod tests {
-    use json::JsonObject;
+    use crate::json::JsonObject;
+    use crate::{GeoJson, Geometry, Value};
     use serde_json;
-    use {GeoJson, Geometry, Value};
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()

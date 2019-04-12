@@ -1,6 +1,3 @@
-extern crate geojson;
-extern crate serde_json;
-
 #[cfg(test)]
 mod roundtrip_tests {
     use geojson::GeoJson;

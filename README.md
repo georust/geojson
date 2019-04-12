@@ -8,6 +8,10 @@ geojson
 
 Library for serializing the [GeoJSON](http://geojson.org) vector GIS file format
 
+## Minimum Rust Version
+
+This library requires a minimum Rust version of 1.34 (released April 11 2019)
+
 ## Examples
 
 ### Reading

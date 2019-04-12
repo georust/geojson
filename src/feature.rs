@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
-use serde_json;
-use {util, Error, Feature};
+use crate::json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use crate::serde_json::json;
+use crate::{util, Error, Feature};
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
@@ -111,19 +111,19 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use {feature, Error, Feature, GeoJson, Geometry, Value};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
          \"Feature\"}"
     }
 
-    fn properties() -> Option<::json::JsonObject> {
-        Some(::json::JsonObject::new())
+    fn properties() -> Option<crate::json::JsonObject> {
+        Some(crate::json::JsonObject::new())
     }
 
     fn feature() -> Feature {
-        ::Feature {
+        crate::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,
@@ -137,8 +137,6 @@ mod tests {
     }
 
     fn encode(feature: &Feature) -> String {
-        use serde_json;
-
         serde_json::to_string(&feature).unwrap()
     }
 
@@ -189,7 +187,7 @@ mod tests {
     #[test]
     fn encode_decode_feature_with_id_number() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
-        let feature = ::Feature {
+        let feature = crate::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,
@@ -215,7 +213,7 @@ mod tests {
     #[test]
     fn encode_decode_feature_with_id_string() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":\"foo\",\"properties\":{},\"type\":\"Feature\"}";
-        let feature = ::Feature {
+        let feature = crate::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,
@@ -258,7 +256,7 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_foreign_member() {
-        use json::JsonObject;
+        use crate::json::JsonObject;
         use serde_json;
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"other_member\":\"some_value\",\"properties\":{},\"type\":\"Feature\"}";
         let mut foreign_members = JsonObject::new();
@@ -266,7 +264,7 @@ mod tests {
             String::from("other_member"),
             serde_json::to_value("some_value").unwrap(),
         );
-        let feature = ::Feature {
+        let feature = crate::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
                 bbox: None,

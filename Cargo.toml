@@ -2,7 +2,7 @@
 
 name = "geojson"
 description = "Library for serializing the GeoJSON vector GIS file format"
-version = "0.15.0"
+version = "0.16.0"
 authors = ["Corey Farwell <coreyf@rwell.org>",
            "Blake Grotewold <hello@grotewold.me>"]
 license = "MIT/Apache-2.0"
@@ -10,6 +10,7 @@ repository = "https://github.com/georust/geojson"
 readme = "README.md"
 documentation = "https://docs.rs/geojson/"
 keywords = ["geojson", "gis", "json", "geo"]
+edition = "2018"
 
 [dependencies]
 serde = "~1.0"

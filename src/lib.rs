@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,10 +49,8 @@
 //! (like `Feature`) use json values for properties.
 //!
 //! ```
-//! # extern crate geojson;
-//! extern crate serde_json;
+//! use serde_json;
 //!
-//! # fn main () {
 //! use serde_json::{Map, to_value};
 //!
 //! let mut properties = Map::new();
@@ -60,14 +58,11 @@
 //!     String::from("name"),
 //!     to_value("Firestone Grill").unwrap(),
 //! );
-//! # }
 //! ```
 //!
 //! `GeoJson` can then be serialized by calling `to_string`:
 //!
 //! ```rust
-//! # extern crate serde_json;
-//! # extern crate geojson;
 //! use geojson::{Feature, GeoJson, Geometry, Value};
 //! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
 //! # let mut properties = ::serde_json::Map::new();
@@ -184,18 +179,15 @@
 //!
 //! ## Conversion to Geo objects
 //!
-//! The [try_into](conversion/trait.TryInto.html) trait provides *fallible* conversions from GeoJSON Value structs
-//! to [Geo](https://docs.rs/geo) types, allowing them to be measured or used in calculations. Note that
-//! this conversion consumes the GeoJSON object, so you will not be able to match
-//! by reference as in the example above. The [polylabel_cmd](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crate contains an
-//! implementation which may be useful if you wish to perform these conversions.
+//! The [`TryFrom`](https://doc.rust-lang.org/stable/std/convert/trait.TryFrom.html) trait provides **fallible** conversions _to_ [Geo](https://docs.rs/geo) types from GeoJSON [`Value`](enum.Value.html) structs,
+//! allowing them to be measured or used in calculations. Conversely, `From` is implemented for the [`Value`](enum.Value.html) variants to allow conversion _from_ `Geo` types.
+//!
+//! The [`geojson_example`](https://github.com/urschrei/geojson_example) and [`polylabel_cmd`](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
+//! implementations which may be useful if you wish to perform these conversions.
 
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
-
-extern crate geo_types;
-extern crate num_traits;
+use geo_types;
+use serde;
+use serde_json;
 
 /// Bounding Boxes
 ///
@@ -214,15 +206,15 @@ pub type PolygonType = Vec<Vec<Position>>;
 mod util;
 
 mod geojson;
-pub use geojson::GeoJson;
+pub use crate::geojson::GeoJson;
 
 mod geometry;
-pub use geometry::{Geometry, Value};
+pub use crate::geometry::{Geometry, Value};
 
 pub mod feature;
 
 mod feature_collection;
-pub use feature_collection::FeatureCollection;
+pub use crate::feature_collection::FeatureCollection;
 
 /// Convert Geometries into [Geo](https://docs.rs/geo) types
 pub mod conversion;
@@ -265,7 +257,7 @@ pub enum Error {
 }
 
 impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             Error::BboxExpectedArray =>
             // FIXME: inform what type we actually found
