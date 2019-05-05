@@ -224,9 +224,21 @@ pub mod conversion;
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Feature {
+    /// Bounding Box
+    ///
+    /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
+    /// Geometry
+    ///
+    /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
     pub geometry: Option<Geometry>,
+    /// Identifier
+    ///
+    /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
     pub id: Option<feature::Id>,
+    /// Properties
+    ///
+    /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
     pub properties: Option<json::JsonObject>,
     /// Foreign Members
     ///

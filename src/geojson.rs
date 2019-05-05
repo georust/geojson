@@ -181,3 +181,10 @@ impl fmt::Display for Geometry {
     }
 }
 
+impl fmt::Display for FeatureCollection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        ::serde_json::to_string(self)
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
+    }
+}

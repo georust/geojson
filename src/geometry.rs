@@ -16,7 +16,7 @@ use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, S
 use crate::serde;
 use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
 
-/// The underlying Geometry value
+/// The underlying value for a `Geometry`.
 ///
 /// # Conversion from `geo_types`
 ///
@@ -98,8 +98,61 @@ impl Serialize for Value {
 /// Geometry Objects
 ///
 /// [GeoJSON Format Specification § 3.1](https://tools.ietf.org/html/rfc7946#section-3.1)
+///
+/// ## Examples
+///
+/// Constructing a `Geometry`:
+///
+/// ```
+/// use geojson::{Geometry, Value};
+///
+/// let geometry = Geometry::new(
+///     Value::Point(vec![7.428959, 1.513394]),
+/// );
+/// ```
+///
+/// Serializing a `Geometry` to a GeoJSON string:
+///
+/// ```
+/// use geojson::{GeoJson, Geometry, Value};
+/// use serde_json;
+///
+/// let geometry = Geometry::new(
+///     Value::Point(vec![7.428959, 1.513394]),
+/// );
+///
+/// let geojson_string = geometry.to_string();
+///
+/// assert_eq!(
+///     "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}",
+///     geojson_string,
+/// );
+/// ```
+///
+/// Deserializing a GeoJSON string into a `Geometry`:
+///
+/// ```
+/// use geojson::{GeoJson, Geometry, Value};
+///
+/// let geojson_str = "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}";
+///
+/// let geometry = match geojson_str.parse::<GeoJson>() {
+///     Ok(GeoJson::Geometry(g)) => g,
+///     _ => return,
+/// };
+///
+/// assert_eq!(
+///     Geometry::new(
+///         Value::Point(vec![7.428959, 1.513394]),
+///     ),
+///     geometry,
+/// );
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Geometry {
+    /// Bounding Box
+    ///
+    /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
     pub value: Value,
     /// Foreign Members
