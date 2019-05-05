@@ -2,10 +2,6 @@ language: rust
 
 cache: cargo
 
-rust:
-  - beta
-  - stable
-
 matrix:
   include:
     - env: FEATURES=""
