@@ -121,7 +121,7 @@ impl Serialize for Value {
 ///     Value::Point(vec![7.428959, 1.513394]),
 /// );
 ///
-/// let geojson_string = GeoJson::Geometry(geometry).to_string();
+/// let geojson_string = geometry.to_string();
 ///
 /// assert_eq!(
 ///     "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}",
