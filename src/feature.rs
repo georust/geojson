@@ -161,6 +161,13 @@ mod tests {
     }
 
     #[test]
+    fn test_display_feature() {
+        let f = feature().to_string();
+        assert_eq!(f, "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
+         \"Feature\"}");
+    }
+
+    #[test]
     fn feature_json_null_geometry() {
         let geojson_str = r#"{
             "geometry": null,

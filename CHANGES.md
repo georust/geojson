@@ -4,6 +4,7 @@
 
 * Switch to 2018 edition
 * Switch to `std::TryFrom` trait
+* Implement `Display` for `Feature` and `Geometry`
 
 ## 0.15.0
 

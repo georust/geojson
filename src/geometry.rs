@@ -202,9 +202,10 @@ impl<'de> Deserialize<'de> for Geometry {
 
 #[cfg(test)]
 mod tests {
+
     use crate::json::JsonObject;
     use crate::{GeoJson, Geometry, Value};
-    use serde_json;
+    use geo_types::LineString;
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()
@@ -233,6 +234,17 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
+    }
+
+    #[test]
+    fn test_geometry_display() {
+        let route: LineString<_> = vec![(0.0, 0.1), (0.1, 0.2), (0.2, 0.3)].into();
+        let v = Value::from(&route);
+        let geometry = Geometry::new(v);
+        assert_eq!(
+            "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
+            geometry.to_string()
+        );
     }
 
     #[test]
