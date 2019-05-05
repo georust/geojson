@@ -2,9 +2,15 @@
 
 ## 0.16.0
 
-* Switch to 2018 edition
-* Switch to `std::TryFrom` trait
-* Implement `Display` for `Feature` and `Geometry`
+* Switch to Rust 2018 Edition
+  * <https://github.com/georust/geojson/pull/111>
+* Switch to `std::TryFrom` trait from custom in-crate `TryFrom` trait
+  * <https://github.com/georust/geojson/pull/111>
+* Implement `Display` for `Feature`, `Geometry`, and `FeatureCollection`
+  * <https://github.com/georust/geojson/pull/113>
+  * <https://github.com/georust/geojson/pull/114>
+* Make the `geo-types` conversion functionality opt-in
+  * <https://github.com/georust/geojson/pull/115>
 
 ## 0.15.0
 
