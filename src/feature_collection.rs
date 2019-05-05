@@ -46,6 +46,9 @@ use crate::{util, Bbox, Error, Feature};
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeatureCollection {
+    /// Bounding Box
+    ///
+    /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
     pub features: Vec<Feature>,
     /// Foreign Members
