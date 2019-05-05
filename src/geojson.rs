@@ -164,3 +164,20 @@ impl fmt::Display for GeoJson {
             .and_then(|s| f.write_str(&s))
     }
 }
+
+impl fmt::Display for Feature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        ::serde_json::to_string(self)
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
+    }
+}
+
+impl fmt::Display for Geometry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        ::serde_json::to_string(self)
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
+    }
+}
+
