@@ -1,9 +1,6 @@
 geojson
 =======
 
-[![Build Status](https://travis-ci.org/georust/geojson.svg)](https://travis-ci.org/georust/geojson)
-[![geojson on Crates.io](https://meritbadge.herokuapp.com/geojson)](https://crates.io/crates/geojson)
-
 [Documentation](https://docs.rs/geojson/)
 
 Library for serializing the [GeoJSON](http://geojson.org) vector GIS file format
