@@ -188,4 +188,3 @@ impl fmt::Display for FeatureCollection {
             .and_then(|s| f.write_str(&s))
     }
 }
-
