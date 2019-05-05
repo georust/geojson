@@ -184,6 +184,8 @@
 //!
 //! The [`geojson_example`](https://github.com/urschrei/geojson_example) and [`polylabel_cmd`](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
 //! implementations which may be useful if you wish to perform these conversions.
+//!
+//! To use the conversion functionality, ensure the `geo-types` feature is enabled.
 
 #[cfg(feature = "geo-types")]
 use geo_types;
@@ -218,10 +220,7 @@ mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
 
 #[cfg(feature = "geo-types")]
-/// Convert `geojson` types to/from [`geo`](https://docs.rs/geo) types.
-/// To use the conversion functionality, ensure the `geo-types` feature is
-/// enabled.
-pub mod conversion;
+mod conversion;
 
 /// Feature Objects
 ///
