@@ -189,6 +189,8 @@
 
 #[cfg(feature = "geo-types")]
 use geo_types;
+#[cfg(feature = "geo-types")]
+use geo;
 use serde;
 use serde_json;
 

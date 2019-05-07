@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::geo_types;
-use crate::geo::algorithm::orient{Orient, Direction};
+use crate::geo::algorithm::orient::{Orient, Direction};
 use crate::geometry;
 use crate::Error as GJError;
 use crate::{LineStringType, PointType, PolygonType};
@@ -863,9 +863,9 @@ mod tests {
         assert_almost_eq!(geo_line_string2.0[0].x, coord4[0], 1e-6);
         assert_almost_eq!(geo_line_string2.0[0].y, coord4[1], 1e-6);
         assert_almost_eq!(geo_line_string2.0[1].x, coord5[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[1].y, coord5[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[1].y, coord6[1], 1e-6);
         assert_almost_eq!(geo_line_string2.0[2].x, coord6[0], 1e-6);
-        assert_almost_eq!(geo_line_string2.0[2].y, coord6[1], 1e-6);
+        assert_almost_eq!(geo_line_string2.0[2].y, coord5[1], 1e-6);
         assert_almost_eq!(geo_line_string2.0[3].x, coord4[0], 1e-6);
         assert_almost_eq!(geo_line_string2.0[3].y, coord4[1], 1e-6);
     }
