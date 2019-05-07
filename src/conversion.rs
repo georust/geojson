@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::geo_types;
+use crate::geo::algorithm::orient{Orient, Direction};
 use crate::geometry;
 use crate::Error as GJError;
 use crate::{LineStringType, PointType, PolygonType};
@@ -148,7 +149,7 @@ where
             .collect()
     };
 
-    geo_types::Polygon::new(exterior, interiors)
+    geo_types::Polygon::new(exterior, interiors).orient(Direction::Default)
 }
 
 fn create_geo_multi_polygon<T>(multi_polygon_type: &[PolygonType]) -> geo_types::MultiPolygon<T>
