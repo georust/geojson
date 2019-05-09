@@ -5,7 +5,7 @@ cache: cargo
 matrix:
   include:
     - env: FEATURES=""
-    - env: FEATURES="--features geo-types"
+    - env: FEATURES="--features geotypes"
 
 script:
   - cargo build --release $FEATURES && cargo test --release $FEATURES

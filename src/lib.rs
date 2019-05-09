@@ -187,9 +187,9 @@
 //!
 //! To use the conversion functionality, ensure the `geo-types` feature is enabled.
 
-#[cfg(feature = "geo-types")]
+#[cfg(feature = "geotypes")]
 use geo_types;
-#[cfg(feature = "geo-types")]
+#[cfg(feature = "geotypes")]
 use geo;
 use serde;
 use serde_json;
