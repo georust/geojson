@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::json::{self, Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
 use crate::{Error, Feature, FeatureCollection, Geometry};
 use std::fmt;
@@ -75,6 +75,45 @@ impl GeoJson {
             Type::FeatureCollection => {
                 FeatureCollection::from_json_object(object).map(GeoJson::FeatureCollection)
             }
+        }
+    }
+
+    /// Converts a JSON Value into a GeoJson object.
+    ///
+    /// # Example
+    /// ```
+    /// use geojson::{Feature, GeoJson, Geometry, Value};
+    /// use serde_json::json;
+    ///
+    /// let json_value = json!({
+    ///     "type": "Feature",
+    ///     "geometry": {
+    ///         "type": "Point",
+    ///         "coordinates": [102.0, 0.5]
+    ///     },
+    ///     "properties": null,
+    /// });
+    ///
+    /// assert!(json_value.is_object());
+    ///
+    /// let geojson = GeoJson::from_json_value(json_value).unwrap();
+    ///
+    /// assert_eq!(
+    ///     geojson,
+    ///     GeoJson::Feature(Feature {
+    ///         bbox: None,
+    ///         geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
+    ///         id: None,
+    ///         properties: None,
+    ///         foreign_members: None,
+    ///     })
+    /// );
+    /// ```
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+        if let JsonValue::Object(obj) = value {
+            Self::from_json_object(obj)
+        } else {
+            Err(Error::GeoJsonExpectedObject)
         }
     }
 }
@@ -186,5 +225,38 @@ impl fmt::Display for FeatureCollection {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
             .and_then(|s| f.write_str(&s))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Feature, GeoJson, Geometry, Value};
+    use serde_json::json;
+
+    #[test]
+    fn test_geojson_from_value() {
+        let json_value = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [102.0, 0.5]
+            },
+            "properties": null,
+        });
+
+        assert!(json_value.is_object());
+
+        let geojson = GeoJson::from_json_value(json_value).unwrap();
+
+        assert_eq!(
+            geojson,
+            GeoJson::Feature(Feature {
+                bbox: None,
+                geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
+                id: None,
+                properties: None,
+                foreign_members: None,
+            })
+        );
     }
 }
