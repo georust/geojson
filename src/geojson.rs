@@ -109,9 +109,9 @@ impl TryFrom<JsonObject> for GeoJson {
         };
         let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
         match type_ {
-            Type::Feature => Feature::from_json_object(object).map(GeoJson::Feature),
+            Type::Feature => Feature::try_from(object).map(GeoJson::Feature),
             Type::FeatureCollection => {
-                FeatureCollection::from_json_object(object).map(GeoJson::FeatureCollection)
+                FeatureCollection::try_from(object).map(GeoJson::FeatureCollection)
             }
             _ => Geometry::try_from(object).map(GeoJson::Geometry),
         }
