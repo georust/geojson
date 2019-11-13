@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::convert::TryFrom;
+
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
 use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
@@ -212,7 +214,19 @@ impl<'a> From<&'a Geometry> for JsonObject {
 }
 
 impl Geometry {
-    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+        Self::try_from(object)
+    }
+
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<JsonObject> for Geometry {
+    type Error = Error;
+
+    fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let value = match &*util::expect_type(&mut object)? {
             "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
             "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
@@ -230,6 +244,18 @@ impl Geometry {
             value,
             foreign_members,
         })
+    }
+}
+
+impl TryFrom<JsonValue> for Geometry {
+    type Error = Error;
+
+    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+        if let JsonValue::Object(obj) = value {
+            Self::try_from(obj)
+        } else {
+            Err(Error::GeoJsonExpectedObject)
+        }
     }
 }
 
@@ -288,6 +314,30 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
+    }
+
+    #[test]
+    fn test_geometry_from_value() {
+        use serde_json::json;
+        use std::convert::TryInto;
+
+        let json_value = json!({
+            "type": "Point",
+            "coordinates": [
+                0.0, 0.1
+            ],
+        });
+        assert!(json_value.is_object());
+
+        let geometry: Geometry = json_value.try_into().unwrap();
+        assert_eq!(
+            geometry,
+            Geometry {
+                value: Value::Point(vec![0.0, 0.1]),
+                bbox: None,
+                foreign_members: None,
+            }
+        )
     }
 
     #[test]

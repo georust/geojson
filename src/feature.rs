@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use std::convert::TryFrom;
+
+use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Error, Feature};
 
@@ -51,7 +53,19 @@ impl<'a> From<&'a Feature> for JsonObject {
 }
 
 impl Feature {
-    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+        Self::try_from(object)
+    }
+
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<JsonObject> for Feature {
+    type Error = Error;
+
+    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match &*util::expect_type(&mut object)? {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
@@ -61,6 +75,18 @@ impl Feature {
                 foreign_members: util::get_foreign_members(object)?,
             }),
             _ => Err(Error::GeoJsonUnknownType),
+        }
+    }
+}
+
+impl TryFrom<JsonValue> for Feature {
+    type Error = Error;
+
+    fn try_from(value: JsonValue) -> Result<Self, Error> {
+        if let JsonValue::Object(obj) = value {
+            Self::try_from(obj)
+        } else {
+            Err(Error::GeoJsonExpectedObject)
         }
     }
 }
@@ -158,6 +184,34 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn try_from_value() {
+        use serde_json::json;
+        use std::convert::TryInto;
+
+        let json_value = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [102.0, 0.5]
+            },
+            "properties": null,
+        });
+        assert!(json_value.is_object());
+
+        let feature: Feature = json_value.try_into().unwrap();
+        assert_eq!(
+            feature,
+            Feature {
+                bbox: None,
+                geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
+                id: None,
+                properties: None,
+                foreign_members: None,
+            }
+        )
     }
 
     #[test]
