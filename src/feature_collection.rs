@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::json::{Deserialize, Deserializer, JsonObject, Serialize, Serializer};
+use std::convert::TryFrom;
+
+use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Bbox, Error, Feature};
 
@@ -81,7 +83,19 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 }
 
 impl FeatureCollection {
-    pub fn from_json_object(mut object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+        Self::try_from(object)
+    }
+
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<JsonObject> for FeatureCollection {
+    type Error = Error;
+
+    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match util::expect_type(&mut object)? {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
@@ -92,6 +106,18 @@ impl FeatureCollection {
                 expected: "FeatureCollection".to_owned(),
                 actual: type_,
             }),
+        }
+    }
+}
+
+impl TryFrom<JsonValue> for FeatureCollection {
+    type Error = Error;
+
+    fn try_from(value: JsonValue) -> Result<Self, Error> {
+        if let JsonValue::Object(obj) = value {
+            Self::try_from(obj)
+        } else {
+            Err(Error::GeoJsonExpectedObject)
         }
     }
 }
