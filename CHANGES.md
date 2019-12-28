@@ -1,5 +1,12 @@
 # Changes
 
+## 0.17.0
+
+* Add `TryFrom` impls for `JsonObject` and `JsonValue`
+  * <https://github.com/georust/geojson/pull/120>
+* Add `from_json_value` for `GeoJson` enum
+  * <https://github.com/georust/geojson/pull/119>
+
 ## 0.16.0
 
 * Switch to Rust 2018 Edition
