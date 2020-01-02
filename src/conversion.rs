@@ -21,7 +21,7 @@ use crate::geo_types::{
 use crate::geojson::GeoJson;
 use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 use crate::geometry;
-use crate::geometry::Geometry as Gh;
+use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;
 use crate::Value;
 use crate::{LineStringType, PointType, PolygonType};
@@ -461,7 +461,7 @@ where
 
 // Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
 #[cfg(feature = "geo-types")]
-fn process_geometry<T>(geometry: &Gh) -> Result<geo_types::Geometry<T>, GJError>
+fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
 where
     T: Float,
 {
