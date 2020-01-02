@@ -172,6 +172,7 @@ where
     )
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Point<T>> for geometry::Value
 where
     T: Float,
@@ -186,6 +187,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
 where
     T: Float,
@@ -197,6 +199,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::MultiPoint<T>> for geometry::Value
 where
     T: Float,
@@ -216,6 +219,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiPoint<T>> for geometry::Value
 where
     T: Float,
@@ -231,6 +235,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::LineString<T>> for geometry::Value
 where
     T: Float,
@@ -247,6 +252,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::LineString<T>> for geometry::Value
 where
     T: Float,
@@ -258,6 +264,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::MultiLineString<T>> for geometry::Value
 where
     T: Float,
@@ -274,6 +281,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
 where
     T: Float,
@@ -285,6 +293,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Polygon<T>> for geometry::Value
 where
     T: Float,
@@ -299,6 +308,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Polygon<T>> for geometry::Value
 where
     T: Float,
@@ -310,6 +320,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::MultiPolygon<T>> for geometry::Value
 where
     T: Float,
@@ -326,6 +337,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiPolygon<T>> for geometry::Value
 where
     T: Float,
@@ -337,6 +349,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::GeometryCollection<T>> for geometry::Value
 where
     T: Float,
@@ -358,6 +371,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Geometry<T>> for geometry::Value
 where
     T: Float,
@@ -396,6 +410,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for geometry::Value
 where
     T: Float,
@@ -411,6 +426,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
 where
     T: Float,
