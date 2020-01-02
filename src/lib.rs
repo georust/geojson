@@ -1,3 +1,4 @@
+#![doc(html_logo_url = "https://raw.githubusercontent.com/georust/meta/master/logo/logo.png")]
 // Copyright 2014-2015 The GeoRust Developers
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +14,40 @@
 // limitations under the License.
 //!
 //! # Introduction
-//! The `geojson` crate reads and writes `GeoJSON` ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)) files, optionally using `serde` as a serialisation. Crate users are encouraged to familiarise themselves with the spec, as the crate is structured around it.
-//! framework.
+//! The `geojson` crate reads and writes `GeoJSON` ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)) files,
+//! optionally using `serde` for serialisation. Crate users are encouraged to familiarise themselves with the spec,
+//! as the crate is structured around it.
 //! # Structure of the Crate
-//! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::GeoJson` types of the same name:
+//! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::GeoJson`
+//! enum members of the same name:
 //! 
 //! - [`Feature`](struct.Feature.html)
 //! - [`FeatureCollection`](struct.FeatureCollection.html)
 //! - [`Geometry`](struct.Geometry.html)
 //! 
-//! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects. A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object. A complicating factor here is the `GeometryCollection` geometry type, which can contain one more `Geometry` objects, _including nested `GeometryCollection` objects_. The use of `GeometryCollection` is discouraged, however.
-//! 
-//! The easiest way to obtain a `GeoJson` object is to call the `parse()` method on a `&str`:
-//! 
+//! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects.
+//! A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object, which may be empty.
+//! A potentially complicating factor is the `GeometryCollection` geometry type, which can contain
+//! one more `Geometry` objects, _including nested `GeometryCollection` objects_.
+//! The use of `GeometryCollection` is discouraged, however.
+//!
+//! If your primary use case for this crate is ingesting `GeoJSON` strings in order to process geometries
+//! using the algorithms in the [`geo`](https://docs.rs/geo) crate, you can do so by enabling the `geo-types` feature in
+//! your `cargo.html`, and using the [`quick_collection`](fn.quick_collection.html) function to
+//! parse [`GeoJson`](enum.GeoJson.html) objects into
+//! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
+//! See [here](#conversion-to-geo-objects) for details.
+//!
+//! This crate uses `serde` for serialization.
+//! To get started, add `geojson` to your `Cargo.toml`:
+//!
+//! ```text
+//! [dependencies]
+//! geojson= "*"
+//! ```
 //! # Examples
-//! 
+//! ## Reading
+//!
 //! ```
 //! use geojson::GeoJson;
 //! 
@@ -50,43 +70,6 @@
 //! }
 //! "#;
 //! 
-//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
-//! ```
-//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in order to process, transform, or measure them:**  
-//! - `match` on `geojson`, iterating over its `features` field, yielding `Option<Feature>`.
-//! - process each `Feature`, accessing its `Value` field, yielding `Option<Value>`.
-//! 
-//! Each [`Value`](enum.Value.html) represents a primitive type, such as a coordinate, point, linestring, polygon, or its multi- equivalent1, **and each of these has an equivalent `geo` primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
-//!
-//!
-//! # Examples
-//!
-//! This crate uses `serde` for serialization.
-//! To get started, add `geojson` to your `Cargo.toml`:
-//!
-//! ```text
-//! [dependencies]
-//! geojson= "*"
-//! ```
-//!
-//! ## Reading
-//!
-//! ```
-//! use geojson::GeoJson;
-//!
-//! let geojson_str = r#"
-//! {
-//!     "type": "Feature",
-//!     "properties": {
-//!         "name": "Firestone Grill"
-//!     },
-//!     "geometry": {
-//!         "type": "Point",
-//!         "coordinates": [-120.66029,35.2812]
-//!     }
-//! }
-//! "#;
-//!
 //! let geojson = geojson_str.parse::<GeoJson>().unwrap();
 //! ```
 //!
@@ -152,6 +135,23 @@
 //! ```rust
 //! use geojson::{GeoJson, Geometry, Value};
 //!
+//! /// Process top-level GeoJSON items
+//! fn process_geojson(gj: &GeoJson) {
+//!     match *gj {
+//!         GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
+//!             if let Some(ref geom) = feature.geometry {
+//!                 match_geometry(geom)
+//!             }
+//!         },
+//!         GeoJson::Feature(ref feature) => {
+//!             if let Some(ref geom) = feature.geometry {
+//!                 match_geometry(geom)
+//!             }
+//!         }
+//!         GeoJson::Geometry(ref geometry) => match_geometry(geometry),
+//!     }
+//! }
+//!
 //! /// Process GeoJSON geometries
 //! fn match_geometry(geom: &Geometry) {
 //!     match geom.value {
@@ -167,23 +167,6 @@
 //!         }
 //!         // Point, LineString, and their Multi– counterparts
 //!         _ => println!("Matched some other geometry"),
-//!     }
-//! }
-//!
-//! /// Process top-level GeoJSON items
-//! fn process_geojson(gj: &GeoJson) {
-//!     match *gj {
-//!         GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
-//!             if let Some(ref geom) = feature.geometry {
-//!                 match_geometry(geom)
-//!             }
-//!         },
-//!         GeoJson::Feature(ref feature) => {
-//!             if let Some(ref geom) = feature.geometry {
-//!                 match_geometry(geom)
-//!             }
-//!         }
-//!         GeoJson::Geometry(ref geometry) => match_geometry(geometry),
 //!     }
 //! }
 //!
@@ -226,13 +209,59 @@
 //!
 //! ## Conversion to Geo objects
 //!
-//! The [`TryFrom`](https://doc.rust-lang.org/stable/std/convert/trait.TryFrom.html) trait provides **fallible** conversions _to_ [Geo](https://docs.rs/geo) types from GeoJSON [`Value`](enum.Value.html) structs,
-//! allowing them to be measured or used in calculations. Conversely, `From` is implemented for the [`Value`](enum.Value.html) variants to allow conversion _from_ `Geo` types.
+//! The [`TryFrom`](../std/convert/trait.TryFrom.html) trait provides
+//! **fallible** conversions _to_ [Geo](../geo_types/index.html#structs) types from GeoJSON [`Value`](enum.Value.html) enums,
+//! allowing them to be measured or used in calculations. Conversely, `From` is
+//! implemented on the [`Value`](enum.Value.html) enum variants to allow conversion _from_ `Geo` types.
 //!
-//! The [`geojson_example`](https://github.com/urschrei/geojson_example) and [`polylabel_cmd`](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
-//! implementations which may be useful if you wish to perform these conversions.
+//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in order to process, transform, or measure them:**  
+//! - `match` on `geojson`, iterating over its `features` field, yielding `Option<Feature>`.
+//! - process each `Feature`, accessing its `Value` field, yielding `Option<Value>`.
 //!
-//! To use the conversion functionality, ensure the `geo-types` feature is enabled.
+//! Each [`Value`](enum.Value.html) represents a primitive type, such as a
+//! coordinate, point, linestring, polygon, or its multi- equivalent, **and each of these has
+//! an equivalent `geo` primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
+//!
+//! Unifying these features, the [`quick_collection`](fn.quick_collection.html) function accepts a [`GeoJson`](enum.GeoJson.html) enum
+//! and processes it, producing a [`GeometryCollection`](../geo_types/struct.GeometryCollection.html)
+//! whose members can be transformed, measured, rotated, etc using the algorithms and functions in
+//! the [`geo`](https://docs.rs/geo) crate:
+//!
+//! ```
+//! use geojson::{GeoJson, quick_collection};
+//! use geo_types::GeometryCollection;
+//!
+//! let geojson_str = r#"
+//! {
+//!   "type": "FeatureCollection",
+//!   "features": [
+//!     {
+//!       "type": "Feature",
+//!       "properties": {},
+//!       "geometry": {
+//!         "type": "Point",
+//!         "coordinates": [
+//!           -0.13583511114120483,
+//!           51.5218870403801
+//!         ]
+//!       }
+//!     }
+//!   ]
+//! }
+//! "#;
+//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! // Turn the GeoJSON string into a geo_types GeometryCollection
+//! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
+//! ```
+//! ### Caveats
+//! - Round-tripping with intermediate processing using the `geo` types may not produce identical output,
+//! as e.g. outer `Polygon` rings are automatically closed.
+//! - `geojson` attempts to output valid geometries. In particular, it may re-orient `Polygon` rings when serialising.
+//!
+//! The [`geojson_example`](https://github.com/urschrei/geojson_example) and
+//! [`polylabel_cmd`](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
+//! implementations which may be useful if you wish to perform this kind of processing yourself and require
+//! more granular control over performance and / or memory allocation.
 
 #[cfg(feature = "geo-types")]
 use geo_types;

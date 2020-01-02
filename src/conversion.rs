@@ -522,7 +522,7 @@ where
 /// "#;
 /// let geojson = geojson_str.parse::<GeoJson>().unwrap();
 /// // Turn the GeoJSON string into a geo_types GeometryCollection
-/// let collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
+/// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
 #[cfg(feature = "geo-types")]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
