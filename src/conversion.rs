@@ -432,7 +432,8 @@ where
     }
 }
 
-/// Process top-level `GeoJSON` items
+// Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
+#[cfg(feature = "geo-types")]
 fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
     T: Float,
@@ -458,6 +459,8 @@ where
     }
 }
 
+// Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
+#[cfg(feature = "geo-types")]
 fn process_geometry<T>(geometry: &Gh) -> Result<geo_types::Geometry<T>, GJError>
 where
     T: Float,
@@ -486,6 +489,46 @@ where
             Ok(gc)
         }
     }
+}
+
+/// A shortcut for producing `geo_types` [GeometryCollection](../geo_types/struct.GeometryCollection.html) objects
+/// from arbitrary valid GeoJSON input.
+///
+/// This function is primarily intended for easy processing of GeoJSON `FeatureCollection`
+/// objects using the `geo` crate, and sacrifices a little performance for convenience.
+/// # Example
+/// 
+/// ```
+/// use geojson::{GeoJson, quick_collection};
+/// use geo_types::GeometryCollection;
+///
+/// let geojson_str = r#"
+/// {
+///   "type": "FeatureCollection",
+///   "features": [
+///     {
+///       "type": "Feature",
+///       "properties": {},
+///       "geometry": {
+///         "type": "Point",
+///         "coordinates": [
+///           -0.13583511114120483,
+///           51.5218870403801
+///         ]
+///       }
+///     }
+///   ]
+/// }
+/// "#;
+/// let geojson = geojson_str.parse::<GeoJson>().unwrap();
+/// // Turn the GeoJSON string into a geo_types GeometryCollection
+/// let collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
+/// ```
+#[cfg(feature = "geo-types")]
+pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+    where T: Float
+{
+    process_geojson(gj)
 }
 
 #[cfg(test)]

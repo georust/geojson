@@ -11,7 +11,54 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+//!
+//! # Introduction
+//! The `geojson` crate reads and writes `GeoJSON` ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)) files, optionally using `serde` as a serialisation. Crate users are encouraged to familiarise themselves with the spec, as the crate is structured around it.
+//! framework.
+//! # Structure of the Crate
+//! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::GeoJson` types of the same name:
+//! 
+//! - [`Feature`](struct.Feature.html)
+//! - [`FeatureCollection`](struct.FeatureCollection.html)
+//! - [`Geometry`](struct.Geometry.html)
+//! 
+//! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects. A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object. A complicating factor here is the `GeometryCollection` geometry type, which can contain one more `Geometry` objects, _including nested `GeometryCollection` objects_. The use of `GeometryCollection` is discouraged, however.
+//! 
+//! The easiest way to obtain a `GeoJson` object is to call the `parse()` method on a `&str`:
+//! 
+//! # Examples
+//! 
+//! ```
+//! use geojson::GeoJson;
+//! 
+//! let geojson_str = r#"
+//! {
+//!   "type": "FeatureCollection",
+//!   "features": [
+//!     {
+//!       "type": "Feature",
+//!       "properties": {},
+//!       "geometry": {
+//!         "type": "Point",
+//!         "coordinates": [
+//!           -0.13583511114120483,
+//!           51.5218870403801
+//!         ]
+//!       }
+//!     }
+//!   ]
+//! }
+//! "#;
+//! 
+//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! ```
+//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in order to process, transform, or measure them:**  
+//! - `match` on `geojson`, iterating over its `features` field, yielding `Option<Feature>`.
+//! - process each `Feature`, accessing its `Value` field, yielding `Option<Value>`.
+//! 
+//! Each [`Value`](enum.Value.html) represents a primitive type, such as a coordinate, point, linestring, polygon, or its multi- equivalent1, **and each of these has an equivalent `geo` primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
+//!
+//!
 //! # Examples
 //!
 //! This crate uses `serde` for serialization.
@@ -221,6 +268,8 @@ pub use crate::feature_collection::FeatureCollection;
 
 #[cfg(feature = "geo-types")]
 mod conversion;
+#[cfg(feature = "geo-types")]
+pub use conversion::quick_collection;
 
 /// Feature Objects
 ///
