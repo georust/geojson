@@ -228,9 +228,11 @@
 //! the [`geo`](https://docs.rs/geo) crate:
 //!
 //! ```
+//! # #[cfg(feature = "geo-types")]
 //! use geojson::{GeoJson, quick_collection};
+//! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
-//!
+//! # #[cfg(feature = "geo-types")]
 //! let geojson_str = r#"
 //! {
 //!   "type": "FeatureCollection",
@@ -249,8 +251,10 @@
 //!   ]
 //! }
 //! "#;
+//! # #[cfg(feature = "geo-types")]
 //! let geojson = geojson_str.parse::<GeoJson>().unwrap();
 //! // Turn the GeoJSON string into a geo_types GeometryCollection
+//! # #[cfg(feature = "geo-types")]
 //! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 //! ```
 //! ### Caveats
