@@ -13,8 +13,17 @@
 // limitations under the License.
 
 use crate::geo_types;
+use crate::geo_types::{
+    Geometry as GtGeometry, GeometryCollection, LineString as GtLineString,
+    MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
+    MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
+};
+use crate::geojson::GeoJson;
+use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 use crate::geometry;
+use crate::geometry::Geometry as Gh;
 use crate::Error as GJError;
+use crate::Value;
 use crate::{LineStringType, PointType, PolygonType};
 use num_traits::Float;
 use std::convert::From;
@@ -419,6 +428,62 @@ where
                 geometry::Value::from(multi_polygon)
             }
             _ => panic!("GeometryCollection not allowed"),
+        }
+    }
+}
+
+/// Process top-level `GeoJSON` items
+fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+where
+    T: Float,
+{
+    match &*gj {
+        FeatureCollection(collection) => Ok(GeometryCollection(
+            collection
+                .features
+                .iter()
+                // Only pass on non-empty geometries
+                .filter_map(|feature| feature.geometry.as_ref())
+                .map(|geometry| process_geometry(&geometry))
+                .collect::<Result<_, _>>()?,
+        )),
+        Feature(feature) => {
+            if let Some(geometry) = &feature.geometry {
+                Ok(GeometryCollection(vec![process_geometry(&geometry)?]))
+            } else {
+                Ok(GeometryCollection(vec![]))
+            }
+        }
+        Geometry(geometry) => Ok(GeometryCollection(vec![process_geometry(&geometry)?])),
+    }
+}
+
+fn process_geometry<T>(geometry: &Gh) -> Result<geo_types::Geometry<T>, GJError>
+where
+    T: Float,
+{
+    match &geometry.value {
+        Value::Point(_) => Ok(TryInto::<GtPoint<_>>::try_into(geometry.value.clone())?.into()),
+        Value::MultiPoint(_) => {
+            Ok(TryInto::<GtMultiPoint<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::LineString(_) => {
+            Ok(TryInto::<GtLineString<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::MultiLineString(_) => {
+            Ok(TryInto::<GtMultiLineString<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::Polygon(_) => Ok(TryInto::<GtPolygon<_>>::try_into(geometry.value.clone())?.into()),
+        Value::MultiPolygon(_) => {
+            Ok(TryInto::<GtMultiPolygon<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::GeometryCollection(gc) => {
+            let gc = GtGeometry::GeometryCollection(GeometryCollection(
+                gc.iter()
+                    .map(|geom| process_geometry(&geom))
+                    .collect::<Result<Vec<geo_types::Geometry<T>>, GJError>>()?,
+            ));
+            Ok(gc)
         }
     }
 }
