@@ -525,6 +525,7 @@ where
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
 #[cfg(feature = "geo-types")]
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
     where T: Float
 {
