@@ -23,11 +23,9 @@ use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 use crate::geometry;
 use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;
-use crate::Value;
-use crate::{LineStringType, PointType, PolygonType};
+use crate::{LineStringType, PointType, PolygonType, Value};
 use num_traits::Float;
-use std::convert::From;
-use std::convert::TryInto;
+use std::convert::{From, TryInto};
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
@@ -513,7 +511,7 @@ where
 /// This function is primarily intended for easy processing of GeoJSON `FeatureCollection`
 /// objects using the `geo` crate, and sacrifices a little performance for convenience.
 /// # Example
-/// 
+///
 /// ```
 /// use geojson::{GeoJson, quick_collection};
 /// use geo_types::GeometryCollection;
@@ -543,7 +541,8 @@ where
 #[cfg(feature = "geo-types")]
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
-    where T: Float
+where
+    T: Float,
 {
     process_geojson(gj)
 }
