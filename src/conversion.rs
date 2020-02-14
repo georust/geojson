@@ -13,12 +13,19 @@
 // limitations under the License.
 
 use crate::geo_types;
+use crate::geo_types::{
+    Geometry as GtGeometry, GeometryCollection, LineString as GtLineString,
+    MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
+    MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
+};
+use crate::geojson::GeoJson;
+use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 use crate::geometry;
+use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType};
+use crate::{LineStringType, PointType, PolygonType, Value};
 use num_traits::Float;
-use std::convert::From;
-use std::convert::TryInto;
+use std::convert::{From, TryInto};
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
@@ -163,6 +170,7 @@ where
     )
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Point<T>> for geometry::Value
 where
     T: Float,
@@ -177,6 +185,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
 where
     T: Float,
@@ -188,6 +197,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::MultiPoint<T>> for geometry::Value
 where
     T: Float,
@@ -207,6 +217,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiPoint<T>> for geometry::Value
 where
     T: Float,
@@ -222,6 +233,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::LineString<T>> for geometry::Value
 where
     T: Float,
@@ -238,6 +250,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::LineString<T>> for geometry::Value
 where
     T: Float,
@@ -249,6 +262,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::MultiLineString<T>> for geometry::Value
 where
     T: Float,
@@ -265,6 +279,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
 where
     T: Float,
@@ -276,6 +291,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Polygon<T>> for geometry::Value
 where
     T: Float,
@@ -290,6 +306,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Polygon<T>> for geometry::Value
 where
     T: Float,
@@ -301,6 +318,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::MultiPolygon<T>> for geometry::Value
 where
     T: Float,
@@ -317,6 +335,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiPolygon<T>> for geometry::Value
 where
     T: Float,
@@ -328,6 +347,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::GeometryCollection<T>> for geometry::Value
 where
     T: Float,
@@ -349,6 +369,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Geometry<T>> for geometry::Value
 where
     T: Float,
@@ -387,6 +408,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for geometry::Value
 where
     T: Float,
@@ -402,6 +424,7 @@ where
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
 where
     T: Float,
@@ -421,6 +444,104 @@ where
             _ => panic!("GeometryCollection not allowed"),
         }
     }
+}
+
+// Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
+fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+where
+    T: Float,
+{
+    match &*gj {
+        FeatureCollection(collection) => Ok(GeometryCollection(
+            collection
+                .features
+                .iter()
+                // Only pass on non-empty geometries
+                .filter_map(|feature| feature.geometry.as_ref())
+                .map(|geometry| process_geometry(&geometry))
+                .collect::<Result<_, _>>()?,
+        )),
+        Feature(feature) => {
+            if let Some(geometry) = &feature.geometry {
+                Ok(GeometryCollection(vec![process_geometry(&geometry)?]))
+            } else {
+                Ok(GeometryCollection(vec![]))
+            }
+        }
+        Geometry(geometry) => Ok(GeometryCollection(vec![process_geometry(&geometry)?])),
+    }
+}
+
+// Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
+fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
+where
+    T: Float,
+{
+    match &geometry.value {
+        Value::Point(_) => Ok(TryInto::<GtPoint<_>>::try_into(geometry.value.clone())?.into()),
+        Value::MultiPoint(_) => {
+            Ok(TryInto::<GtMultiPoint<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::LineString(_) => {
+            Ok(TryInto::<GtLineString<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::MultiLineString(_) => {
+            Ok(TryInto::<GtMultiLineString<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::Polygon(_) => Ok(TryInto::<GtPolygon<_>>::try_into(geometry.value.clone())?.into()),
+        Value::MultiPolygon(_) => {
+            Ok(TryInto::<GtMultiPolygon<_>>::try_into(geometry.value.clone())?.into())
+        }
+        Value::GeometryCollection(gc) => {
+            let gc = GtGeometry::GeometryCollection(GeometryCollection(
+                gc.iter()
+                    .map(|geom| process_geometry(&geom))
+                    .collect::<Result<Vec<geo_types::Geometry<T>>, GJError>>()?,
+            ));
+            Ok(gc)
+        }
+    }
+}
+
+/// A shortcut for producing `geo_types` [GeometryCollection](../geo_types/struct.GeometryCollection.html) objects
+/// from arbitrary valid GeoJSON input.
+///
+/// This function is primarily intended for easy processing of GeoJSON `FeatureCollection`
+/// objects using the `geo` crate, and sacrifices a little performance for convenience.
+/// # Example
+///
+/// ```
+/// use geojson::{GeoJson, quick_collection};
+/// use geo_types::GeometryCollection;
+///
+/// let geojson_str = r#"
+/// {
+///   "type": "FeatureCollection",
+///   "features": [
+///     {
+///       "type": "Feature",
+///       "properties": {},
+///       "geometry": {
+///         "type": "Point",
+///         "coordinates": [
+///           -0.13583511114120483,
+///           51.5218870403801
+///         ]
+///       }
+///     }
+///   ]
+/// }
+/// "#;
+/// let geojson = geojson_str.parse::<GeoJson>().unwrap();
+/// // Turn the GeoJSON string into a geo_types GeometryCollection
+/// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
+/// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+where
+    T: Float,
+{
+    process_geojson(gj)
 }
 
 #[cfg(test)]
