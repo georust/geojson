@@ -447,7 +447,6 @@ where
 }
 
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
-#[cfg(feature = "geo-types")]
 fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
     T: Float,
@@ -474,7 +473,6 @@ where
 }
 
 // Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
-#[cfg(feature = "geo-types")]
 fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
 where
     T: Float,
@@ -538,7 +536,6 @@ where
 /// // Turn the GeoJSON string into a geo_types GeometryCollection
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
-#[cfg(feature = "geo-types")]
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
