@@ -137,10 +137,9 @@ impl<'de> Deserialize<'de> for FeatureCollection {
         D: Deserializer<'de>,
     {
         use serde::de::Error as SerdeError;
-        use std::error::Error as StdError;
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
+        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }

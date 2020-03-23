@@ -2,7 +2,7 @@
 
 name = "geojson"
 description = "Library for serializing the GeoJSON vector GIS file format"
-version = "0.17.0"
+version = "0.18.0"
 authors = ["Corey Farwell <coreyf@rwell.org>",
            "Blake Grotewold <hello@grotewold.me>"]
 license = "MIT/Apache-2.0"
@@ -15,7 +15,7 @@ edition = "2018"
 [dependencies]
 serde = "~1.0"
 serde_json = "~1.0"
-geo-types = { version = "0.4", optional = true }
+geo-types = { version = "0.5", optional = true }
 num-traits = "0.2"
 
 [dev-dependencies]
