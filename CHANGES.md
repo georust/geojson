@@ -1,5 +1,15 @@
 # Changes
 
+## 0.18.0
+* Update `geo-types` to 0.5.0
+* Update docs
+* Add quick_collection function
+  * <https://github.com/georust/geojson/pull/122>
+* Add TryFrom impls for JsonObject and JsonValue
+  * <https://github.com/georust/geojson/pull/120>
+* Add from_json_value! macro
+  * <https://github.com/georust/geojson/pull/119>
+
 ## 0.17.0
 
 * Add `TryFrom` impls for `JsonObject` and `JsonValue`
