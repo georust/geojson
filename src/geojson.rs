@@ -175,11 +175,10 @@ impl<'de> Deserialize<'de> for GeoJson {
         D: Deserializer<'de>,
     {
         use serde::de::Error as SerdeError;
-        use std::error::Error as StdError;
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
+        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 

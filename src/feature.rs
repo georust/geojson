@@ -106,11 +106,10 @@ impl<'de> Deserialize<'de> for Feature {
         D: Deserializer<'de>,
     {
         use serde::de::Error as SerdeError;
-        use std::error::Error as StdError;
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.description()))
+        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 
