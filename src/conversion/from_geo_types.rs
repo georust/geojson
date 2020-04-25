@@ -1,18 +1,10 @@
 use crate::geo_types;
-use crate::geo_types::{
-    Geometry as GtGeometry, GeometryCollection, LineString as GtLineString,
-    MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
-    MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
-};
-use crate::geojson::GeoJson;
-use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
-use crate::geometry;
-use crate::geometry::Geometry as GjGeometry;
-use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType, Value};
-use num_traits::Float;
-use std::convert::{From, TryInto};
 
+use crate::geometry;
+
+use crate::{LineStringType, PointType, PolygonType};
+use num_traits::Float;
+use std::convert::From;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
@@ -199,7 +191,6 @@ mod tests {
     use geo_types::{
         GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
     };
-    use std::convert::TryInto;
 
     #[test]
     fn geo_point_conversion_test() {

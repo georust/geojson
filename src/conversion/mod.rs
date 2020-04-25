@@ -20,12 +20,12 @@ use crate::geo_types::{
 };
 use crate::geojson::GeoJson;
 use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
-use crate::geometry;
+
 use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType, Value};
+use crate::Value;
 use num_traits::Float;
-use std::convert::{From, TryInto};
+use std::convert::TryInto;
 
 #[cfg(test)]
 macro_rules! assert_almost_eq {
@@ -70,8 +70,8 @@ macro_rules! assert_almost_eq {
     }};
 }
 
-pub(crate) mod to_geo_types;
 pub(crate) mod from_geo_types;
+pub(crate) mod to_geo_types;
 
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
 fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>

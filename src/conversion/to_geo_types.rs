@@ -1,15 +1,9 @@
 use crate::geo_types;
-use crate::geo_types::{
-    Geometry as GtGeometry, GeometryCollection, LineString as GtLineString,
-    MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
-    MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
-};
-use crate::geojson::GeoJson;
-use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
+
 use crate::geometry;
-use crate::geometry::Geometry as GjGeometry;
+
 use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType, Value};
+use crate::{LineStringType, PointType, PolygonType};
 use num_traits::Float;
 use std::convert::{From, TryInto};
 
@@ -258,9 +252,7 @@ where
 mod tests {
     use crate::{Geometry, Value};
     use geo_types;
-    use geo_types::{
-        GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
-    };
+
     use std::convert::TryInto;
 
     #[test]

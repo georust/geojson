@@ -20,11 +20,11 @@
 //! # Structure of the Crate
 //! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::GeoJson`
 //! enum members of the same name:
-//! 
+//!
 //! - [`Feature`](struct.Feature.html)
 //! - [`FeatureCollection`](struct.FeatureCollection.html)
 //! - [`Geometry`](struct.Geometry.html)
-//! 
+//!
 //! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects.
 //! A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object, which may be empty.
 //! A potentially complicating factor is the `GeometryCollection` geometry type, which can contain
@@ -50,7 +50,7 @@
 //!
 //! ```
 //! use geojson::GeoJson;
-//! 
+//!
 //! let geojson_str = r#"
 //! {
 //!   "type": "FeatureCollection",
@@ -69,7 +69,7 @@
 //!   ]
 //! }
 //! "#;
-//! 
+//!
 //! let geojson = geojson_str.parse::<GeoJson>().unwrap();
 //! ```
 //!
