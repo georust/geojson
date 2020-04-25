@@ -301,6 +301,7 @@ pub use crate::feature_collection::FeatureCollection;
 
 #[cfg(feature = "geo-types")]
 mod conversion;
+
 #[cfg(feature = "geo-types")]
 pub use conversion::quick_collection;
 
