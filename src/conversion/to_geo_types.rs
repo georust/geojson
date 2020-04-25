@@ -5,7 +5,7 @@ use crate::geometry;
 use crate::Error as GJError;
 use crate::{LineStringType, PointType, PolygonType};
 use num_traits::Float;
-use std::convert::{From, TryInto};
+use std::convert::TryInto;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Point<T>> for geometry::Value
