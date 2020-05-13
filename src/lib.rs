@@ -33,7 +33,7 @@
 //!
 //! If your primary use case for this crate is ingesting `GeoJSON` strings in order to process geometries
 //! using the algorithms in the [`geo`](https://docs.rs/geo) crate, you can do so by enabling the `geo-types` feature in
-//! your `cargo.html`, and using the [`quick_collection`](fn.quick_collection.html) function to
+//! your `Cargo.toml`, and using the [`quick_collection`](fn.quick_collection.html) function to
 //! parse [`GeoJson`](enum.GeoJson.html) objects into
 //! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
 //! See [here](#conversion-to-geo-objects) for details.
