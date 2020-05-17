@@ -41,13 +41,6 @@ pub fn expect_array(value: &JsonValue) -> Result<&Vec<JsonValue>, Error> {
     }
 }
 
-pub fn expect_object(value: &JsonValue) -> Result<&JsonObject, Error> {
-    match value.as_object() {
-        Some(v) => Ok(v),
-        None => Err(Error::ExpectedObjectValue),
-    }
-}
-
 fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue, Error> {
     match obj.remove(name) {
         Some(v) => Ok(v),
@@ -144,11 +137,11 @@ pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position
 /// Used by Value::GeometryCollection
 pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
     let geometries_json = expect_property(object, "geometries")?;
-    let geometries_array = expect_array(&geometries_json)?;
+    let geometries_array = expect_owned_array(geometries_json)?;
     let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
-        let obj = expect_object(json)?;
-        let geometry = Geometry::from_json_object(obj.clone())?;
+        let obj = expect_owned_object(json)?;
+        let geometry = Geometry::from_json_object(obj)?;
         geometries.push(geometry);
     }
     Ok(geometries)
