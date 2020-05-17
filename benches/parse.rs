@@ -4,11 +4,19 @@ use geojson;
 extern crate test;
 
 fn parse_benchmark(c: &mut Criterion) {
-    c.bench_function("parse", |b| {
+    c.bench_function("parse1", |b| {
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
         b.iter(|| {
             let _ = test::black_box(geojson_str.parse::<geojson::GeoJson>());
+        });
+    });
+
+    c.bench_function("parse2", |b| {
+        let geojson_str = include_str!("../tests/fixtures/countries.geojson");
+
+        b.iter(|| {
+            let _: Result<geojson::geojson_raw::GeoJson, _> = test::black_box(serde_json::from_str(&geojson_str));
         });
     });
 }

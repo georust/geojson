@@ -288,6 +288,8 @@ pub type PolygonType = Vec<Vec<Position>>;
 
 mod util;
 
+pub mod geojson_raw;
+
 mod geojson;
 pub use crate::geojson::GeoJson;
 
