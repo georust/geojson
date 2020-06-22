@@ -1,5 +1,11 @@
 # Changes
 
+## 0.19.0
+
+* Update `geo-types` to 0.6.0
+* Remove unnecessary allocations when parsing `GeometryCollection`
+  * <https://github.com/georust/geojson/pull/128>
+
 ## 0.18.0
 * Update `geo-types` to 0.5.0
 * Update docs
