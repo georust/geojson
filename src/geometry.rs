@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
+use crate::{util, Bbox, Error};
 
 /// The underlying value for a `Geometry`.
 ///
@@ -39,42 +39,44 @@ use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
 /// # test()
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub enum Value {
+pub enum ValueBase<Pos> {
     /// Point
     ///
     /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
-    Point(PointType),
+    Point(Pos),
 
     /// MultiPoint
     ///
     /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3)
-    MultiPoint(Vec<PointType>),
+    MultiPoint(Vec<Pos>),
 
     /// LineString
     ///
     /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4)
-    LineString(LineStringType),
+    LineString(Vec<Pos>),
 
     /// MultiLineString
     ///
     /// [GeoJSON Format Specification § 3.1.5](https://tools.ietf.org/html/rfc7946#section-3.1.5)
-    MultiLineString(Vec<LineStringType>),
+    MultiLineString(Vec<Vec<Pos>>),
 
     /// Polygon
     ///
     /// [GeoJSON Format Specification § 3.1.6](https://tools.ietf.org/html/rfc7946#section-3.1.6)
-    Polygon(PolygonType),
+    Polygon(Vec<Vec<Pos>>),
 
     /// MultiPolygon
     ///
     /// [GeoJSON Format Specification § 3.1.7](https://tools.ietf.org/html/rfc7946#section-3.1.7)
-    MultiPolygon(Vec<PolygonType>),
+    MultiPolygon(Vec<Vec<Vec<Pos>>>),
 
     /// GeometryCollection
     ///
     /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
     GeometryCollection(Vec<Geometry>),
 }
+
+pub type Value = ValueBase<Vec<f64>>;
 
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
@@ -154,17 +156,19 @@ impl Serialize for Value {
 /// );
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct Geometry {
+pub struct GeometryBase<Pos> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
-    pub value: Value,
+    pub value: ValueBase<Pos>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
+
+pub type Geometry = GeometryBase<Vec<f64>>;
 
 impl Geometry {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be

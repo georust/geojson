@@ -267,8 +267,8 @@
 //! implementations which may be useful if you wish to perform this kind of processing yourself and require
 //! more granular control over performance and / or memory allocation.
 
-#[cfg(feature = "geo-types")]
-use geo_types;
+// #[cfg(feature = "geo-types")]
+// use geo_types;
 use serde;
 use serde_json;
 
@@ -282,9 +282,9 @@ pub type Bbox = Vec<f64>;
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
 pub type Position = Vec<f64>;
 
-pub type PointType = Position;
-pub type LineStringType = Vec<Position>;
-pub type PolygonType = Vec<Vec<Position>>;
+// pub type PointType = Position;
+// pub type LineStringType = Vec<Position>;
+// pub type PolygonType = Vec<Vec<Position>>;
 
 mod util;
 
@@ -299,11 +299,11 @@ pub mod feature;
 mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
 
-#[cfg(feature = "geo-types")]
-mod conversion;
+// #[cfg(feature = "geo-types")]
+// mod conversion;
 
-#[cfg(feature = "geo-types")]
-pub use conversion::quick_collection;
+// #[cfg(feature = "geo-types")]
+// pub use conversion::quick_collection;
 
 /// Feature Objects
 ///
