@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Bbox, Error, Feature};
+use crate::{util, Bbox, Error, FeatureBase};
 
 /// Feature Collection Objects
 ///
@@ -47,17 +47,19 @@ use crate::{util, Bbox, Error, Feature};
 /// # }
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct FeatureCollection {
+pub struct FeatureCollectionBase<Pos> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
-    pub features: Vec<Feature>,
+    pub features: Vec<FeatureBase<Pos>>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
+
+pub type FeatureCollection = FeatureCollectionBase<Vec<f64>>;
 
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {

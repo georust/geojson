@@ -292,12 +292,12 @@ mod geojson;
 pub use crate::geojson::GeoJson;
 
 mod geometry;
-pub use crate::geometry::{Geometry, Value};
+pub use crate::geometry::{Geometry, GeometryBase, Value};
 
 pub mod feature;
 
 mod feature_collection;
-pub use crate::feature_collection::FeatureCollection;
+pub use crate::feature_collection::{FeatureCollection, FeatureCollectionBase};
 
 // #[cfg(feature = "geo-types")]
 // mod conversion;
@@ -309,7 +309,7 @@ pub use crate::feature_collection::FeatureCollection;
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
-pub struct Feature {
+pub struct FeatureBase<Pos> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -317,7 +317,7 @@ pub struct Feature {
     /// Geometry
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-    pub geometry: Option<Geometry>,
+    pub geometry: Option<GeometryBase<Pos>>,
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -331,6 +331,8 @@ pub struct Feature {
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<json::JsonObject>,
 }
+
+pub type Feature = FeatureBase<Vec<f64>>;
 
 /// Error when reading a GeoJSON object from a str or Object
 #[derive(Debug, PartialEq, Eq)]

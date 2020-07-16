@@ -14,7 +14,7 @@
 
 use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{Error, Feature, FeatureCollection, Geometry};
+use crate::{Error, Feature, FeatureBase, FeatureCollection, FeatureCollectionBase, Geometry, GeometryBase};
 use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
@@ -23,11 +23,13 @@ use std::str::FromStr;
 ///
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq)]
-pub enum GeoJson {
-    Geometry(Geometry),
-    Feature(Feature),
-    FeatureCollection(FeatureCollection),
+pub enum GeoJsonBase<Pos> {
+    Geometry(GeometryBase<Pos>),
+    Feature(FeatureBase<Pos>),
+    FeatureCollection(FeatureCollectionBase<Pos>),
 }
+
+pub type GeoJson = GeoJsonBase<Vec<f64>>;
 
 impl<'a> From<&'a GeoJson> for JsonObject {
     fn from(geojson: &'a GeoJson) -> JsonObject {
