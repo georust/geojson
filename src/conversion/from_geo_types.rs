@@ -2,7 +2,6 @@ use crate::geo_types;
 
 use crate::geometry;
 
-use crate::{LineStringType, PointType, PolygonType};
 use num_traits::Float;
 use std::convert::From;
 

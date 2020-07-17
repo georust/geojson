@@ -6,6 +6,8 @@ use crate::{util, Error};
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
 pub trait Position: Sized {
     fn from_json_value(json: &JsonValue) -> Result<Self, Error>;
+    fn x(&self) -> f64;
+    fn y(&self) -> f64;
 }
 
 impl Position for Vec<f64> {
@@ -16,6 +18,14 @@ impl Position for Vec<f64> {
             coords.push(util::expect_f64(position)?);
         }
         Ok(coords)
+    }
+
+    fn x(&self) -> f64 {
+        self[0]
+    }
+
+    fn y(&self) -> f64 {
+        self[0]
     }
 }
 
@@ -30,6 +40,14 @@ impl Position for (f64, f64) {
             util::expect_f64(&coords_array[1])?,
         ))
     }
+
+    fn x(&self) -> f64 {
+        self.0
+    }
+
+    fn y(&self) -> f64 {
+        self.1
+    }
 }
 
 impl Position for (f64, f64, f64) {
@@ -43,5 +61,13 @@ impl Position for (f64, f64, f64) {
             util::expect_f64(&coords_array[1])?,
             util::expect_f64(&coords_array[2])?,
         ))
+    }
+
+    fn x(&self) -> f64 {
+        self.0
+    }
+
+    fn y(&self) -> f64 {
+        self.1
     }
 }
