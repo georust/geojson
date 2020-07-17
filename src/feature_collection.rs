@@ -94,12 +94,12 @@ impl FeatureCollection {
     }
 }
 
-impl TryFrom<JsonObject> for FeatureCollection {
+impl<P: crate::util::Pos> TryFrom<JsonObject> for FeatureCollectionBase<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match util::expect_type(&mut object)? {
-            ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
+            ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollectionBase {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,

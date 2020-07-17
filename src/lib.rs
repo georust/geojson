@@ -289,7 +289,7 @@ pub type Position = Vec<f64>;
 mod util;
 
 mod geojson;
-pub use crate::geojson::GeoJson;
+pub use crate::geojson::{GeoJson, GeoJsonBase};
 
 mod geometry;
 pub use crate::geometry::{Geometry, GeometryBase, Value};

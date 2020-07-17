@@ -59,11 +59,24 @@ impl From<FeatureCollection> for GeoJson {
     }
 }
 
-impl GeoJson {
+impl<P: crate::util::Pos> GeoJsonBase<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
-        Self::try_from(object)
+        let type_ = match object.get("type") {
+            Some(json::JsonValue::String(t)) => Type::from_str(t),
+            _ => return Err(Error::ExpectedProperty("type".to_owned())),
+        };
+        let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
+        match type_ {
+            Type::Feature => FeatureBase::try_from(object).map(GeoJsonBase::Feature),
+            Type::FeatureCollection => {
+                FeatureCollectionBase::try_from(object).map(GeoJsonBase::FeatureCollection)
+            }
+            _ => GeometryBase::try_from(object).map(GeoJsonBase::Geometry),
+        }
     }
+}
 
+impl GeoJson {
     /// Converts a JSON Value into a GeoJson object.
     ///
     /// # Example
@@ -184,13 +197,13 @@ impl<'de> Deserialize<'de> for GeoJson {
     }
 }
 
-impl FromStr for GeoJson {
+impl<P: crate::util::Pos> FromStr for GeoJsonBase<P> {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let object = get_object(s)?;
 
-        GeoJson::from_json_object(object)
+        GeoJsonBase::from_json_object(object)
     }
 }
 

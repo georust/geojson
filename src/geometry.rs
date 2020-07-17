@@ -217,33 +217,35 @@ impl<'a> From<&'a Geometry> for JsonObject {
     }
 }
 
-impl Geometry {
+impl<P: crate::util::Pos> GeometryBase<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
+}
 
+impl Geometry {
     pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
     }
 }
 
-impl TryFrom<JsonObject> for Geometry {
+impl<P: crate::util::Pos> TryFrom<JsonObject> for GeometryBase<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let value = match &*util::expect_type(&mut object)? {
-            "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
-            "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
-            "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),
-            "MultiLineString" => Value::MultiLineString(util::get_coords_2d_pos(&mut object)?),
-            "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
-            "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
-            "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
+            "Point" => ValueBase::Point(util::get_coords_one_pos(&mut object)?),
+            "MultiPoint" => ValueBase::MultiPoint(util::get_coords_1d_pos(&mut object)?),
+            "LineString" => ValueBase::LineString(util::get_coords_1d_pos(&mut object)?),
+            "MultiLineString" => ValueBase::MultiLineString(util::get_coords_2d_pos(&mut object)?),
+            "Polygon" => ValueBase::Polygon(util::get_coords_2d_pos(&mut object)?),
+            "MultiPolygon" => ValueBase::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
+            "GeometryCollection" => ValueBase::GeometryCollection(util::get_geometries(&mut object)?),
             _ => return Err(Error::GeometryUnknownType),
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
-        Ok(Geometry {
+        Ok(GeometryBase {
             bbox,
             value,
             foreign_members,

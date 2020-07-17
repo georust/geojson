@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Error, Feature};
+use crate::{util, Error, Feature, FeatureBase};
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
@@ -52,7 +52,7 @@ impl<'a> From<&'a Feature> for JsonObject {
     }
 }
 
-impl Feature {
+impl<P: crate::util::Pos> FeatureBase<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
@@ -62,12 +62,12 @@ impl Feature {
     }
 }
 
-impl TryFrom<JsonObject> for Feature {
+impl<P: crate::util::Pos> TryFrom<JsonObject> for FeatureBase<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match &*util::expect_type(&mut object)? {
-            "Feature" => Ok(Feature {
+            "Feature" => Ok(FeatureBase {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,
                 id: util::get_id(&mut object)?,
@@ -79,7 +79,7 @@ impl TryFrom<JsonObject> for Feature {
     }
 }
 
-impl TryFrom<JsonValue> for Feature {
+impl<P: crate::util::Pos> TryFrom<JsonValue> for FeatureBase<P> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Error> {
