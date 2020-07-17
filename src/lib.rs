@@ -267,8 +267,6 @@
 //! implementations which may be useful if you wish to perform this kind of processing yourself and require
 //! more granular control over performance and / or memory allocation.
 
-use crate::json::JsonValue;
-
 // #[cfg(feature = "geo-types")]
 // use geo_types;
 use serde;
@@ -279,42 +277,14 @@ use serde_json;
 /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
 pub type Bbox = Vec<f64>;
 
-/// Positions
-///
-/// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub trait Position: Sized {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error>;
-}
-
-impl Position for Vec<f64> {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error> {
-        let coords_array = util::expect_array(json)?;
-        let mut coords = Vec::with_capacity(coords_array.len());
-        for position in coords_array {
-            coords.push(util::expect_f64(position)?);
-        }
-        Ok(coords)
-    }
-}
-
-impl Position for (f64, f64) {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error> {
-        let coords_array = util::expect_array(json)?;
-        if coords_array.len() != 2 {
-            unimplemented!()
-        }
-        Ok((
-            util::expect_f64(&coords_array[0])?,
-            util::expect_f64(&coords_array[1])?,
-        ))
-    }
-}
-
 // pub type PointType = Position;
 // pub type LineStringType = Vec<Position>;
 // pub type PolygonType = Vec<Vec<Position>>;
 
 mod util;
+
+mod position;
+pub use position::Position;
 
 mod geojson;
 pub use crate::geojson::{GeoJson, GeoJsonBase};
