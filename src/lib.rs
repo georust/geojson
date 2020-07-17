@@ -267,7 +267,7 @@
 //! implementations which may be useful if you wish to perform this kind of processing yourself and require
 //! more granular control over performance and / or memory allocation.
 
-use crate::json::{JsonValue};
+use crate::json::JsonValue;
 
 // #[cfg(feature = "geo-types")]
 // use geo_types;
@@ -309,7 +309,6 @@ impl Position for (f64, f64) {
         ))
     }
 }
-
 
 // pub type PointType = Position;
 // pub type LineStringType = Vec<Position>;

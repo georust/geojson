@@ -240,7 +240,9 @@ impl<P: Position> TryFrom<JsonObject> for GeometryBase<P> {
             "MultiLineString" => ValueBase::MultiLineString(util::get_coords_2d_pos(&mut object)?),
             "Polygon" => ValueBase::Polygon(util::get_coords_2d_pos(&mut object)?),
             "MultiPolygon" => ValueBase::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
-            "GeometryCollection" => ValueBase::GeometryCollection(util::get_geometries(&mut object)?),
+            "GeometryCollection" => {
+                ValueBase::GeometryCollection(util::get_geometries(&mut object)?)
+            }
             _ => return Err(Error::GeometryUnknownType),
         };
         let bbox = util::get_bbox(&mut object)?;

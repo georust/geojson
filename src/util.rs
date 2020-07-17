@@ -158,7 +158,9 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, Error> {
 }
 
 /// Used by Feature
-pub fn get_geometry<P: Position>(object: &mut JsonObject) -> Result<Option<GeometryBase<P>>, Error> {
+pub fn get_geometry<P: Position>(
+    object: &mut JsonObject,
+) -> Result<Option<GeometryBase<P>>, Error> {
     let geometry = expect_property(object, "geometry")?;
     match geometry {
         JsonValue::Object(x) => {

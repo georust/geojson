@@ -14,7 +14,10 @@
 
 use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{Error, Feature, FeatureBase, FeatureCollection, FeatureCollectionBase, Geometry, GeometryBase, Position};
+use crate::{
+    Error, Feature, FeatureBase, FeatureCollection, FeatureCollectionBase, Geometry, GeometryBase,
+    Position,
+};
 use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
