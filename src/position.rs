@@ -31,3 +31,17 @@ impl Position for (f64, f64) {
         ))
     }
 }
+
+impl Position for (f64, f64, f64) {
+    fn from_json_value(json: &JsonValue) -> Result<Self, Error> {
+        let coords_array = util::expect_array(json)?;
+        if coords_array.len() != 3 {
+            unimplemented!()
+        }
+        Ok((
+            util::expect_f64(&coords_array[0])?,
+            util::expect_f64(&coords_array[1])?,
+            util::expect_f64(&coords_array[2])?,
+        ))
+    }
+}
