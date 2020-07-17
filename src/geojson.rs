@@ -14,7 +14,7 @@
 
 use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{Error, Feature, FeatureBase, FeatureCollection, FeatureCollectionBase, Geometry, GeometryBase};
+use crate::{Error, Feature, FeatureBase, FeatureCollection, FeatureCollectionBase, Geometry, GeometryBase, Position};
 use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
@@ -59,7 +59,7 @@ impl From<FeatureCollection> for GeoJson {
     }
 }
 
-impl<P: crate::util::Pos> GeoJsonBase<P> {
+impl<P: Position> GeoJsonBase<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         let type_ = match object.get("type") {
             Some(json::JsonValue::String(t)) => Type::from_str(t),
@@ -197,7 +197,7 @@ impl<'de> Deserialize<'de> for GeoJson {
     }
 }
 
-impl<P: crate::util::Pos> FromStr for GeoJsonBase<P> {
+impl<P: Position> FromStr for GeoJsonBase<P> {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {

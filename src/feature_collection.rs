@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Bbox, Error, FeatureBase};
+use crate::{util, Bbox, Error, FeatureBase, Position};
 
 /// Feature Collection Objects
 ///
@@ -94,7 +94,7 @@ impl FeatureCollection {
     }
 }
 
-impl<P: crate::util::Pos> TryFrom<JsonObject> for FeatureCollectionBase<P> {
+impl<P: Position> TryFrom<JsonObject> for FeatureCollectionBase<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {

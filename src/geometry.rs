@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{util, Bbox, Error};
+use crate::{util, Bbox, Error, Position};
 
 /// The underlying value for a `Geometry`.
 ///
@@ -217,7 +217,7 @@ impl<'a> From<&'a Geometry> for JsonObject {
     }
 }
 
-impl<P: crate::util::Pos> GeometryBase<P> {
+impl<P: Position> GeometryBase<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
@@ -229,7 +229,7 @@ impl Geometry {
     }
 }
 
-impl<P: crate::util::Pos> TryFrom<JsonObject> for GeometryBase<P> {
+impl<P: Position> TryFrom<JsonObject> for GeometryBase<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
