@@ -1,6 +1,6 @@
 use crate::geo_types;
 
-use crate::geometry;
+use crate::{geometry, Position};
 
 use num_traits::Float;
 use std::convert::From;
@@ -119,17 +119,17 @@ where
     }
 }
 
-fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
+fn create_point_type<T, P: Position>(point: &geo_types::Point<T>) -> P
 where
     T: Float,
 {
     let x: f64 = point.x().to_f64().unwrap();
     let y: f64 = point.y().to_f64().unwrap();
 
-    vec![x, y]
+    P::from_x_y(x, y)
 }
 
-fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType
+fn create_line_string_type<T, P: Position>(line_string: &geo_types::LineString<T>) -> Vec<P>
 where
     T: Float,
 {
@@ -139,9 +139,9 @@ where
         .collect()
 }
 
-fn create_multi_line_string_type<T>(
+fn create_multi_line_string_type<T, P: Position>(
     multi_line_string: &geo_types::MultiLineString<T>,
-) -> Vec<LineStringType>
+) -> Vec<Vec<P>>
 where
     T: Float,
 {
@@ -152,7 +152,7 @@ where
         .collect()
 }
 
-fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
+fn create_polygon_type<T, P: Position>(polygon: &geo_types::Polygon<T>) -> Vec<Vec<P>>
 where
     T: Float,
 {
@@ -172,7 +172,7 @@ where
     coords
 }
 
-fn create_multi_polygon_type<T>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<PolygonType>
+fn create_multi_polygon_type<T, P: Position>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<Vec<Vec<P>>>
 where
     T: Float,
 {

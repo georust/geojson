@@ -19,7 +19,7 @@ use crate::geo_types::{
     MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
 };
 use crate::geojson::GeoJson;
-use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
+use crate::geojson::GeoJsonBase::{Feature, FeatureCollection, Geometry};
 
 use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;

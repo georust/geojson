@@ -223,23 +223,20 @@ where
     )
 }
 
-fn create_geo_polygon<T, P: Position>(polygon_type: Vec<Vec<P>>) -> geo_types::Polygon<T>
+fn create_geo_polygon<T, P: Position>(mut polygon_type: Vec<Vec<P>>) -> geo_types::Polygon<T>
 where
     T: Float,
 {
-    let exterior = polygon_type
-        .get(0)
-        .map(|e| create_geo_line_string(e))
-        .unwrap_or_else(|| create_geo_line_string(&vec![]));
-
-    let interiors = if polygon_type.len() < 2 {
-        vec![]
+    let exterior: geo_types::LineString<T> = if polygon_type.is_empty() {
+        geo_types::LineString(vec![])
     } else {
-        polygon_type[1..]
-            .iter()
-            .map(|line_string_type| create_geo_line_string(line_string_type))
-            .collect()
+        create_geo_line_string(polygon_type.remove(0))
     };
+
+    let interiors = polygon_type
+        .into_iter()
+        .map(|line_string_type| create_geo_line_string(line_string_type))
+        .collect();
 
     geo_types::Polygon::new(exterior, interiors)
 }
