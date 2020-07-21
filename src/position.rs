@@ -4,12 +4,13 @@ use crate::{util, Error};
 /// Positions
 ///
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub trait Position: Sized {
+pub trait Position: Sized + serde::Serialize {
     fn from_json_value(json: &JsonValue) -> Result<Self, Error>;
     fn from_x_y(x: f64, y: f64) -> Self;
     fn x(&self) -> f64;
     fn y(&self) -> f64;
 }
+// TODO: should this derivce serialize unconditionally?
 
 impl Position for Vec<f64> {
     fn from_json_value(json: &JsonValue) -> Result<Self, Error> {

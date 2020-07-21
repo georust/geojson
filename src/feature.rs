@@ -16,10 +16,10 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Error, Feature, FeatureBase, Position};
+use crate::{util, Error, FeatureBase, Position};
 
-impl<'a> From<&'a Feature> for JsonObject {
-    fn from(feature: &'a Feature) -> JsonObject {
+impl<'a, P: Position> From<&'a FeatureBase<P>> for JsonObject {
+    fn from(feature: &'a FeatureBase<P>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("Feature"));
         map.insert(
@@ -91,7 +91,7 @@ impl<P: Position> TryFrom<JsonValue> for FeatureBase<P> {
     }
 }
 
-impl Serialize for Feature {
+impl<P: Position> Serialize for FeatureBase<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

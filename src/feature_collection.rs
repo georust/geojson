@@ -61,8 +61,8 @@ pub struct FeatureCollectionBase<Pos> {
 
 pub type FeatureCollection = FeatureCollectionBase<Vec<f64>>;
 
-impl<'a> From<&'a FeatureCollection> for JsonObject {
-    fn from(fc: &'a FeatureCollection) -> JsonObject {
+impl<'a, P: Position> From<&'a FeatureCollectionBase<P>> for JsonObject {
+    fn from(fc: &'a FeatureCollectionBase<P>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("FeatureCollection"));
         map.insert(
@@ -124,7 +124,7 @@ impl<Pos: Position> TryFrom<JsonValue> for FeatureCollectionBase<Pos> {
     }
 }
 
-impl Serialize for FeatureCollection {
+impl<P: Position> Serialize for FeatureCollectionBase<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -133,8 +133,8 @@ impl Serialize for FeatureCollection {
     }
 }
 
-impl<'de, Pos: Position> Deserialize<'de> for FeatureCollectionBase<Pos> {
-    fn deserialize<D>(deserializer: D) -> Result<FeatureCollectionBase<Pos>, D::Error>
+impl<'de, P: Position> Deserialize<'de> for FeatureCollectionBase<P> {
+    fn deserialize<D>(deserializer: D) -> Result<FeatureCollectionBase<P>, D::Error>
     where
         D: Deserializer<'de>,
     {

@@ -78,22 +78,22 @@ pub enum ValueBase<Pos> {
 
 pub type Value = ValueBase<Vec<f64>>;
 
-impl<'a> From<&'a Value> for JsonValue {
-    fn from(value: &'a Value) -> JsonValue {
+impl<'a, P: Position> From<&'a ValueBase<P>> for JsonValue {
+    fn from(value: &'a ValueBase<P>) -> JsonValue {
         match *value {
-            Value::Point(ref x) => ::serde_json::to_value(x),
-            Value::MultiPoint(ref x) => ::serde_json::to_value(x),
-            Value::LineString(ref x) => ::serde_json::to_value(x),
-            Value::MultiLineString(ref x) => ::serde_json::to_value(x),
-            Value::Polygon(ref x) => ::serde_json::to_value(x),
-            Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
-            Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
+            ValueBase::Point(ref x) => ::serde_json::to_value(x),
+            ValueBase::MultiPoint(ref x) => ::serde_json::to_value(x),
+            ValueBase::LineString(ref x) => ::serde_json::to_value(x),
+            ValueBase::MultiLineString(ref x) => ::serde_json::to_value(x),
+            ValueBase::Polygon(ref x) => ::serde_json::to_value(x),
+            ValueBase::MultiPolygon(ref x) => ::serde_json::to_value(x),
+            ValueBase::GeometryCollection(ref x) => ::serde_json::to_value(x),
         }
         .unwrap()
     }
 }
 
-impl Serialize for Value {
+impl<P: Position> Serialize for ValueBase<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -170,11 +170,11 @@ pub struct GeometryBase<Pos> {
 
 pub type Geometry = GeometryBase<Vec<f64>>;
 
-impl Geometry {
+impl<P: Position> GeometryBase<P> {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
     /// set to `None`.
-    pub fn new(value: Value) -> Self {
-        Geometry {
+    pub fn new(value: ValueBase<P>) -> Self {
+        GeometryBase {
             bbox: None,
             value,
             foreign_members: None,
@@ -182,28 +182,28 @@ impl Geometry {
     }
 }
 
-impl<'a> From<&'a Geometry> for JsonObject {
-    fn from(geometry: &'a Geometry) -> JsonObject {
+impl<'a, P: Position> From<&'a GeometryBase<P>> for JsonObject {
+    fn from(geometry: &'a GeometryBase<P>) -> JsonObject {
         let mut map = JsonObject::new();
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
 
         let ty = String::from(match geometry.value {
-            Value::Point(..) => "Point",
-            Value::MultiPoint(..) => "MultiPoint",
-            Value::LineString(..) => "LineString",
-            Value::MultiLineString(..) => "MultiLineString",
-            Value::Polygon(..) => "Polygon",
-            Value::MultiPolygon(..) => "MultiPolygon",
-            Value::GeometryCollection(..) => "GeometryCollection",
+            ValueBase::Point(..) => "Point",
+            ValueBase::MultiPoint(..) => "MultiPoint",
+            ValueBase::LineString(..) => "LineString",
+            ValueBase::MultiLineString(..) => "MultiLineString",
+            ValueBase::Polygon(..) => "Polygon",
+            ValueBase::MultiPolygon(..) => "MultiPolygon",
+            ValueBase::GeometryCollection(..) => "GeometryCollection",
         });
 
         map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
 
         map.insert(
             String::from(match geometry.value {
-                Value::GeometryCollection(..) => "geometries",
+                ValueBase::GeometryCollection(..) => "geometries",
                 _ => "coordinates",
             }),
             ::serde_json::to_value(&geometry.value).unwrap(),
@@ -221,9 +221,7 @@ impl<P: Position> GeometryBase<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
-}
 
-impl Geometry {
     pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
     }
@@ -255,7 +253,7 @@ impl<P: Position> TryFrom<JsonObject> for GeometryBase<P> {
     }
 }
 
-impl TryFrom<JsonValue> for Geometry {
+impl<P: Position> TryFrom<JsonValue> for GeometryBase<P> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
@@ -267,7 +265,7 @@ impl TryFrom<JsonValue> for Geometry {
     }
 }
 
-impl Serialize for Geometry {
+impl<P: Position> Serialize for GeometryBase<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

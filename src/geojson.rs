@@ -34,12 +34,12 @@ pub enum GeoJsonBase<Pos> {
 
 pub type GeoJson = GeoJsonBase<Vec<f64>>;
 
-impl<'a> From<&'a GeoJson> for JsonObject {
-    fn from(geojson: &'a GeoJson) -> JsonObject {
+impl<'a, P: Position> From<&'a GeoJsonBase<P>> for JsonObject {
+    fn from(geojson: &'a GeoJsonBase<P>) -> JsonObject {
         match *geojson {
-            GeoJson::Geometry(ref geometry) => geometry.into(),
-            GeoJson::Feature(ref feature) => feature.into(),
-            GeoJson::FeatureCollection(ref fc) => fc.into(),
+            GeoJsonBase::Geometry(ref geometry) => geometry.into(),
+            GeoJsonBase::Feature(ref feature) => feature.into(),
+            GeoJsonBase::FeatureCollection(ref fc) => fc.into(),
         }
     }
 }
