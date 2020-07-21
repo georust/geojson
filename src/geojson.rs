@@ -44,21 +44,21 @@ impl<'a> From<&'a GeoJson> for JsonObject {
     }
 }
 
-impl From<Geometry> for GeoJson {
-    fn from(geometry: Geometry) -> Self {
-        GeoJson::Geometry(geometry)
+impl<P: Position> From<GeometryBase<P>> for GeoJsonBase<P> {
+    fn from(geometry: GeometryBase<P>) -> Self {
+        GeoJsonBase::Geometry(geometry)
     }
 }
 
-impl From<Feature> for GeoJson {
-    fn from(feature: Feature) -> Self {
-        GeoJson::Feature(feature)
+impl<P: Position> From<FeatureBase<P>> for GeoJsonBase<P> {
+    fn from(feature: FeatureBase<P>) -> Self {
+        GeoJsonBase::Feature(feature)
     }
 }
 
-impl From<FeatureCollection> for GeoJson {
-    fn from(feature_collection: FeatureCollection) -> GeoJson {
-        GeoJson::FeatureCollection(feature_collection)
+impl<P: Position> From<FeatureCollectionBase<P>> for GeoJsonBase<P> {
+    fn from(feature_collection: FeatureCollectionBase<P>) -> GeoJsonBase<P> {
+        GeoJsonBase::FeatureCollection(feature_collection)
     }
 }
 
