@@ -30,7 +30,7 @@ impl Position for Vec<f64> {
     }
 
     fn y(&self) -> f64 {
-        self[0]
+        self[1]
     }
 }
 
