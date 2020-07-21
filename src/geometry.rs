@@ -73,7 +73,7 @@ pub enum ValueBase<Pos> {
     /// GeometryCollection
     ///
     /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
-    GeometryCollection(Vec<Geometry>),
+    GeometryCollection(Vec<GeometryBase<Pos>>),
 }
 
 pub type Value = ValueBase<Vec<f64>>;
@@ -233,7 +233,7 @@ impl<P: Position> TryFrom<JsonObject> for GeometryBase<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
-        let value = match &*util::expect_type(&mut object)? {
+        let value: ValueBase<P> = match &*util::expect_type(&mut object)? {
             "Point" => ValueBase::Point(util::get_coords_one_pos(&mut object)?),
             "MultiPoint" => ValueBase::MultiPoint(util::get_coords_1d_pos(&mut object)?),
             "LineString" => ValueBase::LineString(util::get_coords_1d_pos(&mut object)?),

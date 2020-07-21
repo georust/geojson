@@ -286,7 +286,7 @@ mod geojson;
 pub use crate::geojson::{GeoJson, GeoJsonBase};
 
 mod geometry;
-pub use crate::geometry::{Geometry, GeometryBase, Value};
+pub use crate::geometry::{Geometry, GeometryBase, Value, ValueBase};
 
 pub mod feature;
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::json::{JsonObject, JsonValue};
-use crate::{feature, Bbox, Error, FeatureBase, Geometry, GeometryBase, Position};
+use crate::{feature, Bbox, Error, FeatureBase, GeometryBase, Position};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;
@@ -135,13 +135,13 @@ pub fn get_coords_3d_pos<P: Position>(object: &mut JsonObject) -> Result<Vec<Vec
 }
 
 /// Used by Value::GeometryCollection
-pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>, Error> {
+pub fn get_geometries<Pos: Position>(object: &mut JsonObject) -> Result<Vec<GeometryBase<Pos>>, Error> {
     let geometries_json = expect_property(object, "geometries")?;
     let geometries_array = expect_owned_array(geometries_json)?;
     let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
         let obj = expect_owned_object(json)?;
-        let geometry = Geometry::from_json_object(obj)?;
+        let geometry = GeometryBase::from_json_object(obj)?;
         geometries.push(geometry);
     }
     Ok(geometries)

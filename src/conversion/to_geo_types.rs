@@ -7,7 +7,7 @@ use num_traits::Float;
 use std::convert::TryInto;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::Point<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::Point<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -15,14 +15,14 @@ where
 
     fn try_into(self) -> Result<geo_types::Point<T>, Self::Error> {
         match self {
-            geometry::Value::Point(point_type) => Ok(create_geo_point(point_type)),
+            geometry::ValueBase::Point(point_type) => Ok(create_geo_point(point_type)),
             _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::MultiPoint<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::MultiPoint<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -30,7 +30,7 @@ where
 
     fn try_into(self) -> Result<geo_types::MultiPoint<T>, Self::Error> {
         match self {
-            geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
+            geometry::ValueBase::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
                 multi_point_type
                     .into_iter()
                     .map(|point_type| create_geo_point(point_type))
@@ -42,7 +42,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::LineString<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::LineString<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -50,7 +50,7 @@ where
 
     fn try_into(self) -> Result<geo_types::LineString<T>, Self::Error> {
         match self {
-            geometry::Value::LineString(multi_point_type) => {
+            geometry::ValueBase::LineString(multi_point_type) => {
                 Ok(create_geo_line_string(multi_point_type))
             }
             _ => Err(GJError::GeometryUnknownType),
@@ -59,7 +59,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::MultiLineString<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::MultiLineString<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -67,7 +67,7 @@ where
 
     fn try_into(self) -> Result<geo_types::MultiLineString<T>, Self::Error> {
         match self {
-            geometry::Value::MultiLineString(multi_line_string_type) => {
+            geometry::ValueBase::MultiLineString(multi_line_string_type) => {
                 Ok(create_geo_multi_line_string(multi_line_string_type))
             }
             _ => Err(GJError::GeometryUnknownType),
@@ -76,7 +76,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::Polygon<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::Polygon<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -84,14 +84,14 @@ where
 
     fn try_into(self) -> Result<geo_types::Polygon<T>, Self::Error> {
         match self {
-            geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(polygon_type)),
+            geometry::ValueBase::Polygon(polygon_type) => Ok(create_geo_polygon(polygon_type)),
             _ => Err(GJError::GeometryUnknownType),
         }
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::MultiPolygon<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::MultiPolygon<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -99,7 +99,7 @@ where
 
     fn try_into(self) -> Result<geo_types::MultiPolygon<T>, Self::Error> {
         match self {
-            geometry::Value::MultiPolygon(multi_polygon_type) => {
+            geometry::ValueBase::MultiPolygon(multi_polygon_type) => {
                 Ok(create_geo_multi_polygon(multi_polygon_type))
             }
             _ => Err(GJError::GeometryUnknownType),
@@ -108,7 +108,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::GeometryCollection<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::GeometryCollection<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -116,10 +116,10 @@ where
 
     fn try_into(self) -> Result<geo_types::GeometryCollection<T>, Self::Error> {
         match self {
-            geometry::Value::GeometryCollection(geometries) => {
+            geometry::ValueBase::GeometryCollection(geometries) => {
                 let geojson_geometries = geometries
-                    .iter()
-                    .map(|geometry| geometry.value.clone().try_into().unwrap())
+                    .into_iter()
+                    .map(|geometry| geometry.value.try_into().unwrap())
                     .collect();
 
                 Ok(geo_types::GeometryCollection(geojson_geometries))
@@ -130,7 +130,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryInto<geo_types::Geometry<T>> for geometry::Value
+impl<T, P: Position> TryInto<geo_types::Geometry<T>> for geometry::ValueBase<P>
 where
     T: Float,
 {
@@ -138,24 +138,24 @@ where
 
     fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
         match self {
-            geometry::Value::Point(point_type) => {
+            geometry::ValueBase::Point(point_type) => {
                 Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
             }
-            geometry::Value::MultiPoint(multi_point_type) => {
+            geometry::ValueBase::MultiPoint(multi_point_type) => {
                 Ok(geo_types::Geometry::MultiPoint(create_geo_multi_point(multi_point_type)))
             }
-            geometry::Value::LineString(line_string_type) => Ok(
+            geometry::ValueBase::LineString(line_string_type) => Ok(
                 geo_types::Geometry::LineString(create_geo_line_string(line_string_type)),
             ),
-            geometry::Value::MultiLineString(multi_line_string_type) => {
+            geometry::ValueBase::MultiLineString(multi_line_string_type) => {
                 Ok(geo_types::Geometry::MultiLineString(
                     create_geo_multi_line_string(multi_line_string_type),
                 ))
             }
-            geometry::Value::Polygon(polygon_type) => Ok(geo_types::Geometry::Polygon(
+            geometry::ValueBase::Polygon(polygon_type) => Ok(geo_types::Geometry::Polygon(
                 create_geo_polygon(polygon_type),
             )),
-            geometry::Value::MultiPolygon(multi_polygon_type) => Ok(
+            geometry::ValueBase::MultiPolygon(multi_polygon_type) => Ok(
                 geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
             ),
             _ => Err(GJError::GeometryUnknownType),
