@@ -187,8 +187,8 @@ impl Serialize for GeoJson {
     }
 }
 
-impl<'de> Deserialize<'de> for GeoJson {
-    fn deserialize<D>(deserializer: D) -> Result<GeoJson, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for GeoJsonBase<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<GeoJsonBase<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -196,7 +196,7 @@ impl<'de> Deserialize<'de> for GeoJson {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        GeoJsonBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 

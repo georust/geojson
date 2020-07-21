@@ -84,7 +84,7 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
     }
 }
 
-impl FeatureCollection {
+impl<Pos: Position> FeatureCollectionBase<Pos> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
@@ -112,7 +112,7 @@ impl<P: Position> TryFrom<JsonObject> for FeatureCollectionBase<P> {
     }
 }
 
-impl TryFrom<JsonValue> for FeatureCollection {
+impl<Pos: Position> TryFrom<JsonValue> for FeatureCollectionBase<Pos> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Error> {
@@ -133,8 +133,8 @@ impl Serialize for FeatureCollection {
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for FeatureCollectionBase<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<FeatureCollectionBase<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -142,6 +142,6 @@ impl<'de> Deserialize<'de> for FeatureCollection {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        FeatureCollectionBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }

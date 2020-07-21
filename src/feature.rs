@@ -100,8 +100,8 @@ impl Serialize for Feature {
     }
 }
 
-impl<'de> Deserialize<'de> for Feature {
-    fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for FeatureBase<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<FeatureBase<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -109,7 +109,7 @@ impl<'de> Deserialize<'de> for Feature {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        FeatureBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 

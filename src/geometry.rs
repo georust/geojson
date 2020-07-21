@@ -276,8 +276,8 @@ impl Serialize for Geometry {
     }
 }
 
-impl<'de> Deserialize<'de> for Geometry {
-    fn deserialize<D>(deserializer: D) -> Result<Geometry, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for GeometryBase<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<GeometryBase<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -285,7 +285,7 @@ impl<'de> Deserialize<'de> for Geometry {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        GeometryBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 
