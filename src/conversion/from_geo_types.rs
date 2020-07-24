@@ -172,7 +172,9 @@ where
     coords
 }
 
-fn create_multi_polygon_type<T, P: Position>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<Vec<Vec<P>>>
+fn create_multi_polygon_type<T, P: Position>(
+    multi_polygon: &geo_types::MultiPolygon<T>,
+) -> Vec<Vec<Vec<P>>>
 where
     T: Float,
 {

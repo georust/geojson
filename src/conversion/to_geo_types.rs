@@ -141,12 +141,12 @@ where
             geometry::Value::Point(point_type) => {
                 Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
             }
-            geometry::Value::MultiPoint(multi_point_type) => {
-                Ok(geo_types::Geometry::MultiPoint(create_geo_multi_point(multi_point_type)))
-            }
-            geometry::Value::LineString(line_string_type) => Ok(
-                geo_types::Geometry::LineString(create_geo_line_string(line_string_type)),
-            ),
+            geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::Geometry::MultiPoint(
+                create_geo_multi_point(multi_point_type),
+            )),
+            geometry::Value::LineString(line_string_type) => Ok(geo_types::Geometry::LineString(
+                create_geo_line_string(line_string_type),
+            )),
             geometry::Value::MultiLineString(multi_line_string_type) => {
                 Ok(geo_types::Geometry::MultiLineString(
                     create_geo_multi_line_string(multi_line_string_type),
@@ -183,9 +183,7 @@ where
     )
 }
 
-fn create_geo_multi_point<T, P: Position>(
-    multi_point: Vec<P>,
-) -> geo_types::MultiPoint<T>
+fn create_geo_multi_point<T, P: Position>(multi_point: Vec<P>) -> geo_types::MultiPoint<T>
 where
     T: Float,
 {
@@ -241,7 +239,9 @@ where
     geo_types::Polygon::new(exterior, interiors)
 }
 
-fn create_geo_multi_polygon<T, P: Position>(multi_polygon_type: Vec<Vec<Vec<P>>>) -> geo_types::MultiPolygon<T>
+fn create_geo_multi_polygon<T, P: Position>(
+    multi_polygon_type: Vec<Vec<Vec<P>>>,
+) -> geo_types::MultiPolygon<T>
 where
     T: Float,
 {
