@@ -104,7 +104,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Err
 
 /// Retrieve a single Position from the value of the "coordinates" key
 ///
-/// Used by Value::Point
+/// Used by ValueBase::Point
 pub fn get_coords_one_pos<P: Position>(object: &mut JsonObject) -> Result<P, Error> {
     let coords_json = get_coords_value(object)?;
     Position::from_json_value(&coords_json)

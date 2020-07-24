@@ -106,7 +106,7 @@
 //! # let properties = properties();
 //!
 //! let geometry = Geometry::new(
-//!     Value::Point(vec![-120.66029,35.2812])
+//!     ValueBase::Point(vec![-120.66029,35.2812])
 //! );
 //!
 //! let geojson = GeoJson::Feature(Feature {
@@ -155,9 +155,9 @@
 //! /// Process GeoJSON geometries
 //! fn match_geometry(geom: &Geometry) {
 //!     match geom.value {
-//!         Value::Polygon(_) => println!("Matched a Polygon"),
-//!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
-//!         Value::GeometryCollection(ref gc) => {
+//!         ValueBase::Polygon(_) => println!("Matched a Polygon"),
+//!         ValueBase::MultiPolygon(_) => println!("Matched a MultiPolygon"),
+//!         ValueBase::GeometryCollection(ref gc) => {
 //!             println!("Matched a GeometryCollection");
 //!             // GeometryCollections contain other Geometry types, and can nest
 //!             // we deal with this by recursively processing each geometry
@@ -229,7 +229,7 @@
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
-//! use geojson::{GeoJson, quick_collection};
+//! use geojson::{GeoJsonBase, quick_collection};
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
 //! # #[cfg(feature = "geo-types")]
@@ -283,15 +283,15 @@ mod position;
 pub use position::Position;
 
 mod geojson;
-pub use crate::geojson::{GeoJson, GeoJsonBase};
+pub use crate::geojson::GeoJsonBase;
 
 mod geometry;
-pub use crate::geometry::{Geometry, GeometryBase, Value, ValueBase};
+pub use crate::geometry::{GeometryBase, ValueBase};
 
 pub mod feature;
 
 mod feature_collection;
-pub use crate::feature_collection::{FeatureCollection, FeatureCollectionBase};
+pub use crate::feature_collection::FeatureCollectionBase;
 
 #[cfg(feature = "geo-types")]
 mod conversion;
@@ -325,8 +325,6 @@ pub struct FeatureBase<Pos> {
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<json::JsonObject>,
 }
-
-pub type Feature = FeatureBase<Vec<f64>>;
 
 /// Error when reading a GeoJSON object from a str or Object
 #[derive(Debug, PartialEq, Eq)]

@@ -18,12 +18,12 @@ use crate::geo_types::{
     MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
     MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
 };
-use crate::geojson::GeoJson;
-use crate::geojson::GeoJsonBase::{Feature, FeatureCollection, Geometry};
+use crate::Position;
+use crate::geojson::GeoJsonBase::{self, Feature, FeatureCollection, Geometry};
 
-use crate::geometry::Geometry as GjGeometry;
+use crate::geometry::GeometryBase as GjGeometry;
 use crate::Error as GJError;
-use crate::Value;
+use crate::ValueBase;
 use num_traits::Float;
 use std::convert::TryInto;
 
@@ -74,7 +74,7 @@ pub(crate) mod from_geo_types;
 pub(crate) mod to_geo_types;
 
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
-fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+fn process_geojson<T, P: Position>(gj: &GeoJsonBase<P>) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
     T: Float,
 {
@@ -100,26 +100,26 @@ where
 }
 
 // Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
-fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
+fn process_geometry<T, P: Position>(geometry: &GjGeometry<P>) -> Result<geo_types::Geometry<T>, GJError>
 where
     T: Float,
 {
     match &geometry.value {
-        Value::Point(_) => Ok(TryInto::<GtPoint<_>>::try_into(geometry.value.clone())?.into()),
-        Value::MultiPoint(_) => {
+        ValueBase::Point(_) => Ok(TryInto::<GtPoint<_>>::try_into(geometry.value.clone())?.into()),
+        ValueBase::MultiPoint(_) => {
             Ok(TryInto::<GtMultiPoint<_>>::try_into(geometry.value.clone())?.into())
         }
-        Value::LineString(_) => {
+        ValueBase::LineString(_) => {
             Ok(TryInto::<GtLineString<_>>::try_into(geometry.value.clone())?.into())
         }
-        Value::MultiLineString(_) => {
+        ValueBase::MultiLineString(_) => {
             Ok(TryInto::<GtMultiLineString<_>>::try_into(geometry.value.clone())?.into())
         }
-        Value::Polygon(_) => Ok(TryInto::<GtPolygon<_>>::try_into(geometry.value.clone())?.into()),
-        Value::MultiPolygon(_) => {
+        ValueBase::Polygon(_) => Ok(TryInto::<GtPolygon<_>>::try_into(geometry.value.clone())?.into()),
+        ValueBase::MultiPolygon(_) => {
             Ok(TryInto::<GtMultiPolygon<_>>::try_into(geometry.value.clone())?.into())
         }
-        Value::GeometryCollection(gc) => {
+        ValueBase::GeometryCollection(gc) => {
             let gc = GtGeometry::GeometryCollection(GeometryCollection(
                 gc.iter()
                     .map(|geom| process_geometry(&geom))
@@ -164,7 +164,7 @@ where
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+pub fn quick_collection<T, P: Position>(gj: &GeoJsonBase<P>) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
     T: Float,
 {

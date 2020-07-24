@@ -1,10 +1,11 @@
 use crate::json::JsonValue;
 use crate::{util, Error};
+use std::fmt::Debug;
 
 /// Positions
 ///
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub trait Position: Sized + serde::Serialize {
+pub trait Position: Sized + Clone + Debug + serde::Serialize {
     fn from_json_value(json: &JsonValue) -> Result<Self, Error>;
     fn from_x_y(x: f64, y: f64) -> Self;
     fn x(&self) -> f64;

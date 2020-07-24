@@ -255,7 +255,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Geometry, Value};
+    use crate::{GeometryBase, ValueBase};
     use geo_types;
 
     use std::convert::TryInto;
@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn geojson_point_conversion_test() {
         let coords = vec![100.0, 0.2];
-        let geojson_point = Value::Point(coords.clone());
+        let geojson_point = ValueBase::Point(coords.clone());
         let geo_point: geo_types::Point<f64> = geojson_point.try_into().unwrap();
 
         assert_almost_eq!(geo_point.x(), coords[0], 1e-6);
@@ -274,7 +274,7 @@ mod tests {
     fn geojson_multi_point_conversion_test() {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
-        let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
+        let geojson_multi_point = ValueBase::MultiPoint(vec![coord1.clone(), coord2.clone()]);
         let geo_multi_point: geo_types::MultiPoint<f64> = geojson_multi_point.try_into().unwrap();
 
         assert_almost_eq!(geo_multi_point.0[0].x(), coord1[0], 1e-6);
@@ -287,7 +287,7 @@ mod tests {
     fn geojson_line_string_conversion_test() {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
-        let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
+        let geojson_line_string = ValueBase::LineString(vec![coord1.clone(), coord2.clone()]);
         let geo_line_string: geo_types::LineString<f64> = geojson_line_string.try_into().unwrap();
 
         assert_almost_eq!(geo_line_string.0[0].x, coord1[0], 1e-6);
@@ -301,7 +301,7 @@ mod tests {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![102.0, 0.8];
-        let geojson_multi_line_string = Value::MultiLineString(vec![
+        let geojson_multi_line_string = ValueBase::MultiLineString(vec![
             vec![coord1.clone(), coord2.clone()],
             vec![coord2.clone(), coord3.clone()],
         ]);
@@ -344,7 +344,7 @@ mod tests {
                 coord4.clone(),
             ],
         ];
-        let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
+        let geojson_polygon = ValueBase::Polygon(geojson_multi_line_string_type1);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
         let ref geo_line_string1 = geo_polygon.exterior();
@@ -370,7 +370,7 @@ mod tests {
 
     #[test]
     fn geojson_empty_polygon_conversion_test() {
-        let geojson_polygon = Value::Polygon(vec![]);
+        let geojson_polygon = ValueBase::<(f64, f64)>::Polygon(vec![]);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
         assert!(geo_polygon.exterior().0.is_empty());
@@ -388,7 +388,7 @@ mod tests {
             coord3.clone(),
             coord1.clone(),
         ]];
-        let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
+        let geojson_polygon = ValueBase::Polygon(geojson_multi_line_string_type1);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
         let ref geo_line_string1 = geo_polygon.exterior();
@@ -426,7 +426,7 @@ mod tests {
             coord6.clone(),
             coord4.clone(),
         ];
-        let geojson_multi_polygon = Value::MultiPolygon(vec![
+        let geojson_multi_polygon = ValueBase::MultiPolygon(vec![
             vec![geojson_line_string_type1],
             vec![geojson_line_string_type2],
         ]);
@@ -462,12 +462,12 @@ mod tests {
         let coord4 = vec![102.0, 0.0];
         let coord5 = vec![101.0, 0.0];
 
-        let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
-        let geojson_multi_line_string = Value::MultiLineString(vec![
+        let geojson_multi_point = ValueBase::MultiPoint(vec![coord1.clone(), coord2.clone()]);
+        let geojson_multi_line_string = ValueBase::MultiLineString(vec![
             vec![coord1.clone(), coord2.clone()],
             vec![coord2.clone(), coord3.clone()],
         ]);
-        let geojson_multi_polygon = Value::MultiPolygon(vec![
+        let geojson_multi_polygon = ValueBase::MultiPolygon(vec![
             vec![vec![
                 coord3.clone(),
                 coord4.clone(),
@@ -482,10 +482,10 @@ mod tests {
             ]],
         ]);
 
-        let geojson_geometry_collection = Value::GeometryCollection(vec![
-            Geometry::new(geojson_multi_point),
-            Geometry::new(geojson_multi_line_string),
-            Geometry::new(geojson_multi_polygon),
+        let geojson_geometry_collection = ValueBase::GeometryCollection(vec![
+            GeometryBase::new(geojson_multi_point),
+            GeometryBase::new(geojson_multi_line_string),
+            GeometryBase::new(geojson_multi_polygon),
         ]);
 
         let geo_geometry_collection: geo_types::GeometryCollection<f64> =

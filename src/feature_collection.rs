@@ -59,8 +59,6 @@ pub struct FeatureCollectionBase<Pos> {
     pub foreign_members: Option<JsonObject>,
 }
 
-pub type FeatureCollection = FeatureCollectionBase<Vec<f64>>;
-
 impl<'a, P: Position> From<&'a FeatureCollectionBase<P>> for JsonObject {
     fn from(fc: &'a FeatureCollectionBase<P>) -> JsonObject {
         let mut map = JsonObject::new();

@@ -30,8 +30,8 @@ use crate::{util, Bbox, Error, Position};
 /// # fn test() {
 /// let point = geo_types::Point::new(2., 9.);
 /// assert_eq!(
-///     geojson::Value::from(&point),
-///     geojson::Value::Point(vec![2., 9.]),
+///     geojson::ValueBase::from(&point),
+///     geojson::ValueBase::Point(vec![2., 9.]),
 /// );
 /// # }
 /// # #[cfg(not(feature = "geo-types"))]
@@ -76,8 +76,6 @@ pub enum ValueBase<Pos> {
     GeometryCollection(Vec<GeometryBase<Pos>>),
 }
 
-pub type Value = ValueBase<Vec<f64>>;
-
 impl<'a, P: Position> From<&'a ValueBase<P>> for JsonValue {
     fn from(value: &'a ValueBase<P>) -> JsonValue {
         match *value {
@@ -114,7 +112,7 @@ impl<P: Position> Serialize for ValueBase<P> {
 /// use geojson::{Geometry, Value};
 ///
 /// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
+///     ValueBase::Point(vec![7.428959, 1.513394]),
 /// );
 /// ```
 ///
@@ -125,7 +123,7 @@ impl<P: Position> Serialize for ValueBase<P> {
 /// use serde_json;
 ///
 /// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
+///     ValueBase::Point(vec![7.428959, 1.513394]),
 /// );
 ///
 /// let geojson_string = geometry.to_string();
@@ -150,7 +148,7 @@ impl<P: Position> Serialize for ValueBase<P> {
 ///
 /// assert_eq!(
 ///     Geometry::new(
-///         Value::Point(vec![7.428959, 1.513394]),
+///         ValueBase::Point(vec![7.428959, 1.513394]),
 ///     ),
 ///     geometry,
 /// );
@@ -167,8 +165,6 @@ pub struct GeometryBase<Pos> {
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
-
-pub type Geometry = GeometryBase<Vec<f64>>;
 
 impl<P: Position> GeometryBase<P> {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
@@ -291,20 +287,20 @@ impl<'de, Pos: Position> Deserialize<'de> for GeometryBase<Pos> {
 mod tests {
 
     use crate::json::JsonObject;
-    use crate::{GeoJson, Geometry, Value};
+    use crate::{GeoJsonBase, GeometryBase, ValueBase, Position};
 
-    fn encode(geometry: &Geometry) -> String {
+    fn encode<P: Position>(geometry: &GeometryBase<P>) -> String {
         serde_json::to_string(&geometry).unwrap()
     }
-    fn decode(json_string: String) -> GeoJson {
+    fn decode<P: Position>(json_string: String) -> GeoJsonBase<P> {
         json_string.parse().unwrap()
     }
 
     #[test]
     fn encode_decode_geometry() {
         let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"type\":\"Point\"}";
-        let geometry = Geometry {
-            value: Value::Point(vec![1.1, 2.1]),
+        let geometry = GeometryBase {
+            value: ValueBase::Point((1.1f64, 2.1)),
             bbox: None,
             foreign_members: None,
         };
@@ -315,7 +311,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(json_string) {
-            GeoJson::Geometry(g) => g,
+            GeoJsonBase::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
@@ -334,11 +330,11 @@ mod tests {
         });
         assert!(json_value.is_object());
 
-        let geometry: Geometry = json_value.try_into().unwrap();
+        let geometry: GeometryBase<(f64, f64)> = json_value.try_into().unwrap();
         assert_eq!(
             geometry,
-            Geometry {
-                value: Value::Point(vec![0.0, 0.1]),
+            GeometryBase {
+                value: ValueBase::Point((0.0f64, 0.1f64)),
                 bbox: None,
                 foreign_members: None,
             }
@@ -347,8 +343,8 @@ mod tests {
 
     #[test]
     fn test_geometry_display() {
-        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
-        let geometry = Geometry::new(v);
+        let v = ValueBase::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        let geometry = GeometryBase::new(v);
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             geometry.to_string()
@@ -364,8 +360,8 @@ mod tests {
             String::from("other_member"),
             serde_json::to_value(true).unwrap(),
         );
-        let geometry = Geometry {
-            value: Value::Point(vec![1.1, 2.1]),
+        let geometry = GeometryBase {
+            value: ValueBase::Point(vec![1.1, 2.1]),
             bbox: None,
             foreign_members: Some(foreign_members),
         };
@@ -376,7 +372,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(geometry_json_str.into()) {
-            GeoJson::Geometry(g) => g,
+            GeoJsonBase::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
@@ -384,17 +380,17 @@ mod tests {
 
     #[test]
     fn encode_decode_geometry_collection() {
-        let geometry_collection = Geometry {
+        let geometry_collection = GeometryBase {
             bbox: None,
-            value: Value::GeometryCollection(vec![
-                Geometry {
+            value: ValueBase::GeometryCollection(vec![
+                GeometryBase {
                     bbox: None,
-                    value: Value::Point(vec![100.0, 0.0]),
+                    value: ValueBase::Point(vec![100.0, 0.0]),
                     foreign_members: None,
                 },
-                Geometry {
+                GeometryBase {
                     bbox: None,
-                    value: Value::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
+                    value: ValueBase::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
                     foreign_members: None,
                 },
             ]),
@@ -408,7 +404,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(geometry_collection_string.into()) {
-            GeoJson::Geometry(g) => g,
+            GeoJsonBase::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry_collection);

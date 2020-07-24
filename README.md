@@ -39,7 +39,7 @@ use geojson::{Feature, GeoJson, Geometry, Value};
 use serde_json::{Map, to_value};
 
 let geometry = Geometry::new(
-    Value::Point(vec![-120.66029,35.2812])
+    ValueBase::Point(vec![-120.66029,35.2812])
 );
 
 let mut properties = Map::new();
