@@ -141,14 +141,14 @@ impl<P: Position> Serialize for Value<P> {
 ///
 /// let geojson_str = "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}";
 ///
-/// let geometry = match geojson_str.parse::<GeoJson>() {
+/// let geometry = match geojson_str.parse::<GeoJson<_>>() {
 ///     Ok(GeoJson::Geometry(g)) => g,
 ///     _ => return,
 /// };
 ///
 /// assert_eq!(
 ///     Geometry::new(
-///         Value::Point(vec![7.428959, 1.513394]),
+///         Value::Point((7.428959, 1.513394)),
 ///     ),
 ///     geometry,
 /// );

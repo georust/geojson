@@ -38,7 +38,7 @@ use crate::{util, Bbox, Error, Feature, Position};
 ///     foreign_members: None,
 /// };
 ///
-/// let serialized = GeoJson::from(feature_collection).to_string();
+/// let serialized = GeoJson::<(f64, f64)>::from(feature_collection).to_string();
 ///
 /// assert_eq!(
 ///     serialized,

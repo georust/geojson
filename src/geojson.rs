@@ -94,13 +94,13 @@ impl<P: Position> GeoJson<P> {
     ///
     /// assert!(json_value.is_object());
     ///
-    /// let geojson: GeoJson = json_value.try_into().unwrap();
+    /// let geojson: GeoJson<_> = json_value.try_into().unwrap();
     ///
     /// assert_eq!(
     ///     geojson,
     ///     GeoJson::Feature(Feature {
     ///         bbox: None,
-    ///         geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
+    ///         geometry: Some(Geometry::new(Value::Point((102.0, 0.5)))),
     ///         id: None,
     ///         properties: None,
     ///         foreign_members: None,

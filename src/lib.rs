@@ -70,7 +70,7 @@
 //! }
 //! "#;
 //!
-//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! let geojson = geojson_str.parse::<GeoJson<(f64, f64)>>().unwrap();
 //! ```
 //!
 //! ## Writing
@@ -133,10 +133,10 @@
 //! ownership of it.
 //!
 //! ```rust
-//! use geojson::{GeoJson, Geometry, Value};
+//! use geojson::{GeoJson, Geometry, Position, Value};
 //!
 //! /// Process top-level GeoJSON items
-//! fn process_geojson(gj: &GeoJson) {
+//! fn process_geojson<P: Position>(gj: &GeoJson<P>) {
 //!     match *gj {
 //!         GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
 //!             if let Some(ref geom) = feature.geometry {
@@ -153,7 +153,7 @@
 //! }
 //!
 //! /// Process GeoJSON geometries
-//! fn match_geometry(geom: &Geometry) {
+//! fn match_geometry<P: Position>(geom: &Geometry<P>) {
 //!     match geom.value {
 //!         Value::Polygon(_) => println!("Matched a Polygon"),
 //!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
@@ -202,7 +202,7 @@
 //!       ]
 //!     }
 //!     "#;
-//!     let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//!     let geojson = geojson_str.parse::<GeoJson<(f64, f64)>>().unwrap();
 //!     process_geojson(&geojson);
 //! }
 //! ```
