@@ -16,10 +16,10 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Error, FeatureBase, Position};
+use crate::{util, Error, Feature, Position};
 
-impl<'a, P: Position> From<&'a FeatureBase<P>> for JsonObject {
-    fn from(feature: &'a FeatureBase<P>) -> JsonObject {
+impl<'a, P: Position> From<&'a Feature<P>> for JsonObject {
+    fn from(feature: &'a Feature<P>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("Feature"));
         map.insert(
@@ -52,7 +52,7 @@ impl<'a, P: Position> From<&'a FeatureBase<P>> for JsonObject {
     }
 }
 
-impl<P: Position> FeatureBase<P> {
+impl<P: Position> Feature<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
@@ -62,12 +62,12 @@ impl<P: Position> FeatureBase<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for FeatureBase<P> {
+impl<P: Position> TryFrom<JsonObject> for Feature<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match &*util::expect_type(&mut object)? {
-            "Feature" => Ok(FeatureBase {
+            "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,
                 id: util::get_id(&mut object)?,
@@ -79,7 +79,7 @@ impl<P: Position> TryFrom<JsonObject> for FeatureBase<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonValue> for FeatureBase<P> {
+impl<P: Position> TryFrom<JsonValue> for Feature<P> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Error> {
@@ -91,7 +91,7 @@ impl<P: Position> TryFrom<JsonValue> for FeatureBase<P> {
     }
 }
 
-impl<P: Position> Serialize for FeatureBase<P> {
+impl<P: Position> Serialize for Feature<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -100,8 +100,8 @@ impl<P: Position> Serialize for FeatureBase<P> {
     }
 }
 
-impl<'de, Pos: Position> Deserialize<'de> for FeatureBase<Pos> {
-    fn deserialize<D>(deserializer: D) -> Result<FeatureBase<Pos>, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for Feature<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<Feature<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -109,7 +109,7 @@ impl<'de, Pos: Position> Deserialize<'de> for FeatureBase<Pos> {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        FeatureBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 
@@ -136,7 +136,7 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, Error, FeatureBase, GeoJsonBase, GeometryBase, ValueBase};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -147,10 +147,10 @@ mod tests {
         Some(crate::json::JsonObject::new())
     }
 
-    fn feature() -> FeatureBase<(f64, f64)> {
-        FeatureBase {
-            geometry: Some(GeometryBase {
-                value: ValueBase::Point((1.1f64, 2.1f64)),
+    fn feature() -> Feature<(f64, f64)> {
+        Feature {
+            geometry: Some(Geometry {
+                value: Value::Point((1.1f64, 2.1f64)),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -161,11 +161,11 @@ mod tests {
         }
     }
 
-    fn encode(feature: &FeatureBase<(f64, f64)>) -> String {
+    fn encode(feature: &Feature<(f64, f64)>) -> String {
         serde_json::to_string(&feature).unwrap()
     }
 
-    fn decode(json_string: String) -> GeoJsonBase<(f64, f64)> {
+    fn decode(json_string: String) -> GeoJson<(f64, f64)> {
         json_string.parse().unwrap()
     }
 
@@ -179,7 +179,7 @@ mod tests {
 
         // Test decoding
         let decoded_feature = match decode(json_string) {
-            GeoJsonBase::Feature(f) => f,
+            GeoJson::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
@@ -200,12 +200,12 @@ mod tests {
         });
         assert!(json_value.is_object());
 
-        let feature: FeatureBase<(f64, f64)> = json_value.try_into().unwrap();
+        let feature: Feature<(f64, f64)> = json_value.try_into().unwrap();
         assert_eq!(
             feature,
-            FeatureBase {
+            Feature {
                 bbox: None,
-                geometry: Some(GeometryBase::new(ValueBase::Point((102.0, 0.5)))),
+                geometry: Some(Geometry::new(Value::Point((102.0, 0.5)))),
                 id: None,
                 properties: None,
                 foreign_members: None,
@@ -227,9 +227,9 @@ mod tests {
             "properties":{},
             "type":"Feature"
         }"#;
-        let geojson = geojson_str.parse::<GeoJsonBase<(f64, f64)>>().unwrap();
+        let geojson = geojson_str.parse::<GeoJson<(f64, f64)>>().unwrap();
         let feature = match geojson {
-            GeoJsonBase::Feature(feature) => feature,
+            GeoJson::Feature(feature) => feature,
             _ => unimplemented!(),
         };
         assert!(feature.geometry.is_none());
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn feature_json_invalid_geometry() {
         let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
-        match geojson_str.parse::<GeoJsonBase<(f64, f64)>>().unwrap_err() {
+        match geojson_str.parse::<GeoJson<(f64, f64)>>().unwrap_err() {
             Error::FeatureInvalidGeometryValue => (),
             _ => unreachable!(),
         }
@@ -247,9 +247,9 @@ mod tests {
     #[test]
     fn encode_decode_feature_with_id_number() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
-        let feature = FeatureBase {
-            geometry: Some(GeometryBase {
-                value: ValueBase::Point((1.1, 2.1)),
+        let feature = Feature {
+            geometry: Some(Geometry {
+                value: Value::Point((1.1, 2.1)),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -264,7 +264,7 @@ mod tests {
 
         // Test decode
         let decoded_feature = match decode(feature_json_str.into()) {
-            GeoJsonBase::Feature(f) => f,
+            GeoJson::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
@@ -273,9 +273,9 @@ mod tests {
     #[test]
     fn encode_decode_feature_with_id_string() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":\"foo\",\"properties\":{},\"type\":\"Feature\"}";
-        let feature = FeatureBase {
-            geometry: Some(GeometryBase {
-                value: ValueBase::Point((1.1, 2.1)),
+        let feature = Feature {
+            geometry: Some(Geometry {
+                value: Value::Point((1.1, 2.1)),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -290,7 +290,7 @@ mod tests {
 
         // Test decode
         let decoded_feature = match decode(feature_json_str.into()) {
-            GeoJsonBase::Feature(f) => f,
+            GeoJson::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
@@ -300,7 +300,7 @@ mod tests {
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
         assert_eq!(
-            feature_json_str.parse::<GeoJsonBase<(f64, f64)>>(),
+            feature_json_str.parse::<GeoJson<(f64, f64)>>(),
             Err(Error::FeatureInvalidIdentifierType),
         )
     }
@@ -309,7 +309,7 @@ mod tests {
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
         assert_eq!(
-            feature_json_str.parse::<GeoJsonBase<(f64, f64)>>(),
+            feature_json_str.parse::<GeoJson<(f64, f64)>>(),
             Err(Error::FeatureInvalidIdentifierType),
         )
     }
@@ -324,9 +324,9 @@ mod tests {
             String::from("other_member"),
             serde_json::to_value("some_value").unwrap(),
         );
-        let feature = FeatureBase {
-            geometry: Some(GeometryBase {
-                value: ValueBase::Point((1.1, 2.1)),
+        let feature = Feature {
+            geometry: Some(Geometry {
+                value: Value::Point((1.1, 2.1)),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -341,7 +341,7 @@ mod tests {
 
         // Test decode
         let decoded_feature = match decode(feature_json_str.into()) {
-            GeoJsonBase::Feature(f) => f,
+            GeoJson::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);

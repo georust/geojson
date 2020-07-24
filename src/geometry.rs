@@ -30,8 +30,8 @@ use crate::{util, Bbox, Error, Position};
 /// # fn test() {
 /// let point = geo_types::Point::new(2., 9.);
 /// assert_eq!(
-///     geojson::ValueBase::from(&point),
-///     geojson::ValueBase::Point(vec![2., 9.]),
+///     geojson::Value::from(&point),
+///     geojson::Value::Point(vec![2., 9.]),
 /// );
 /// # }
 /// # #[cfg(not(feature = "geo-types"))]
@@ -39,7 +39,7 @@ use crate::{util, Bbox, Error, Position};
 /// # test()
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub enum ValueBase<Pos> {
+pub enum Value<Pos> {
     /// Point
     ///
     /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
@@ -73,25 +73,25 @@ pub enum ValueBase<Pos> {
     /// GeometryCollection
     ///
     /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
-    GeometryCollection(Vec<GeometryBase<Pos>>),
+    GeometryCollection(Vec<Geometry<Pos>>),
 }
 
-impl<'a, P: Position> From<&'a ValueBase<P>> for JsonValue {
-    fn from(value: &'a ValueBase<P>) -> JsonValue {
+impl<'a, P: Position> From<&'a Value<P>> for JsonValue {
+    fn from(value: &'a Value<P>) -> JsonValue {
         match *value {
-            ValueBase::Point(ref x) => ::serde_json::to_value(x),
-            ValueBase::MultiPoint(ref x) => ::serde_json::to_value(x),
-            ValueBase::LineString(ref x) => ::serde_json::to_value(x),
-            ValueBase::MultiLineString(ref x) => ::serde_json::to_value(x),
-            ValueBase::Polygon(ref x) => ::serde_json::to_value(x),
-            ValueBase::MultiPolygon(ref x) => ::serde_json::to_value(x),
-            ValueBase::GeometryCollection(ref x) => ::serde_json::to_value(x),
+            Value::Point(ref x) => ::serde_json::to_value(x),
+            Value::MultiPoint(ref x) => ::serde_json::to_value(x),
+            Value::LineString(ref x) => ::serde_json::to_value(x),
+            Value::MultiLineString(ref x) => ::serde_json::to_value(x),
+            Value::Polygon(ref x) => ::serde_json::to_value(x),
+            Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
+            Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
         }
         .unwrap()
     }
 }
 
-impl<P: Position> Serialize for ValueBase<P> {
+impl<P: Position> Serialize for Value<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -112,7 +112,7 @@ impl<P: Position> Serialize for ValueBase<P> {
 /// use geojson::{Geometry, Value};
 ///
 /// let geometry = Geometry::new(
-///     ValueBase::Point(vec![7.428959, 1.513394]),
+///     Value::Point(vec![7.428959, 1.513394]),
 /// );
 /// ```
 ///
@@ -123,7 +123,7 @@ impl<P: Position> Serialize for ValueBase<P> {
 /// use serde_json;
 ///
 /// let geometry = Geometry::new(
-///     ValueBase::Point(vec![7.428959, 1.513394]),
+///     Value::Point(vec![7.428959, 1.513394]),
 /// );
 ///
 /// let geojson_string = geometry.to_string();
@@ -148,29 +148,29 @@ impl<P: Position> Serialize for ValueBase<P> {
 ///
 /// assert_eq!(
 ///     Geometry::new(
-///         ValueBase::Point(vec![7.428959, 1.513394]),
+///         Value::Point(vec![7.428959, 1.513394]),
 ///     ),
 ///     geometry,
 /// );
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct GeometryBase<Pos> {
+pub struct Geometry<Pos> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
-    pub value: ValueBase<Pos>,
+    pub value: Value<Pos>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 
-impl<P: Position> GeometryBase<P> {
+impl<P: Position> Geometry<P> {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
     /// set to `None`.
-    pub fn new(value: ValueBase<P>) -> Self {
-        GeometryBase {
+    pub fn new(value: Value<P>) -> Self {
+        Geometry {
             bbox: None,
             value,
             foreign_members: None,
@@ -178,28 +178,28 @@ impl<P: Position> GeometryBase<P> {
     }
 }
 
-impl<'a, P: Position> From<&'a GeometryBase<P>> for JsonObject {
-    fn from(geometry: &'a GeometryBase<P>) -> JsonObject {
+impl<'a, P: Position> From<&'a Geometry<P>> for JsonObject {
+    fn from(geometry: &'a Geometry<P>) -> JsonObject {
         let mut map = JsonObject::new();
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
 
         let ty = String::from(match geometry.value {
-            ValueBase::Point(..) => "Point",
-            ValueBase::MultiPoint(..) => "MultiPoint",
-            ValueBase::LineString(..) => "LineString",
-            ValueBase::MultiLineString(..) => "MultiLineString",
-            ValueBase::Polygon(..) => "Polygon",
-            ValueBase::MultiPolygon(..) => "MultiPolygon",
-            ValueBase::GeometryCollection(..) => "GeometryCollection",
+            Value::Point(..) => "Point",
+            Value::MultiPoint(..) => "MultiPoint",
+            Value::LineString(..) => "LineString",
+            Value::MultiLineString(..) => "MultiLineString",
+            Value::Polygon(..) => "Polygon",
+            Value::MultiPolygon(..) => "MultiPolygon",
+            Value::GeometryCollection(..) => "GeometryCollection",
         });
 
         map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
 
         map.insert(
             String::from(match geometry.value {
-                ValueBase::GeometryCollection(..) => "geometries",
+                Value::GeometryCollection(..) => "geometries",
                 _ => "coordinates",
             }),
             ::serde_json::to_value(&geometry.value).unwrap(),
@@ -213,7 +213,7 @@ impl<'a, P: Position> From<&'a GeometryBase<P>> for JsonObject {
     }
 }
 
-impl<P: Position> GeometryBase<P> {
+impl<P: Position> Geometry<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
@@ -223,25 +223,25 @@ impl<P: Position> GeometryBase<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for GeometryBase<P> {
+impl<P: Position> TryFrom<JsonObject> for Geometry<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
-        let value: ValueBase<P> = match &*util::expect_type(&mut object)? {
-            "Point" => ValueBase::Point(util::get_coords_one_pos(&mut object)?),
-            "MultiPoint" => ValueBase::MultiPoint(util::get_coords_1d_pos(&mut object)?),
-            "LineString" => ValueBase::LineString(util::get_coords_1d_pos(&mut object)?),
-            "MultiLineString" => ValueBase::MultiLineString(util::get_coords_2d_pos(&mut object)?),
-            "Polygon" => ValueBase::Polygon(util::get_coords_2d_pos(&mut object)?),
-            "MultiPolygon" => ValueBase::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
+        let value: Value<P> = match &*util::expect_type(&mut object)? {
+            "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
+            "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
+            "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),
+            "MultiLineString" => Value::MultiLineString(util::get_coords_2d_pos(&mut object)?),
+            "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
+            "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
             "GeometryCollection" => {
-                ValueBase::GeometryCollection(util::get_geometries(&mut object)?)
+                Value::GeometryCollection(util::get_geometries(&mut object)?)
             }
             _ => return Err(Error::GeometryUnknownType),
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
-        Ok(GeometryBase {
+        Ok(Geometry {
             bbox,
             value,
             foreign_members,
@@ -249,7 +249,7 @@ impl<P: Position> TryFrom<JsonObject> for GeometryBase<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonValue> for GeometryBase<P> {
+impl<P: Position> TryFrom<JsonValue> for Geometry<P> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
@@ -261,7 +261,7 @@ impl<P: Position> TryFrom<JsonValue> for GeometryBase<P> {
     }
 }
 
-impl<P: Position> Serialize for GeometryBase<P> {
+impl<P: Position> Serialize for Geometry<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -270,8 +270,8 @@ impl<P: Position> Serialize for GeometryBase<P> {
     }
 }
 
-impl<'de, Pos: Position> Deserialize<'de> for GeometryBase<Pos> {
-    fn deserialize<D>(deserializer: D) -> Result<GeometryBase<Pos>, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for Geometry<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<Geometry<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -279,7 +279,7 @@ impl<'de, Pos: Position> Deserialize<'de> for GeometryBase<Pos> {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        GeometryBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 
@@ -287,20 +287,20 @@ impl<'de, Pos: Position> Deserialize<'de> for GeometryBase<Pos> {
 mod tests {
 
     use crate::json::JsonObject;
-    use crate::{GeoJsonBase, GeometryBase, ValueBase, Position};
+    use crate::{GeoJson, Geometry, Value, Position};
 
-    fn encode<P: Position>(geometry: &GeometryBase<P>) -> String {
+    fn encode<P: Position>(geometry: &Geometry<P>) -> String {
         serde_json::to_string(&geometry).unwrap()
     }
-    fn decode<P: Position>(json_string: String) -> GeoJsonBase<P> {
+    fn decode<P: Position>(json_string: String) -> GeoJson<P> {
         json_string.parse().unwrap()
     }
 
     #[test]
     fn encode_decode_geometry() {
         let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"type\":\"Point\"}";
-        let geometry = GeometryBase {
-            value: ValueBase::Point((1.1f64, 2.1)),
+        let geometry = Geometry {
+            value: Value::Point((1.1f64, 2.1)),
             bbox: None,
             foreign_members: None,
         };
@@ -311,7 +311,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(json_string) {
-            GeoJsonBase::Geometry(g) => g,
+            GeoJson::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
@@ -330,11 +330,11 @@ mod tests {
         });
         assert!(json_value.is_object());
 
-        let geometry: GeometryBase<(f64, f64)> = json_value.try_into().unwrap();
+        let geometry: Geometry<(f64, f64)> = json_value.try_into().unwrap();
         assert_eq!(
             geometry,
-            GeometryBase {
-                value: ValueBase::Point((0.0f64, 0.1f64)),
+            Geometry {
+                value: Value::Point((0.0f64, 0.1f64)),
                 bbox: None,
                 foreign_members: None,
             }
@@ -343,8 +343,8 @@ mod tests {
 
     #[test]
     fn test_geometry_display() {
-        let v = ValueBase::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
-        let geometry = GeometryBase::new(v);
+        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        let geometry = Geometry::new(v);
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             geometry.to_string()
@@ -360,8 +360,8 @@ mod tests {
             String::from("other_member"),
             serde_json::to_value(true).unwrap(),
         );
-        let geometry = GeometryBase {
-            value: ValueBase::Point(vec![1.1, 2.1]),
+        let geometry = Geometry {
+            value: Value::Point(vec![1.1, 2.1]),
             bbox: None,
             foreign_members: Some(foreign_members),
         };
@@ -372,7 +372,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(geometry_json_str.into()) {
-            GeoJsonBase::Geometry(g) => g,
+            GeoJson::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
@@ -380,17 +380,17 @@ mod tests {
 
     #[test]
     fn encode_decode_geometry_collection() {
-        let geometry_collection = GeometryBase {
+        let geometry_collection = Geometry {
             bbox: None,
-            value: ValueBase::GeometryCollection(vec![
-                GeometryBase {
+            value: Value::GeometryCollection(vec![
+                Geometry {
                     bbox: None,
-                    value: ValueBase::Point(vec![100.0, 0.0]),
+                    value: Value::Point(vec![100.0, 0.0]),
                     foreign_members: None,
                 },
-                GeometryBase {
+                Geometry {
                     bbox: None,
-                    value: ValueBase::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
+                    value: Value::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
                     foreign_members: None,
                 },
             ]),
@@ -404,7 +404,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(geometry_collection_string.into()) {
-            GeoJsonBase::Geometry(g) => g,
+            GeoJson::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry_collection);

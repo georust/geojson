@@ -106,7 +106,7 @@
 //! # let properties = properties();
 //!
 //! let geometry = Geometry::new(
-//!     ValueBase::Point(vec![-120.66029,35.2812])
+//!     Value::Point(vec![-120.66029,35.2812])
 //! );
 //!
 //! let geojson = GeoJson::Feature(Feature {
@@ -155,9 +155,9 @@
 //! /// Process GeoJSON geometries
 //! fn match_geometry(geom: &Geometry) {
 //!     match geom.value {
-//!         ValueBase::Polygon(_) => println!("Matched a Polygon"),
-//!         ValueBase::MultiPolygon(_) => println!("Matched a MultiPolygon"),
-//!         ValueBase::GeometryCollection(ref gc) => {
+//!         Value::Polygon(_) => println!("Matched a Polygon"),
+//!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
+//!         Value::GeometryCollection(ref gc) => {
 //!             println!("Matched a GeometryCollection");
 //!             // GeometryCollections contain other Geometry types, and can nest
 //!             // we deal with this by recursively processing each geometry
@@ -229,7 +229,7 @@
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
-//! use geojson::{GeoJsonBase, quick_collection};
+//! use geojson::{GeoJson, quick_collection};
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
 //! # #[cfg(feature = "geo-types")]
@@ -283,15 +283,15 @@ mod position;
 pub use position::Position;
 
 mod geojson;
-pub use crate::geojson::GeoJsonBase;
+pub use crate::geojson::GeoJson;
 
 mod geometry;
-pub use crate::geometry::{GeometryBase, ValueBase};
+pub use crate::geometry::{Geometry, Value};
 
 pub mod feature;
 
 mod feature_collection;
-pub use crate::feature_collection::FeatureCollectionBase;
+pub use crate::feature_collection::FeatureCollection;
 
 #[cfg(feature = "geo-types")]
 mod conversion;
@@ -303,7 +303,7 @@ pub use conversion::quick_collection;
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
-pub struct FeatureBase<Pos> {
+pub struct Feature<Pos> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -311,7 +311,7 @@ pub struct FeatureBase<Pos> {
     /// Geometry
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-    pub geometry: Option<GeometryBase<Pos>>,
+    pub geometry: Option<Geometry<Pos>>,
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)

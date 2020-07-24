@@ -15,7 +15,7 @@
 use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
 use crate::{
-    Error, FeatureBase, FeatureCollectionBase, GeometryBase,
+    Error, Feature, FeatureCollection, Geometry,
     Position,
 };
 use std::convert::TryFrom;
@@ -26,41 +26,41 @@ use std::str::FromStr;
 ///
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq)]
-pub enum GeoJsonBase<Pos> {
-    Geometry(GeometryBase<Pos>),
-    Feature(FeatureBase<Pos>),
-    FeatureCollection(FeatureCollectionBase<Pos>),
+pub enum GeoJson<Pos> {
+    Geometry(Geometry<Pos>),
+    Feature(Feature<Pos>),
+    FeatureCollection(FeatureCollection<Pos>),
 }
 
-impl<'a, P: Position> From<&'a GeoJsonBase<P>> for JsonObject {
-    fn from(geojson: &'a GeoJsonBase<P>) -> JsonObject {
+impl<'a, P: Position> From<&'a GeoJson<P>> for JsonObject {
+    fn from(geojson: &'a GeoJson<P>) -> JsonObject {
         match *geojson {
-            GeoJsonBase::Geometry(ref geometry) => geometry.into(),
-            GeoJsonBase::Feature(ref feature) => feature.into(),
-            GeoJsonBase::FeatureCollection(ref fc) => fc.into(),
+            GeoJson::Geometry(ref geometry) => geometry.into(),
+            GeoJson::Feature(ref feature) => feature.into(),
+            GeoJson::FeatureCollection(ref fc) => fc.into(),
         }
     }
 }
 
-impl<P: Position> From<GeometryBase<P>> for GeoJsonBase<P> {
-    fn from(geometry: GeometryBase<P>) -> Self {
-        GeoJsonBase::Geometry(geometry)
+impl<P: Position> From<Geometry<P>> for GeoJson<P> {
+    fn from(geometry: Geometry<P>) -> Self {
+        GeoJson::Geometry(geometry)
     }
 }
 
-impl<P: Position> From<FeatureBase<P>> for GeoJsonBase<P> {
-    fn from(feature: FeatureBase<P>) -> Self {
-        GeoJsonBase::Feature(feature)
+impl<P: Position> From<Feature<P>> for GeoJson<P> {
+    fn from(feature: Feature<P>) -> Self {
+        GeoJson::Feature(feature)
     }
 }
 
-impl<P: Position> From<FeatureCollectionBase<P>> for GeoJsonBase<P> {
-    fn from(feature_collection: FeatureCollectionBase<P>) -> GeoJsonBase<P> {
-        GeoJsonBase::FeatureCollection(feature_collection)
+impl<P: Position> From<FeatureCollection<P>> for GeoJson<P> {
+    fn from(feature_collection: FeatureCollection<P>) -> GeoJson<P> {
+        GeoJson::FeatureCollection(feature_collection)
     }
 }
 
-impl<P: Position> GeoJsonBase<P> {
+impl<P: Position> GeoJson<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         let type_ = match object.get("type") {
             Some(json::JsonValue::String(t)) => Type::from_str(t),
@@ -68,16 +68,16 @@ impl<P: Position> GeoJsonBase<P> {
         };
         let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
         match type_ {
-            Type::Feature => FeatureBase::try_from(object).map(GeoJsonBase::Feature),
+            Type::Feature => Feature::try_from(object).map(GeoJson::Feature),
             Type::FeatureCollection => {
-                FeatureCollectionBase::try_from(object).map(GeoJsonBase::FeatureCollection)
+                FeatureCollection::try_from(object).map(GeoJson::FeatureCollection)
             }
-            _ => GeometryBase::try_from(object).map(GeoJsonBase::Geometry),
+            _ => Geometry::try_from(object).map(GeoJson::Geometry),
         }
     }
 }
 
-impl<P: Position> GeoJsonBase<P> {
+impl<P: Position> GeoJson<P> {
     /// Converts a JSON Value into a GeoJson object.
     ///
     /// # Example
@@ -103,7 +103,7 @@ impl<P: Position> GeoJsonBase<P> {
     ///     geojson,
     ///     GeoJson::Feature(Feature {
     ///         bbox: None,
-    ///         geometry: Some(Geometry::new(ValueBase::Point(vec![102.0, 0.5]))),
+    ///         geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
     ///         id: None,
     ///         properties: None,
     ///         foreign_members: None,
@@ -115,7 +115,7 @@ impl<P: Position> GeoJsonBase<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for GeoJsonBase<P> {
+impl<P: Position> TryFrom<JsonObject> for GeoJson<P> {
     type Error = Error;
 
     fn try_from(object: JsonObject) -> Result<Self, Self::Error> {
@@ -125,16 +125,16 @@ impl<P: Position> TryFrom<JsonObject> for GeoJsonBase<P> {
         };
         let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
         match type_ {
-            Type::Feature => FeatureBase::try_from(object).map(GeoJsonBase::Feature),
+            Type::Feature => Feature::try_from(object).map(GeoJson::Feature),
             Type::FeatureCollection => {
-                FeatureCollectionBase::try_from(object).map(GeoJsonBase::FeatureCollection)
+                FeatureCollection::try_from(object).map(GeoJson::FeatureCollection)
             }
-            _ => GeometryBase::try_from(object).map(GeoJsonBase::Geometry),
+            _ => Geometry::try_from(object).map(GeoJson::Geometry),
         }
     }
 }
 
-impl<P: Position> TryFrom<JsonValue> for GeoJsonBase<P> {
+impl<P: Position> TryFrom<JsonValue> for GeoJson<P> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
@@ -176,7 +176,7 @@ impl Type {
     }
 }
 
-impl<P: Position> Serialize for GeoJsonBase<P> {
+impl<P: Position> Serialize for GeoJson<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -185,8 +185,8 @@ impl<P: Position> Serialize for GeoJsonBase<P> {
     }
 }
 
-impl<'de, Pos: Position> Deserialize<'de> for GeoJsonBase<Pos> {
-    fn deserialize<D>(deserializer: D) -> Result<GeoJsonBase<Pos>, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for GeoJson<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<GeoJson<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -194,17 +194,17 @@ impl<'de, Pos: Position> Deserialize<'de> for GeoJsonBase<Pos> {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        GeoJsonBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 
-impl<P: Position> FromStr for GeoJsonBase<P> {
+impl<P: Position> FromStr for GeoJson<P> {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let object = get_object(s)?;
 
-        GeoJsonBase::from_json_object(object)
+        GeoJson::from_json_object(object)
     }
 }
 
@@ -223,7 +223,7 @@ fn json_value_into_json_object(json_value: json::JsonValue) -> Option<json::Json
     }
 }
 
-impl<P: Position> fmt::Display for GeoJsonBase<P> {
+impl<P: Position> fmt::Display for GeoJson<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -231,7 +231,7 @@ impl<P: Position> fmt::Display for GeoJsonBase<P> {
     }
 }
 
-impl<P: Position> fmt::Display for FeatureBase<P> {
+impl<P: Position> fmt::Display for Feature<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -239,7 +239,7 @@ impl<P: Position> fmt::Display for FeatureBase<P> {
     }
 }
 
-impl<P: Position> fmt::Display for GeometryBase<P> {
+impl<P: Position> fmt::Display for Geometry<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -247,7 +247,7 @@ impl<P: Position> fmt::Display for GeometryBase<P> {
     }
 }
 
-impl<P: Position> fmt::Display for FeatureCollectionBase<P> {
+impl<P: Position> fmt::Display for FeatureCollection<P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -257,7 +257,7 @@ impl<P: Position> fmt::Display for FeatureCollectionBase<P> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{FeatureBase, GeoJsonBase, GeometryBase, ValueBase};
+    use crate::{Feature, GeoJson, Geometry, Value};
     use serde_json::json;
     use std::convert::TryInto;
 
@@ -274,13 +274,13 @@ mod tests {
 
         assert!(json_value.is_object());
 
-        let geojson: GeoJsonBase<(f64, f64)> = json_value.try_into().unwrap();
+        let geojson: GeoJson<(f64, f64)> = json_value.try_into().unwrap();
 
         assert_eq!(
             geojson,
-            GeoJsonBase::Feature(FeatureBase {
+            GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(GeometryBase::new(ValueBase::Point((102.0, 0.5)))),
+                geometry: Some(Geometry::new(Value::Point((102.0, 0.5)))),
                 id: None,
                 properties: None,
                 foreign_members: None,

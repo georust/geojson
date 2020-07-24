@@ -8,7 +8,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJsonBase<Vec<f64>>>());
+            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson<Vec<f64>>>());
         });
     });
 
@@ -16,7 +16,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJsonBase<(f64, f64)>>());
+            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson<(f64, f64)>>());
         });
     });
 
@@ -24,7 +24,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/geometry_collection.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJsonBase<Vec<f64>>>());
+            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson<Vec<f64>>>());
         });
     });
 
@@ -32,7 +32,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/geometry_collection.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJsonBase<(f64, f64)>>());
+            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson<(f64, f64)>>());
         });
     });
 }

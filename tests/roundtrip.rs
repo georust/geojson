@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod roundtrip_tests {
-    use geojson::GeoJsonBase;
+    use geojson::GeoJson;
     use serde_json;
     use std::fs::File;
     use std::io::prelude::*;
@@ -53,7 +53,7 @@ mod roundtrip_tests {
         let _ = file.read_to_string(&mut file_contents);
 
         // Read and parse the geojson from the file's contents
-        let geojson = file_contents.parse::<GeoJsonBase<Vec<f64>>>().expect("unable to parse");
+        let geojson = file_contents.parse::<GeoJson<Vec<f64>>>().expect("unable to parse");
 
         // Now that we've successfully decoded the geojson, re-encode it and compare to the
         // original to make sure nothing was lost.

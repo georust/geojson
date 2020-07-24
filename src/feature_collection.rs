@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Bbox, Error, FeatureBase, Position};
+use crate::{util, Bbox, Error, Feature, Position};
 
 /// Feature Collection Objects
 ///
@@ -47,20 +47,20 @@ use crate::{util, Bbox, Error, FeatureBase, Position};
 /// # }
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct FeatureCollectionBase<Pos> {
+pub struct FeatureCollection<Pos> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     pub bbox: Option<Bbox>,
-    pub features: Vec<FeatureBase<Pos>>,
+    pub features: Vec<Feature<Pos>>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 
-impl<'a, P: Position> From<&'a FeatureCollectionBase<P>> for JsonObject {
-    fn from(fc: &'a FeatureCollectionBase<P>) -> JsonObject {
+impl<'a, P: Position> From<&'a FeatureCollection<P>> for JsonObject {
+    fn from(fc: &'a FeatureCollection<P>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("FeatureCollection"));
         map.insert(
@@ -82,7 +82,7 @@ impl<'a, P: Position> From<&'a FeatureCollectionBase<P>> for JsonObject {
     }
 }
 
-impl<Pos: Position> FeatureCollectionBase<Pos> {
+impl<Pos: Position> FeatureCollection<Pos> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
@@ -92,12 +92,12 @@ impl<Pos: Position> FeatureCollectionBase<Pos> {
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for FeatureCollectionBase<P> {
+impl<P: Position> TryFrom<JsonObject> for FeatureCollection<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match util::expect_type(&mut object)? {
-            ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollectionBase {
+            ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
@@ -110,7 +110,7 @@ impl<P: Position> TryFrom<JsonObject> for FeatureCollectionBase<P> {
     }
 }
 
-impl<Pos: Position> TryFrom<JsonValue> for FeatureCollectionBase<Pos> {
+impl<Pos: Position> TryFrom<JsonValue> for FeatureCollection<Pos> {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Error> {
@@ -122,7 +122,7 @@ impl<Pos: Position> TryFrom<JsonValue> for FeatureCollectionBase<Pos> {
     }
 }
 
-impl<P: Position> Serialize for FeatureCollectionBase<P> {
+impl<P: Position> Serialize for FeatureCollection<P> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -131,8 +131,8 @@ impl<P: Position> Serialize for FeatureCollectionBase<P> {
     }
 }
 
-impl<'de, P: Position> Deserialize<'de> for FeatureCollectionBase<P> {
-    fn deserialize<D>(deserializer: D) -> Result<FeatureCollectionBase<P>, D::Error>
+impl<'de, P: Position> Deserialize<'de> for FeatureCollection<P> {
+    fn deserialize<D>(deserializer: D) -> Result<FeatureCollection<P>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -140,6 +140,6 @@ impl<'de, P: Position> Deserialize<'de> for FeatureCollectionBase<P> {
 
         let val = JsonObject::deserialize(deserializer)?;
 
-        FeatureCollectionBase::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }

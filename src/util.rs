@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::json::{JsonObject, JsonValue};
-use crate::{feature, Bbox, Error, FeatureBase, GeometryBase, Position};
+use crate::{feature, Bbox, Error, Feature, Geometry, Position};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;
@@ -104,7 +104,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Err
 
 /// Retrieve a single Position from the value of the "coordinates" key
 ///
-/// Used by ValueBase::Point
+/// Used by Value::Point
 pub fn get_coords_one_pos<P: Position>(object: &mut JsonObject) -> Result<P, Error> {
     let coords_json = get_coords_value(object)?;
     Position::from_json_value(&coords_json)
@@ -135,13 +135,13 @@ pub fn get_coords_3d_pos<P: Position>(object: &mut JsonObject) -> Result<Vec<Vec
 }
 
 /// Used by Value::GeometryCollection
-pub fn get_geometries<Pos: Position>(object: &mut JsonObject) -> Result<Vec<GeometryBase<Pos>>, Error> {
+pub fn get_geometries<Pos: Position>(object: &mut JsonObject) -> Result<Vec<Geometry<Pos>>, Error> {
     let geometries_json = expect_property(object, "geometries")?;
     let geometries_array = expect_owned_array(geometries_json)?;
     let mut geometries = Vec::with_capacity(geometries_array.len());
     for json in geometries_array {
         let obj = expect_owned_object(json)?;
-        let geometry = GeometryBase::from_json_object(obj)?;
+        let geometry = Geometry::from_json_object(obj)?;
         geometries.push(geometry);
     }
     Ok(geometries)
@@ -160,11 +160,11 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, Error> {
 /// Used by Feature
 pub fn get_geometry<P: Position>(
     object: &mut JsonObject,
-) -> Result<Option<GeometryBase<P>>, Error> {
+) -> Result<Option<Geometry<P>>, Error> {
     let geometry = expect_property(object, "geometry")?;
     match geometry {
         JsonValue::Object(x) => {
-            let geometry_object = GeometryBase::from_json_object(x)?;
+            let geometry_object = Geometry::from_json_object(x)?;
             Ok(Some(geometry_object))
         }
         JsonValue::Null => Ok(None),
@@ -173,13 +173,13 @@ pub fn get_geometry<P: Position>(
 }
 
 /// Used by FeatureCollection
-pub fn get_features<P: Position>(object: &mut JsonObject) -> Result<Vec<FeatureBase<P>>, Error> {
+pub fn get_features<P: Position>(object: &mut JsonObject) -> Result<Vec<Feature<P>>, Error> {
     let prop = expect_property(object, "features")?;
     let features_json = expect_owned_array(prop)?;
     let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
         let feature = expect_owned_object(feature)?;
-        let feature: FeatureBase<P> = FeatureBase::from_json_object(feature)?;
+        let feature: Feature<P> = Feature::from_json_object(feature)?;
         features.push(feature);
     }
     Ok(features)
