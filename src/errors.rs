@@ -1,24 +1,23 @@
 //! Module for all GeoJSON-related errors
-
 use serde_json::value::Value;
 use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
+    #[error("Encountered non-array value for a 'bbox' object: `{0}`.")]
     BboxExpectedArray(Value),
-    #[error("Encountered non-numeric value within 'bbox' array")]
+    #[error("Encountered non-numeric value within 'bbox' array.")]
     BboxExpectedNumericValues(Value),
-    #[error("Encountered non-object type for GeoJSON")]
+    #[error("Encountered a non-object type for GeoJSON: `{0}`.")]
     GeoJsonExpectedObject(Value),
-    #[error("Encountered an empty Type")]
+    #[error("Expected a Feature, FeatureCollection, or Geometry, but got an empty type.")]
     EmptyType,
-    #[error("Expected a Feature mapping, but got a `{0}`")]
+    #[error("Expected a Feature mapping, but got a `{0}`.")]
     NotAFeature(String),
-    #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
+    #[error("Encountered a mismatch when converting to a Geo type: `{0}`.")]
     InvalidGeometryConversion(Value),
-    #[error("Encountered unknown 'geometry' object type: `{0}`")]
+    #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     // Fixme: can we detail the error?
     #[error("Encountered malformed JSON")]
