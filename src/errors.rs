@@ -32,9 +32,9 @@ pub enum Error {
     FeatureInvalidIdentifierType(Value),
     #[error("Expected GeoJSON type `{expected}`, found `{actual}`")]
     ExpectedType { expected: String, actual: String },
-    #[error("Expected a String value, got a JSONValue: `{0}`")]
+    #[error("Expected a String value, but got a `{0}`")]
     ExpectedStringValue(Value),
-    #[error("Expected a GeoJSON property: `{0}`")]
+    #[error("Expected a GeoJSON property for `{0}`, but got None")]
     ExpectedProperty(String),
     #[error("Expected a floating-point value, but got None")]
     ExpectedF64Value,

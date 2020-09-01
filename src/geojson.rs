@@ -106,7 +106,7 @@ impl TryFrom<JsonObject> for GeoJson {
     fn try_from(object: JsonObject) -> Result<Self, Self::Error> {
         let type_ = match object.get("type") {
             Some(json::JsonValue::String(t)) => Type::from_str(t),
-            _ => return Err(Error::ExpectedProperty("type".to_owned())),
+            _ => return Err(Error::GeometryUnknownType("type".to_owned())),
         };
         let type_ = type_.ok_or(Error::EmptyType)?;
         match type_ {
