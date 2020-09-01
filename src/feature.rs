@@ -138,7 +138,7 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, Feature, Error, GeoJson, Geometry, Value};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\

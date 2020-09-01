@@ -76,7 +76,6 @@ pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>, Error> {
     let bbox_array = match bbox_json {
         JsonValue::Array(a) => a,
         _ => return Err(Error::BboxExpectedArray(bbox_json)),
-
     };
     let bbox = bbox_array
         .into_iter()

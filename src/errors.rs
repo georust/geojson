@@ -26,7 +26,9 @@ pub enum Error {
     PropertiesExpectedObjectOrNull(Value),
     #[error("Encountered neither object type nor null type for 'geometry' field on 'feature' object: `{0}`")]
     FeatureInvalidGeometryValue(Value),
-    #[error("Encountered neither number type nor string type for 'id' field on 'feature' object: `{0}`")]
+    #[error(
+        "Encountered neither number type nor string type for 'id' field on 'feature' object: `{0}`"
+    )]
     FeatureInvalidIdentifierType(Value),
     #[error("Expected GeoJSON type `{expected}`, found `{actual}`")]
     ExpectedType { expected: String, actual: String },
