@@ -118,7 +118,7 @@ impl TryFrom<JsonValue> for FeatureCollection {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(GJError::GeoJsonExpectedObject)
+            Err(GJError::GeoJsonExpectedObject(value))
         }
     }
 }

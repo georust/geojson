@@ -3,21 +3,20 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum GJError {
-    // Fixme: can we detail the value?
-    #[error("Encountered non-array type for a 'bbox' object")]
-    BboxExpectedArray,
-    // Fixme: can we detail the value?
+    #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
+    BboxExpectedArray(Value),
     #[error("Encountered non-numeric value within 'bbox' array")]
-    BboxExpectedNumericValues,
-    // Fixme: can we detail the value?
+    BboxExpectedNumericValues(Value),
     #[error("Encountered non-object type for GeoJSON")]
-    GeoJsonExpectedObject,
-    // Fixme: can we detail the value?
-    #[error("Encountered unknown GeoJSON object type")]
-    GeoJsonUnknownType,
-    // Fixme: can we detail the value?
-    #[error("Encountered unknown 'geometry' object type")]
-    GeometryUnknownType,
+    GeoJsonExpectedObject(Value),
+    #[error("Encountered an empty Type")]
+    EmptyType,
+    #[error("Expected a Feature mapping, but got a `{0}`")]
+    NotAFeature(String),
+    #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
+    InvalidGeometryConversion(Value),
+    #[error("Encountered unknown 'geometry' object type: `{0}`")]
+    GeometryUnknownType(String),
     // Fixme: can we detail the error?
     #[error("Encountered malformed JSON")]
     MalformedJson,
@@ -29,16 +28,16 @@ pub enum GJError {
     FeatureInvalidIdentifierType(Value),
     #[error("Expected GeoJSON type `{expected}`, found `{actual}`")]
     ExpectedType { expected: String, actual: String },
-
-    // FIXME: make these types more specific
-    #[error("Expected a String value")]
-    ExpectedStringValue,
+    #[error("Expected a String value, got a JSONValue: `{0}`")]
+    ExpectedStringValue(Value),
     #[error("Expected a GeoJSON property: `{0}`")]
     ExpectedProperty(String),
-    #[error("Expected a floating-point value")]
+    #[error("Expected a floating-point value, but got None")]
     ExpectedF64Value,
-    #[error("Expected an array value")]
+    #[error("Expected an array value, but got None")]
     ExpectedArrayValue,
-    #[error("Expected an object")]
-    ExpectedObjectValue,
+    #[error("Expected an owned array value, but got `{0}`")]
+    ExpectedOwnedArrayValue(Value),
+    #[error("Expected an owned Object, but got `{0}`")]
+    ExpectedObjectValue(Value),
 }

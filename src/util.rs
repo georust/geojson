@@ -24,7 +24,7 @@ pub fn expect_type(value: &mut JsonObject) -> Result<String, GJError> {
 pub fn expect_string(value: JsonValue) -> Result<String, GJError> {
     match value {
         JsonValue::String(s) => Ok(s),
-        _ => Err(GJError::ExpectedStringValue),
+        _ => Err(GJError::ExpectedStringValue(value)),
     }
 }
 
@@ -52,14 +52,14 @@ fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue
 fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>, GJError> {
     match value {
         JsonValue::Array(v) => Ok(v),
-        _ => Err(GJError::ExpectedArrayValue),
+        _ => Err(GJError::ExpectedOwnedArrayValue(value)),
     }
 }
 
 fn expect_owned_object(value: JsonValue) -> Result<JsonObject, GJError> {
     match value {
         JsonValue::Object(o) => Ok(o),
-        _ => Err(GJError::ExpectedObjectValue),
+        _ => Err(GJError::ExpectedObjectValue(value)),
     }
 }
 
@@ -75,11 +75,12 @@ pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>, GJError> {
     };
     let bbox_array = match bbox_json {
         JsonValue::Array(a) => a,
-        _ => return Err(GJError::BboxExpectedArray),
+        _ => return Err(GJError::BboxExpectedArray(bbox_json)),
+
     };
     let bbox = bbox_array
         .into_iter()
-        .map(|i| i.as_f64().ok_or(GJError::BboxExpectedNumericValues))
+        .map(|i| i.as_f64().ok_or(GJError::BboxExpectedNumericValues(i)))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(Some(bbox))
 }

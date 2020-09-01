@@ -67,7 +67,8 @@ impl TryFrom<JsonObject> for Feature {
     type Error = GJError;
 
     fn try_from(mut object: JsonObject) -> Result<Self, GJError> {
-        match &*util::expect_type(&mut object)? {
+        let res = &*util::expect_type(&mut object)?;
+        match res {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,
@@ -75,7 +76,7 @@ impl TryFrom<JsonObject> for Feature {
                 bbox: util::get_bbox(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
             }),
-            _ => Err(GJError::GeoJsonUnknownType),
+            _ => Err(GJError::NotAFeature(res.to_string())),
         }
     }
 }
@@ -87,7 +88,7 @@ impl TryFrom<JsonValue> for Feature {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(GJError::GeoJsonExpectedObject)
+            Err(GJError::GeoJsonExpectedObject(value))
         }
     }
 }

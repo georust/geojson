@@ -222,7 +222,8 @@ impl TryFrom<JsonObject> for Geometry {
     type Error = GJError;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
-        let value = match &*util::expect_type(&mut object)? {
+        let res = &*util::expect_type(&mut object)?;
+        let value = match res {
             "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
             "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
             "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),
@@ -230,7 +231,7 @@ impl TryFrom<JsonObject> for Geometry {
             "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
             "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
             "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
-            _ => return Err(GJError::GeometryUnknownType),
+            _ => return Err(GJError::GeometryUnknownType(res.to_string())),
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
@@ -249,7 +250,7 @@ impl TryFrom<JsonValue> for Geometry {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(GJError::GeoJsonExpectedObject)
+            Err(GJError::GeoJsonExpectedObject(value))
         }
     }
 }
