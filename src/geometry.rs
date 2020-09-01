@@ -16,7 +16,8 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
+use crate::{util, Bbox, LineStringType, PointType, PolygonType};
+use crate::errors::GJError;
 
 /// The underlying value for a `Geometry`.
 ///
@@ -214,17 +215,17 @@ impl<'a> From<&'a Geometry> for JsonObject {
 }
 
 impl Geometry {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, GJError> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, GJError> {
         Self::try_from(value)
     }
 }
 
 impl TryFrom<JsonObject> for Geometry {
-    type Error = Error;
+    type Error = GJError;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let value = match &*util::expect_type(&mut object)? {
@@ -235,7 +236,7 @@ impl TryFrom<JsonObject> for Geometry {
             "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
             "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
             "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
-            _ => return Err(Error::GeometryUnknownType),
+            _ => return Err(GJError::GeometryUnknownType),
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
@@ -248,13 +249,13 @@ impl TryFrom<JsonObject> for Geometry {
 }
 
 impl TryFrom<JsonValue> for Geometry {
-    type Error = Error;
+    type Error = GJError;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(GJError::GeoJsonExpectedObject)
         }
     }
 }

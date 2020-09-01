@@ -299,6 +299,9 @@ pub mod feature;
 mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
 
+mod errors;
+pub use crate::errors::GJError;
+
 #[cfg(feature = "geo-types")]
 mod conversion;
 
@@ -330,131 +333,6 @@ pub struct Feature {
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<json::JsonObject>,
-}
-
-/// Error when reading a GeoJSON object from a str or Object
-#[derive(Debug, PartialEq, Eq)]
-pub enum Error {
-    BboxExpectedArray,
-    BboxExpectedNumericValues,
-    GeoJsonExpectedObject,
-    GeoJsonUnknownType,
-    GeometryUnknownType,
-    MalformedJson,
-    PropertiesExpectedObjectOrNull,
-    FeatureInvalidGeometryValue,
-    FeatureInvalidIdentifierType,
-    ExpectedType { expected: String, actual: String },
-
-    // FIXME: make these types more specific
-    ExpectedStringValue,
-    ExpectedProperty(String),
-    ExpectedF64Value,
-    ExpectedArrayValue,
-    ExpectedObjectValue,
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match *self {
-            Error::BboxExpectedArray =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered non-array type for a 'bbox' object.")
-            }
-            Error::BboxExpectedNumericValues =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered non-numeric value within 'bbox' array.")
-            }
-            Error::GeoJsonExpectedObject =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered non-object type for GeoJSON.")
-            }
-            Error::GeoJsonUnknownType =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered unknown GeoJSON object type.")
-            }
-            Error::GeometryUnknownType => write!(f, "Encountered unknown 'geometry' object type."),
-            Error::MalformedJson =>
-            // FIXME: can we report specific serialization error?
-            {
-                write!(f, "Encountered malformed JSON.")
-            }
-            Error::PropertiesExpectedObjectOrNull =>
-            // FIXME: inform what type we actually found
-            {
-                write!(
-                    f,
-                    "Encountered neither object type nor null type for \
-                     'properties' object."
-                )
-            }
-            Error::FeatureInvalidGeometryValue =>
-            // FIXME: inform what type we actually found
-            {
-                write!(
-                    f,
-                    "Encountered neither object type nor null type for \
-                     'geometry' field on 'feature' object."
-                )
-            }
-            Error::FeatureInvalidIdentifierType =>
-            // FIXME: inform what type we actually found
-            {
-                write!(
-                    f,
-                    "Encountered neither number type nor string type for \
-                     'id' field on 'feature' object."
-                )
-            }
-            Error::ExpectedType {
-                ref expected,
-                ref actual,
-            } => write!(
-                f,
-                "Expected GeoJSON type '{}', found '{}'",
-                expected, actual,
-            ),
-            Error::ExpectedStringValue => write!(f, "Expected a string value."),
-            Error::ExpectedProperty(ref prop_name) => {
-                write!(f, "Expected GeoJSON property '{}'.", prop_name)
-            }
-            Error::ExpectedF64Value => write!(f, "Expected a floating-point value."),
-            Error::ExpectedArrayValue => write!(f, "Expected an array."),
-            Error::ExpectedObjectValue => write!(f, "Expected an object."),
-        }
-    }
-}
-
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::BboxExpectedArray => "non-array 'bbox' type",
-            Error::BboxExpectedNumericValues => "non-numeric 'bbox' array",
-            Error::GeoJsonExpectedObject => "non-object GeoJSON type",
-            Error::GeoJsonUnknownType => "unknown GeoJSON object type",
-            Error::GeometryUnknownType => "unknown 'geometry' object type",
-            Error::MalformedJson => "malformed JSON",
-            Error::PropertiesExpectedObjectOrNull => {
-                "neither object type nor null type for properties' object."
-            }
-            Error::FeatureInvalidGeometryValue => {
-                "neither object type nor null type for 'geometry' field on 'feature' object."
-            }
-            Error::FeatureInvalidIdentifierType => {
-                "neither number type nor string type for 'id' field on 'feature' object."
-            }
-            Error::ExpectedType { .. } => "mismatched GeoJSON type",
-            Error::ExpectedStringValue => "expected a string value",
-            Error::ExpectedProperty(..) => "expected a GeoJSON property",
-            Error::ExpectedF64Value => "expected a floating-point value",
-            Error::ExpectedArrayValue => "expected an array",
-            Error::ExpectedObjectValue => "expected an object",
-        }
-    }
 }
 
 mod json {

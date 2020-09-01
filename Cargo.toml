@@ -3,8 +3,7 @@
 name = "geojson"
 description = "Library for serializing the GeoJSON vector GIS file format"
 version = "0.19.0"
-authors = ["Corey Farwell <coreyf@rwell.org>",
-           "Blake Grotewold <hello@grotewold.me>"]
+authors = ["The GeoRust Developers <mods@georust.org>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/georust/geojson"
 readme = "README.md"
@@ -17,6 +16,7 @@ serde = "~1.0"
 serde_json = "~1.0"
 geo-types = { version = "0.6", optional = true }
 num-traits = "0.2"
+thiserror = "1.0.20"
 
 [dev-dependencies]
 criterion = "0.2"

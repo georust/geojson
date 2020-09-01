@@ -16,7 +16,8 @@ use std::convert::TryFrom;
 
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Bbox, Error, Feature};
+use crate::{util, Bbox, Feature};
+use crate::errors::GJError;
 
 /// Feature Collection Objects
 ///
@@ -83,26 +84,26 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 }
 
 impl FeatureCollection {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, GJError> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, GJError> {
         Self::try_from(value)
     }
 }
 
 impl TryFrom<JsonObject> for FeatureCollection {
-    type Error = Error;
+    type Error = GJError;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self, GJError> {
         match util::expect_type(&mut object)? {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
             }),
-            type_ => Err(Error::ExpectedType {
+            type_ => Err(GJError::ExpectedType {
                 expected: "FeatureCollection".to_owned(),
                 actual: type_,
             }),
@@ -111,13 +112,13 @@ impl TryFrom<JsonObject> for FeatureCollection {
 }
 
 impl TryFrom<JsonValue> for FeatureCollection {
-    type Error = Error;
+    type Error = GJError;
 
-    fn try_from(value: JsonValue) -> Result<Self, Error> {
+    fn try_from(value: JsonValue) -> Result<Self, GJError> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(GJError::GeoJsonExpectedObject)
         }
     }
 }
