@@ -14,10 +14,10 @@
 
 use std::convert::TryFrom;
 
+use crate::errors::GJError;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
-use crate::errors::GJError;
 
 /// The underlying value for a `Geometry`.
 ///
@@ -112,9 +112,7 @@ impl Serialize for Value {
 /// ```
 /// use geojson::{Geometry, Value};
 ///
-/// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
-/// );
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
@@ -123,9 +121,7 @@ impl Serialize for Value {
 /// use geojson::{GeoJson, Geometry, Value};
 /// use serde_json;
 ///
-/// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
-/// );
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 ///
 /// let geojson_string = geometry.to_string();
 ///
@@ -148,9 +144,7 @@ impl Serialize for Value {
 /// };
 ///
 /// assert_eq!(
-///     Geometry::new(
-///         Value::Point(vec![7.428959, 1.513394]),
-///     ),
+///     Geometry::new(Value::Point(vec![7.428959, 1.513394]),),
 ///     geometry,
 /// );
 /// ```

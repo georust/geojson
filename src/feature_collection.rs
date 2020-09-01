@@ -14,10 +14,10 @@
 
 use std::convert::TryFrom;
 
+use crate::errors::GJError;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Bbox, Feature};
-use crate::errors::GJError;
 
 /// Feature Collection Objects
 ///

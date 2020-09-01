@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::errors::GJError;
 use crate::json::{JsonObject, JsonValue};
 use crate::{feature, Bbox, Feature, Geometry, Position};
-use crate::errors::GJError;
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, GJError> {
     let prop = expect_property(value, "type")?;

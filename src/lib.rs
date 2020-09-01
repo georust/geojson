@@ -81,13 +81,10 @@
 //! ```
 //! use serde_json;
 //!
-//! use serde_json::{Map, to_value};
+//! use serde_json::{to_value, Map};
 //!
 //! let mut properties = Map::new();
-//! properties.insert(
-//!     String::from("name"),
-//!     to_value("Firestone Grill").unwrap(),
-//! );
+//! properties.insert(String::from("name"), to_value("Firestone Grill").unwrap());
 //! ```
 //!
 //! `GeoJson` can then be serialized by calling `to_string`:
@@ -105,16 +102,14 @@
 //! # fn main() {
 //! # let properties = properties();
 //!
-//! let geometry = Geometry::new(
-//!     Value::Point(vec![-120.66029,35.2812])
-//! );
+//! let geometry = Geometry::new(Value::Point(vec![-120.66029, 35.2812]));
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
 //!     geometry: Some(geometry),
 //!     id: None,
 //!     properties: Some(properties),
-//!     foreign_members: None
+//!     foreign_members: None,
 //! });
 //!
 //! let geojson_string = geojson.to_string();
@@ -138,11 +133,13 @@
 //! /// Process top-level GeoJSON items
 //! fn process_geojson(gj: &GeoJson) {
 //!     match *gj {
-//!         GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
-//!             if let Some(ref geom) = feature.geometry {
-//!                 match_geometry(geom)
+//!         GeoJson::FeatureCollection(ref ctn) => {
+//!             for feature in &ctn.features {
+//!                 if let Some(ref geom) = feature.geometry {
+//!                     match_geometry(geom)
+//!                 }
 //!             }
-//!         },
+//!         }
 //!         GeoJson::Feature(ref feature) => {
 //!             if let Some(ref geom) = feature.geometry {
 //!                 match_geometry(geom)
@@ -229,7 +226,7 @@
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
-//! use geojson::{GeoJson, quick_collection};
+//! use geojson::{quick_collection, GeoJson};
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
 //! # #[cfg(feature = "geo-types")]

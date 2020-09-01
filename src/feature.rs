@@ -14,10 +14,10 @@
 
 use std::convert::TryFrom;
 
+use crate::errors::GJError;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Feature};
-use crate::errors::GJError;
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
@@ -137,7 +137,7 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, GJError, Feature, GeoJson, Geometry, Value};
+    use crate::{feature, Feature, GJError, GeoJson, Geometry, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -301,30 +301,22 @@ mod tests {
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
         let result = match feature_json_str.parse::<GeoJson>() {
-            
             Err(GJError::FeatureInvalidIdentifierType) => true,
             Ok(_) => false,
-            _ => false
+            _ => false,
         };
-        assert_eq!(
-            result,
-            true,
-        )
+        assert_eq!(result, true,)
     }
 
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
         let result = match feature_json_str.parse::<GeoJson>() {
-            
             Err(GJError::FeatureInvalidIdentifierType) => true,
             Ok(_) => false,
-            _ => false
+            _ => false,
         };
-        assert_eq!(
-            result,
-            true,
-        )
+        assert_eq!(result, true,)
     }
 
     #[test]

@@ -1,5 +1,5 @@
-use thiserror::Error;
 use serde_json::value::Value;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum GJError {
