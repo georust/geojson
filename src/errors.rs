@@ -1,6 +1,9 @@
+//! Module for all GeoJSON-related errors
+
 use serde_json::value::Value;
 use thiserror::Error;
 
+/// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
