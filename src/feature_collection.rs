@@ -14,7 +14,7 @@
 
 use std::convert::TryFrom;
 
-use crate::errors::GJError;
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Bbox, Feature};
@@ -84,26 +84,26 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 }
 
 impl FeatureCollection {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, GJError> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, GJError> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
     }
 }
 
 impl TryFrom<JsonObject> for FeatureCollection {
-    type Error = GJError;
+    type Error = Error;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, GJError> {
+    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
         match util::expect_type(&mut object)? {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
             }),
-            type_ => Err(GJError::ExpectedType {
+            type_ => Err(Error::ExpectedType {
                 expected: "FeatureCollection".to_owned(),
                 actual: type_,
             }),
@@ -112,13 +112,13 @@ impl TryFrom<JsonObject> for FeatureCollection {
 }
 
 impl TryFrom<JsonValue> for FeatureCollection {
-    type Error = GJError;
+    type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, GJError> {
+    fn try_from(value: JsonValue) -> Result<Self, Error> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(GJError::GeoJsonExpectedObject(value))
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }

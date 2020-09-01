@@ -14,7 +14,7 @@
 
 use std::convert::TryFrom;
 
-use crate::errors::GJError;
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
@@ -209,17 +209,17 @@ impl<'a> From<&'a Geometry> for JsonObject {
 }
 
 impl Geometry {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, GJError> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, GJError> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
     }
 }
 
 impl TryFrom<JsonObject> for Geometry {
-    type Error = GJError;
+    type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let res = &*util::expect_type(&mut object)?;
@@ -231,7 +231,7 @@ impl TryFrom<JsonObject> for Geometry {
             "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
             "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
             "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
-            _ => return Err(GJError::GeometryUnknownType(res.to_string())),
+            _ => return Err(Error::GeometryUnknownType(res.to_string())),
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
@@ -244,13 +244,13 @@ impl TryFrom<JsonObject> for Geometry {
 }
 
 impl TryFrom<JsonValue> for Geometry {
-    type Error = GJError;
+    type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(GJError::GeoJsonExpectedObject(value))
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }

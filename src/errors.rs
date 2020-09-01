@@ -2,7 +2,7 @@ use serde_json::value::Value;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum GJError {
+pub enum Error {
     #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
     BboxExpectedArray(Value),
     #[error("Encountered non-numeric value within 'bbox' array")]
