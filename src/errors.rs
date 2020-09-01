@@ -1,6 +1,7 @@
 //! Module for all GeoJSON-related errors
 use serde_json::value::Value;
 use thiserror::Error;
+use crate::geometry::Value as GValue;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
@@ -16,7 +17,7 @@ pub enum Error {
     #[error("Expected a Feature mapping, but got a `{0}`.")]
     NotAFeature(String),
     #[error("Encountered a mismatch when converting to a Geo type: `{0}`.")]
-    InvalidGeometryConversion(Value),
+    InvalidGeometryConversion(GValue),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     // Fixme: can we detail the error?
