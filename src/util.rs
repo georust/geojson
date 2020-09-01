@@ -153,7 +153,7 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, GJError> {
     match object.remove("id") {
         Some(JsonValue::Number(x)) => Ok(Some(feature::Id::Number(x))),
         Some(JsonValue::String(s)) => Ok(Some(feature::Id::String(s))),
-        Some(_) => Err(GJError::FeatureInvalidIdentifierType),
+        Some(v) => Err(GJError::FeatureInvalidIdentifierType(v)),
         None => Ok(None),
     }
 }

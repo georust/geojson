@@ -301,7 +301,7 @@ mod tests {
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
         let result = match feature_json_str.parse::<GeoJson>() {
-            Err(GJError::FeatureInvalidIdentifierType) => true,
+            Err(GJError::FeatureInvalidIdentifierType(_)) => true,
             Ok(_) => false,
             _ => false,
         };
@@ -312,7 +312,7 @@ mod tests {
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
         let result = match feature_json_str.parse::<GeoJson>() {
-            Err(GJError::FeatureInvalidIdentifierType) => true,
+            Err(GJError::FeatureInvalidIdentifierType(_)) => true,
             Ok(_) => false,
             _ => false,
         };
