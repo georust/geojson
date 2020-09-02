@@ -296,7 +296,7 @@ pub mod feature;
 mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
 
-mod errors;
+pub mod errors;
 pub use crate::errors::Error;
 
 #[cfg(feature = "geo-types")]

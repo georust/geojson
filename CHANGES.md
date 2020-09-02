@@ -3,6 +3,7 @@
 ## 0.20.0
 * Switch to thiserror
 * Add more granular errors
+  * `GeoJsonUnknownType` has been split into `NotAFeature` and `EmptyType`
 * Add additional Value context to errors where possible
 
 ## 0.19.0
