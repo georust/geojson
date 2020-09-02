@@ -6,19 +6,19 @@ use crate::geometry::Value as GValue;
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Encountered non-array value for a 'bbox' object: `{0}`.")]
+    #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
     BboxExpectedArray(Value),
-    #[error("Encountered non-numeric value within 'bbox' array.")]
+    #[error("Encountered non-numeric value within 'bbox' array")]
     BboxExpectedNumericValues(Value),
-    #[error("Encountered a non-object type for GeoJSON: `{0}`.")]
+    #[error("Encountered a non-object type for GeoJSON: `{0}`")]
     GeoJsonExpectedObject(Value),
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
-    #[error("Expected a Feature, FeatureCollection, or Geometry, but got an empty type.")]
+    #[error("Expected a Feature, FeatureCollection, or Geometry, but got an empty type")]
     EmptyType,
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
-    #[error("Expected a Feature mapping, but got a `{0}`.")]
+    #[error("Expected a Feature mapping, but got a `{0}`")]
     NotAFeature(String),
-    #[error("Encountered a mismatch when converting to a Geo type: `{0}`.")]
+    #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
     InvalidGeometryConversion(GValue),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
