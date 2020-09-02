@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::convert::TryFrom;
+use std::{fmt, convert::TryFrom};
 
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{util, Bbox, Error, LineStringType, PointType, PolygonType};
+use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 
 /// The underlying value for a `Geometry`.
 ///
@@ -76,6 +77,12 @@ pub enum Value {
     GeometryCollection(Vec<Geometry>),
 }
 
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
         match *value {
@@ -111,9 +118,7 @@ impl Serialize for Value {
 /// ```
 /// use geojson::{Geometry, Value};
 ///
-/// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
-/// );
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
@@ -122,9 +127,7 @@ impl Serialize for Value {
 /// use geojson::{GeoJson, Geometry, Value};
 /// use serde_json;
 ///
-/// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
-/// );
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 ///
 /// let geojson_string = geometry.to_string();
 ///
@@ -147,9 +150,7 @@ impl Serialize for Value {
 /// };
 ///
 /// assert_eq!(
-///     Geometry::new(
-///         Value::Point(vec![7.428959, 1.513394]),
-///     ),
+///     Geometry::new(Value::Point(vec![7.428959, 1.513394]),),
 ///     geometry,
 /// );
 /// ```
@@ -227,7 +228,8 @@ impl TryFrom<JsonObject> for Geometry {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
-        let value = match &*util::expect_type(&mut object)? {
+        let res = &*util::expect_type(&mut object)?;
+        let value = match res {
             "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
             "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
             "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),
@@ -235,7 +237,7 @@ impl TryFrom<JsonObject> for Geometry {
             "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
             "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
             "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
-            _ => return Err(Error::GeometryUnknownType),
+            _ => return Err(Error::GeometryUnknownType(res.to_string())),
         };
         let bbox = util::get_bbox(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
@@ -254,7 +256,7 @@ impl TryFrom<JsonValue> for Geometry {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }

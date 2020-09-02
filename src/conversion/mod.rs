@@ -138,8 +138,8 @@ where
 /// # Example
 ///
 /// ```
-/// use geojson::{GeoJson, quick_collection};
 /// use geo_types::GeometryCollection;
+/// use geojson::{quick_collection, GeoJson};
 ///
 /// let geojson_str = r#"
 /// {

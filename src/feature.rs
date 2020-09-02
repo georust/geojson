@@ -14,9 +14,10 @@
 
 use std::convert::TryFrom;
 
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Error, Feature};
+use crate::{util, Feature};
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
@@ -66,7 +67,8 @@ impl TryFrom<JsonObject> for Feature {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {
-        match &*util::expect_type(&mut object)? {
+        let res = &*util::expect_type(&mut object)?;
+        match res {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,
@@ -74,7 +76,7 @@ impl TryFrom<JsonObject> for Feature {
                 bbox: util::get_bbox(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
             }),
-            _ => Err(Error::GeoJsonUnknownType),
+            _ => Err(Error::NotAFeature(res.to_string())),
         }
     }
 }
@@ -82,11 +84,11 @@ impl TryFrom<JsonObject> for Feature {
 impl TryFrom<JsonValue> for Feature {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Error> {
+    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }
@@ -239,7 +241,7 @@ mod tests {
     fn feature_json_invalid_geometry() {
         let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
         match geojson_str.parse::<GeoJson>().unwrap_err() {
-            Error::FeatureInvalidGeometryValue => (),
+            Error::FeatureInvalidGeometryValue(_) => (),
             _ => unreachable!(),
         }
     }
@@ -299,19 +301,23 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        assert_eq!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType),
-        )
+        let result = match feature_json_str.parse::<GeoJson>() {
+            Err(Error::FeatureInvalidIdentifierType(_)) => true,
+            Ok(_) => false,
+            _ => false,
+        };
+        assert_eq!(result, true,)
     }
 
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        assert_eq!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType),
-        )
+        let result = match feature_json_str.parse::<GeoJson>() {
+            Err(Error::FeatureInvalidIdentifierType(_)) => true,
+            Ok(_) => false,
+            _ => false,
+        };
+        assert_eq!(result, true,)
     }
 
     #[test]

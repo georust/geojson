@@ -17,7 +17,7 @@ where
     fn try_into(self) -> Result<geo_types::Point<T>, Self::Error> {
         match self {
             geometry::Value::Point(point_type) => Ok(create_geo_point(&point_type)),
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -37,7 +37,7 @@ where
                     .map(|point_type| create_geo_point(&point_type))
                     .collect(),
             )),
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -54,7 +54,7 @@ where
             geometry::Value::LineString(multi_point_type) => {
                 Ok(create_geo_line_string(&multi_point_type))
             }
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -71,7 +71,7 @@ where
             geometry::Value::MultiLineString(multi_line_string_type) => {
                 Ok(create_geo_multi_line_string(&multi_line_string_type))
             }
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -86,7 +86,7 @@ where
     fn try_into(self) -> Result<geo_types::Polygon<T>, Self::Error> {
         match self {
             geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(&polygon_type)),
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -103,7 +103,7 @@ where
             geometry::Value::MultiPolygon(multi_polygon_type) => {
                 Ok(create_geo_multi_polygon(&multi_polygon_type))
             }
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -125,7 +125,7 @@ where
 
                 Ok(geo_types::GeometryCollection(geojson_geometries))
             }
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
@@ -164,7 +164,7 @@ where
             geometry::Value::MultiPolygon(ref multi_polygon_type) => Ok(
                 geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
             ),
-            _ => Err(GJError::GeometryUnknownType),
+            _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
 }
