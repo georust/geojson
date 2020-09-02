@@ -314,10 +314,9 @@ mod tests {
              }
            ]
         }"#;
-        match GeoJson::from_str(geojson_str) {
-            Ok(_) => panic!("unexpectedly succeeded at parsing invalid json"),
-            Err(Error::MalformedJson(_)) => (), // expected
-            Err(e) => panic!("unexpected error: {}", e),
-        }
+        assert!(matches!(
+            GeoJson::from_str(geojson_str),
+            Err(Error::MalformedJson(_))
+        ))
     }
 }
