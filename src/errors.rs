@@ -41,10 +41,8 @@ pub enum Error {
     ExpectedProperty(String),
     #[error("Expected a floating-point value, but got None")]
     ExpectedF64Value,
-    #[error("Expected an array value, but got None")]
-    ExpectedArrayValue,
-    #[error("Expected an owned array value, but got `{0}`")]
-    ExpectedOwnedArrayValue(Value),
+    #[error("Expected an Array value, but got `{0}`")]
+    ExpectedArrayValue(String),
     #[error("Expected an owned Object, but got `{0}`")]
     ExpectedObjectValue(Value),
 }

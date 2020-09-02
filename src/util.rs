@@ -38,7 +38,7 @@ pub fn expect_f64(value: &JsonValue) -> Result<f64, Error> {
 pub fn expect_array(value: &JsonValue) -> Result<&Vec<JsonValue>, Error> {
     match value.as_array() {
         Some(v) => Ok(v),
-        None => Err(Error::ExpectedArrayValue),
+        None => Err(Error::ExpectedArrayValue("None".to_string())),
     }
 }
 
@@ -52,7 +52,15 @@ fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue
 fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>, Error> {
     match value {
         JsonValue::Array(v) => Ok(v),
-        _ => Err(Error::ExpectedOwnedArrayValue(value)),
+        _ => match value {
+            // it can never be Array, but that's exhaustive matches for you
+            JsonValue::Array(_) => Err(Error::ExpectedArrayValue("Array".to_string())),
+            JsonValue::Null => Err(Error::ExpectedArrayValue("Null".to_string())),
+            JsonValue::Bool(_) => Err(Error::ExpectedArrayValue("Bool".to_string())),
+            JsonValue::Number(_) => Err(Error::ExpectedArrayValue("Number".to_string())),
+            JsonValue::String(_) => Err(Error::ExpectedArrayValue("String".to_string())),
+            JsonValue::Object(_) => Err(Error::ExpectedArrayValue("Object".to_string())),
+        },
     }
 }
 
