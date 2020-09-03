@@ -185,7 +185,7 @@ where
 {
     vec![
         create_point_type(&line_string.start_point()),
-        create_point_type(&line_string.start_point()),
+        create_point_type(&line_string.end_point()),
     ]
 }
 
@@ -252,7 +252,7 @@ mod tests {
     use crate::{Geometry, Value};
     use geo_types;
     use geo_types::{
-        GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
+        GeometryCollection, LineString, Line, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon,
     };
 
     #[test]
@@ -305,6 +305,24 @@ mod tests {
 
         let geo_line_string = LineString::from(vec![p1, p2]);
         let geojson_line_point = Value::from(&geo_line_string);
+
+        if let Value::LineString(c) = geojson_line_point {
+            assert_almost_eq!(p1.x(), c[0][0], 1e-6);
+            assert_almost_eq!(p1.y(), c[0][1], 1e-6);
+            assert_almost_eq!(p2.x(), c[1][0], 1e-6);
+            assert_almost_eq!(p2.y(), c[1][1], 1e-6);
+        } else {
+            panic!("Not valid geometry {:?}", geojson_line_point);
+        }
+    }
+
+    #[test]
+    fn geo_line_conversion_test() {
+        let p1 = Point::new(40.02f64, 116.34f64);
+        let p2 = Point::new(13.02f64, 24.34f64);
+
+        let geo_line = Line::new(p1, p2);
+        let geojson_line_point = Value::from(&geo_line);
 
         if let Value::LineString(c) = geojson_line_point {
             assert_almost_eq!(p1.x(), c[0][0], 1e-6);
