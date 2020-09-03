@@ -52,7 +52,7 @@ where
     T: Float,
 {
     fn from(line: &geo_types::Line<T>) -> Self {
-        let coords = create_line_type(line);
+        let coords = create_from_line_type(line);
 
         geometry::Value::LineString(coords)
     }
@@ -64,7 +64,7 @@ where
     T: Float,
 {
     fn from(triangle: &geo_types::Triangle<T>) -> Self {
-        let coords = create_triangle_type(triangle);
+        let coords = create_from_triangle_type(triangle);
 
         geometry::Value::Polygon(coords)
     }
@@ -76,7 +76,7 @@ where
     T: Float,
 {
     fn from(rect: &geo_types::Rect<T>) -> Self {
-        let coords = create_rect_type(rect);
+        let coords = create_from_rect_type(rect);
 
         geometry::Value::Polygon(coords)
     }
@@ -179,7 +179,7 @@ where
         .collect()
 }
 
-fn create_line_type<T>(line_string: &geo_types::Line<T>) -> LineStringType
+fn create_from_line_type<T>(line_string: &geo_types::Line<T>) -> LineStringType
 where
     T: Float,
 {
@@ -189,30 +189,19 @@ where
     ]
 }
 
-fn create_triangle_type<T>(triangle: &geo_types::Triangle<T>) -> PolygonType
+fn create_from_triangle_type<T>(triangle: &geo_types::Triangle<T>) -> PolygonType
 where
     T: Float,
 {
     create_polygon_type(&triangle.to_polygon())
 }
 
-fn create_rect_type<T>(rect: &geo_types::Rect<T>) -> PolygonType
+fn create_from_rect_type<T>(rect: &geo_types::Rect<T>) -> PolygonType
 where
     T: Float,
 {
     create_polygon_type(&rect.to_polygon())
 }
-
-// fn create_geometrycollection_type<T>(
-//     gc: &geo_types::GeometryCollection<T>,
-// ) -> Vec<geometry::Geometry>
-// where
-//     T: Float,
-// {
-//     gc.iter()
-//         .map(|geom| geometry::Geometry::new(geometry::Value::from(geom)))
-//         .collect()
-// }
 
 fn create_multi_line_string_type<T>(
     multi_line_string: &geo_types::MultiLineString<T>,
