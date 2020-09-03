@@ -47,6 +47,42 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<'a, T> From<&'a geo_types::Line<T>> for geometry::Value
+where
+    T: Float,
+{
+    fn from(line: &geo_types::Line<T>) -> Self {
+        let coords = create_line_type(line);
+
+        geometry::Value::LineString(coords)
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<'a, T> From<&'a geo_types::Triangle<T>> for geometry::Value
+where
+    T: Float,
+{
+    fn from(triangle: &geo_types::Triangle<T>) -> Self {
+        let coords = create_triangle_type(triangle);
+
+        geometry::Value::Polygon(coords)
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<'a, T> From<&'a geo_types::Rect<T>> for geometry::Value
+where
+    T: Float,
+{
+    fn from(rect: &geo_types::Rect<T>) -> Self {
+        let coords = create_rect_type(rect);
+
+        geometry::Value::Polygon(coords)
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
 where
     T: Float,
@@ -108,6 +144,10 @@ where
             geo_types::Geometry::Point(ref point) => geometry::Value::from(point),
             geo_types::Geometry::MultiPoint(ref multi_point) => geometry::Value::from(multi_point),
             geo_types::Geometry::LineString(ref line_string) => geometry::Value::from(line_string),
+            geo_types::Geometry::Line(ref line) => geometry::Value::from(line),
+            geo_types::Geometry::Triangle(ref triangle) => geometry::Value::from(triangle),
+            geo_types::Geometry::Rect(ref rect) => geometry::Value::from(rect),
+            geo_types::Geometry::GeometryCollection(ref gc) => geometry::Value::from(gc),
             geo_types::Geometry::MultiLineString(ref multi_line_string) => {
                 geometry::Value::from(multi_line_string)
             }
@@ -115,7 +155,6 @@ where
             geo_types::Geometry::MultiPolygon(ref multi_polygon) => {
                 geometry::Value::from(multi_polygon)
             }
-            _ => panic!("GeometryCollection not allowed"),
         }
     }
 }
@@ -139,6 +178,41 @@ where
         .map(|point| create_point_type(&point))
         .collect()
 }
+
+fn create_line_type<T>(line_string: &geo_types::Line<T>) -> LineStringType
+where
+    T: Float,
+{
+    vec![
+        create_point_type(&line_string.start_point()),
+        create_point_type(&line_string.start_point()),
+    ]
+}
+
+fn create_triangle_type<T>(triangle: &geo_types::Triangle<T>) -> PolygonType
+where
+    T: Float,
+{
+    create_polygon_type(&triangle.to_polygon())
+}
+
+fn create_rect_type<T>(rect: &geo_types::Rect<T>) -> PolygonType
+where
+    T: Float,
+{
+    create_polygon_type(&rect.to_polygon())
+}
+
+// fn create_geometrycollection_type<T>(
+//     gc: &geo_types::GeometryCollection<T>,
+// ) -> Vec<geometry::Geometry>
+// where
+//     T: Float,
+// {
+//     gc.iter()
+//         .map(|geom| geometry::Geometry::new(geometry::Value::from(geom)))
+//         .collect()
+// }
 
 fn create_multi_line_string_type<T>(
     multi_line_string: &geo_types::MultiLineString<T>,

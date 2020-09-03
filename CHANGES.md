@@ -5,6 +5,7 @@
 * Add more granular errors
   * `GeoJsonUnknownType` has been split into `NotAFeature` and `EmptyType`
 * Add additional Value context to errors where possible
+* Add conversions from Geo-Types Line, Triangle, Rect and GeometryCollection
 
 ## 0.19.0
 
