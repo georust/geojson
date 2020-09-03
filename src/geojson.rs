@@ -183,6 +183,35 @@ impl<'de> Deserialize<'de> for GeoJson {
     }
 }
 
+/// # Example
+///```
+/// use geojson::GeoJson;
+/// use std::str::FromStr;
+///
+/// let geojson_str = r#"{
+///   "type": "FeatureCollection",
+///   "features": [
+///     {
+///       "type": "Feature",
+///       "properties": {},
+///       "geometry": {
+///         "type": "Point",
+///         "coordinates": [
+///           -0.13583511114120483,
+///           51.5218870403801
+///         ]
+///       }
+///     }
+///   ]
+/// }
+/// "#;
+/// let geo_json = GeoJson::from_str(&geojson_str).unwrap();
+/// if let GeoJson::FeatureCollection(collection) = geo_json {
+///     assert_eq!(1, collection.features.len());
+/// } else {
+///     panic!("expected feature collection");
+/// }
+/// ```
 impl FromStr for GeoJson {
     type Err = Error;
 
@@ -194,17 +223,10 @@ impl FromStr for GeoJson {
 }
 
 fn get_object(s: &str) -> Result<json::JsonObject, Error> {
-    ::serde_json::from_str(s)
-        .ok()
-        .and_then(json_value_into_json_object)
-        .ok_or(Error::MalformedJson)
-}
-
-fn json_value_into_json_object(json_value: json::JsonValue) -> Option<json::JsonObject> {
-    if let json::JsonValue::Object(geo) = json_value {
-        Some(geo)
-    } else {
-        None
+    match ::serde_json::from_str(s) {
+        Ok(json::JsonValue::Object(object)) => Ok(object),
+        Ok(other) => Err(Error::ExpectedObjectValue(other)),
+        Err(serde_error) => Err(Error::MalformedJson(serde_error)),
     }
 }
 
@@ -242,9 +264,10 @@ impl fmt::Display for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Feature, GeoJson, Geometry, Value};
+    use crate::{Error, Feature, GeoJson, Geometry, Value};
     use serde_json::json;
     use std::convert::TryInto;
+    use std::str::FromStr;
 
     #[test]
     fn test_geojson_from_value() {
@@ -271,5 +294,29 @@ mod tests {
                 foreign_members: None,
             })
         );
+    }
+
+    #[test]
+    fn test_invalid_json() {
+        let geojson_str = r#"{
+           "type": "FeatureCollection",
+           "features": [
+             !INTENTIONAL_TYPO! {
+               "type": "Feature",
+               "properties": {},
+               "geometry": {
+                 "type": "Point",
+                 "coordinates": [
+                   -0.13583511114120483,
+                   51.5218870403801
+                 ]
+               }
+             }
+           ]
+        }"#;
+        assert!(matches!(
+            GeoJson::from_str(geojson_str),
+            Err(Error::MalformedJson(_))
+        ))
     }
 }

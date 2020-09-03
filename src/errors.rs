@@ -1,7 +1,7 @@
 //! Module for all GeoJSON-related errors
+use crate::geometry::Value as GValue;
 use serde_json::value::Value;
 use thiserror::Error;
-use crate::geometry::Value as GValue;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
@@ -22,9 +22,8 @@ pub enum Error {
     InvalidGeometryConversion(GValue),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
-    // Fixme: can we detail the error?
-    #[error("Encountered malformed JSON")]
-    MalformedJson,
+    #[error("Encountered malformed JSON: {0}")]
+    MalformedJson(serde_json::error::Error),
     #[error("Encountered neither object type nor null type for 'properties' object: `{0}`")]
     PropertiesExpectedObjectOrNull(Value),
     #[error("Encountered neither object type nor null type for 'geometry' field on 'feature' object: `{0}`")]

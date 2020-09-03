@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{fmt, convert::TryFrom};
+use std::{convert::TryFrom, fmt};
 
 use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
