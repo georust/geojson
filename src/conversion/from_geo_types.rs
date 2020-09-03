@@ -124,13 +124,13 @@ where
     T: Float,
 {
     fn from(geometry_collection: &geo_types::GeometryCollection<T>) -> Self {
-        let coords = geometry_collection
+        let values = geometry_collection
             .0
             .iter()
             .map(|geometry| geometry::Geometry::new(geometry::Value::from(geometry)))
             .collect();
 
-        geometry::Value::GeometryCollection(coords)
+        geometry::Value::GeometryCollection(values)
     }
 }
 
