@@ -26,4 +26,5 @@ name = "parse"
 harness = false
 
 [package.metadata.docs.rs]
-features = [ "geo-types" ]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

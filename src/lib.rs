@@ -264,6 +264,9 @@
 //! implementations which may be useful if you wish to perform this kind of processing yourself and require
 //! more granular control over performance and / or memory allocation.
 
+// only enables the `doc_cfg` feature when
+// the `docsrs` configuration attribute is defined
+#[cfg_attr(docsrs, feature(doc_cfg))]
 #[cfg(feature = "geo-types")]
 use geo_types;
 use serde;
