@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// only enables the `doc_cfg` feature when
-// the `docsrs` configuration attribute is defined
-#[cfg_attr(docsrs, feature(doc_cfg))]
-
 use crate::geo_types;
 use crate::geo_types::{
     Geometry as GtGeometry, GeometryCollection, LineString as GtLineString,
