@@ -22,8 +22,27 @@ use std::str::FromStr;
 
 /// GeoJSON Objects
 ///
+/// ```
+/// use std::convert::TryInto;
+/// use geojson::{Feature, GeoJson, Geometry, Value};
+/// use serde_json::json;
+/// let json_value = json!({
+///     "type": "Feature",
+///     "geometry": {
+///         "type": "Point",
+///         "coordinates": [102.0, 0.5]
+///     },
+///     "properties": null,
+/// });
+/// let feature: Feature = json_value.try_into().unwrap();
+///
+/// // Easily convert a feature to a GeoJson
+/// let geojson: GeoJson = feature.into();
+/// // and back again
+/// let feature2: Feature = geojson.try_into().unwrap();
+/// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, derive_more::TryInto, derive_more::From)]
 pub enum GeoJson {
     Geometry(Geometry),
     Feature(Feature),
@@ -37,24 +56,6 @@ impl<'a> From<&'a GeoJson> for JsonObject {
             GeoJson::Feature(ref feature) => feature.into(),
             GeoJson::FeatureCollection(ref fc) => fc.into(),
         }
-    }
-}
-
-impl From<Geometry> for GeoJson {
-    fn from(geometry: Geometry) -> Self {
-        GeoJson::Geometry(geometry)
-    }
-}
-
-impl From<Feature> for GeoJson {
-    fn from(feature: Feature) -> Self {
-        GeoJson::Feature(feature)
-    }
-}
-
-impl From<FeatureCollection> for GeoJson {
-    fn from(feature_collection: FeatureCollection) -> GeoJson {
-        GeoJson::FeatureCollection(feature_collection)
     }
 }
 
