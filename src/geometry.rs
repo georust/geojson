@@ -121,6 +121,12 @@ impl Serialize for Value {
 /// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 /// ```
 ///
+/// Geometries can be created from Values.
+/// ```
+/// # use geojson::{Geometry, Value};
+/// let geometry1: Geometry = Value::Point(vec![7.428959, 1.513394]).into();
+/// ```
+///
 /// Serializing a `Geometry` to a GeoJSON string:
 ///
 /// ```
@@ -280,6 +286,14 @@ impl<'de> Deserialize<'de> for Geometry {
         let val = JsonObject::deserialize(deserializer)?;
 
         Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+    }
+}
+
+impl<V> From<V> for Geometry
+    where V: Into<Value>
+{
+    fn from(v: V) -> Geometry {
+        Geometry::new(v.into())
     }
 }
 
