@@ -1,5 +1,6 @@
 //! Module for all GeoJSON-related errors
 use crate::geometry::Value as GValue;
+use crate::Feature;
 use serde_json::value::Value;
 use thiserror::Error;
 
@@ -20,6 +21,10 @@ pub enum Error {
     NotAFeature(String),
     #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
     InvalidGeometryConversion(GValue),
+    #[error(
+        "Attempted to a convert a feature without a geometry into a geo_types::Geometry: `{0}`"
+    )]
+    FeatureHasNoGeometry(Feature),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     #[error("Encountered malformed JSON: {0}")]

@@ -3,7 +3,10 @@ use crate::geo_types;
 use crate::geometry;
 
 use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType};
+use crate::{
+    quick_collection, Feature, FeatureCollection, GeoJson, Geometry, LineStringType, PointType,
+    PolygonType,
+};
 use num_traits::Float;
 use std::convert::TryInto;
 
@@ -165,6 +168,63 @@ where
                 geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
             ),
             _ => Err(GJError::InvalidGeometryConversion(self)),
+        }
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryInto<geo_types::Geometry<T>> for Geometry
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
+        self.value.try_into()
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryInto<geo_types::Geometry<T>> for Feature
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
+        match self.geometry {
+            None => Err(GJError::FeatureHasNoGeometry(self)),
+            Some(geom) => geom.try_into(),
+        }
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryInto<geo_types::Geometry<T>> for FeatureCollection
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
+        Ok(geo_types::Geometry::GeometryCollection(quick_collection(
+            &GeoJson::FeatureCollection(self),
+        )?))
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryInto<geo_types::Geometry<T>> for GeoJson
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
+        match self {
+            GeoJson::Geometry(geom) => geom.try_into(),
+            GeoJson::Feature(feat) => feat.try_into(),
+            GeoJson::FeatureCollection(fc) => fc.try_into(),
         }
     }
 }
