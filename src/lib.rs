@@ -254,6 +254,36 @@
 //! # #[cfg(feature = "geo-types")]
 //! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 //! ```
+//!
+//! A `Geojson` may be converted to a `geo_types::Geometry<f64>` like so:
+//!
+//! ```
+//! # #[cfg(feature = "geo-types")]
+//! use geojson::GeoJson;
+//! # #[cfg(feature = "geo-types")]
+//! use geo_types::Geometry;
+//! use std::str::FromStr;
+//! use std::convert::TryInto;
+//! # #[cfg(feature = "geo-types")]
+//! let geojson_str = r#"
+//!{
+//!  "type": "Feature",
+//!  "properties": {},
+//!  "geometry": {
+//!    "type": "Point",
+//!    "coordinates": [
+//!      -0.13583511114120483,
+//!      51.5218870403801
+//!    ]
+//!  }
+//!}
+//! "#;
+//! # #[cfg(feature = "geo-types")]
+//! let geojson = GeoJson::from_str(geojson_str).unwrap();
+//! // Turn the GeoJSON string into a geo_types Geometry
+//! # #[cfg(feature = "geo-types")]
+//! let geom: geo_types::Geometry<f64> = geojson.try_into().unwrap();
+//! ```
 //! ### Caveats
 //! - Round-tripping with intermediate processing using the `geo` types may not produce identical output,
 //! as e.g. outer `Polygon` rings are automatically closed.
