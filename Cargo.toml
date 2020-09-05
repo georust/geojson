@@ -17,7 +17,7 @@ serde_json = "~1.0"
 geo-types = { version = "0.6", optional = true }
 num-traits = "0.2"
 thiserror = "1.0.20"
-derive_more = "0.99.9"
+derive_more = { version = "0.99.9", features = ["try_into", "from"] }
 
 [dev-dependencies]
 criterion = "0.2"
