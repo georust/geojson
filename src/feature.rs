@@ -61,6 +61,55 @@ impl Feature {
     pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
     }
+
+    /// Return the value of this property, if it's set
+    pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
+        self.properties.as_ref().and_then(|props| props.get(key.as_ref()))
+    }
+
+    /// Return true iff this key is set
+    pub fn contains_property(&self, key: impl AsRef<str>) -> bool {
+        match &self.properties {
+            None => false,
+            Some(props) => props.contains_key(key.as_ref()),
+        }
+    }
+
+
+    /// Set a property to this value, overwriting any possible older value
+    pub fn set_property(&mut self, key: impl Into<String>, value: impl Into<JsonValue>) {
+        let key: String = key.into();
+        let value: JsonValue = value.into();
+        if self.properties.is_none() {
+            self.properties = Some(JsonObject::new());
+        }
+
+        self.properties.as_mut().unwrap().insert(key, value);
+    }
+
+    /// Delete a property if it is set, otherwise do nothing.
+    pub fn remove_property(&mut self, key: impl AsRef<str>) {
+        if let Some(props) = self.properties.as_mut() {
+            props.remove(key.as_ref());
+        }
+    }
+
+    /// The number of properties
+    pub fn len_properties(&self) -> usize {
+        match &self.properties {
+            None => 0,
+            Some(props) => props.len(),
+        }
+    }
+
+    /// Returns an iterator over all the properties
+    pub fn properties_iter(&self) -> Box<dyn ExactSizeIterator<Item=(&String, &JsonValue)>+'_> {
+        match self.properties.as_ref() {
+            None => Box::new(std::iter::empty()),
+            Some(props) => Box::new(props.iter()),
+        }
+    }
+
 }
 
 impl TryFrom<JsonObject> for Feature {
@@ -351,5 +400,30 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn feature_ergonomic_property_access() {
+        use serde_json::json;
+
+        let mut feature = feature();
+
+        assert_eq!(feature.len_properties(), 0);
+        assert_eq!(feature.property("foo"), None);
+        assert_eq!(feature.contains_property("foo"), false);
+        assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
+
+        feature.set_property("foo", 12);
+        assert_eq!(feature.property("foo"), Some(&json!(12)));
+        assert_eq!(feature.len_properties(), 1);
+        assert_eq!(feature.contains_property("foo"), true);
+        assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![(&"foo".to_string(), &json!(12))]);
+
+        feature.remove_property("foo");
+        assert_eq!(feature.property("foo"), None);
+        assert_eq!(feature.len_properties(), 0);
+        assert_eq!(feature.contains_property("foo"), false);
+        assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
+
     }
 }
