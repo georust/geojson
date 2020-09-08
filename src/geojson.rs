@@ -40,6 +40,17 @@ impl<'a> From<&'a GeoJson> for JsonObject {
     }
 }
 
+impl From<GeoJson> for JsonValue {
+    fn from(geojson: GeoJson) -> JsonValue {
+        match geojson {
+            GeoJson::Geometry(geometry) => JsonValue::Object(JsonObject::from(&geometry)),
+            GeoJson::Feature(feature) =>   JsonValue::Object(JsonObject::from(&feature)),
+            GeoJson::FeatureCollection(fc) => JsonValue::Object(JsonObject::from(&fc)),
+        }
+    }
+}
+
+
 impl From<Geometry> for GeoJson {
     fn from(geometry: Geometry) -> Self {
         GeoJson::Geometry(geometry)
@@ -97,6 +108,37 @@ impl GeoJson {
     /// ```
     pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
+    }
+
+    /// Convience method to convert to a JSON Value. Uses `From`.
+    /// ```
+    /// use std::convert::TryFrom;
+    /// use geojson::GeoJson;
+    /// use serde_json::json;
+    ///
+    /// let geojson = GeoJson::try_from( json!({
+    ///        "type": "Feature",
+    ///        "geometry": {
+    ///            "type": "Point",
+    ///            "coordinates": [102.0, 0.5]
+    ///        },
+    ///        "properties": {},
+    ///     })).unwrap();
+    ///
+    /// let json_value = geojson.to_json_value();
+    /// assert_eq!(json_value,
+    ///     json!({
+    ///        "type": "Feature",
+    ///        "geometry": {
+    ///            "type": "Point",
+    ///            "coordinates": [102.0, 0.5]
+    ///        },
+    ///        "properties": {},
+    ///     })
+    ///    );
+    /// ```
+    pub fn to_json_value(self) -> JsonValue {
+        JsonValue::from(self)
     }
 }
 
