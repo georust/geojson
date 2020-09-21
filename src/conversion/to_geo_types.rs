@@ -3,9 +3,12 @@ use crate::geo_types;
 use crate::geometry;
 
 use crate::Error as GJError;
-use crate::{LineStringType, PointType, PolygonType};
+use crate::{
+    quick_collection, Feature, FeatureCollection, GeoJson, Geometry, LineStringType, PointType,
+    PolygonType,
+};
 use num_traits::Float;
-use std::convert::TryInto;
+use std::convert::{TryInto, TryFrom};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryInto<geo_types::Point<T>> for geometry::Value
@@ -165,6 +168,63 @@ where
                 geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
             ),
             _ => Err(GJError::InvalidGeometryConversion(self)),
+        }
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryFrom<Geometry> for geo_types::Geometry<T>
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_from(val: Geometry) -> Result<geo_types::Geometry<T>, Self::Error> {
+        val.value.try_into()
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryFrom<Feature> for geo_types::Geometry<T>
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_from(val: Feature) -> Result<geo_types::Geometry<T>, Self::Error> {
+        match val.geometry {
+            None => Err(GJError::FeatureHasNoGeometry(val)),
+            Some(geom) => geom.try_into(),
+        }
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryFrom<FeatureCollection> for geo_types::Geometry<T>
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_from(val: FeatureCollection) -> Result<geo_types::Geometry<T>, Self::Error> {
+        Ok(geo_types::Geometry::GeometryCollection(quick_collection(
+            &GeoJson::FeatureCollection(val),
+        )?))
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryFrom<GeoJson> for geo_types::Geometry<T>
+where
+    T: Float,
+{
+    type Error = GJError;
+
+    fn try_from(val: GeoJson) -> Result<geo_types::Geometry<T>, Self::Error> {
+        match val {
+            GeoJson::Geometry(geom) => geom.try_into(),
+            GeoJson::Feature(feat) => feat.try_into(),
+            GeoJson::FeatureCollection(fc) => fc.try_into(),
         }
     }
 }
@@ -487,5 +547,15 @@ mod tests {
             geojson_geometry_collection.try_into().unwrap();
 
         assert_eq!(3, geo_geometry_collection.0.len());
+    }
+
+    #[test]
+    fn geojson_geometry_conversion() {
+        let coords = vec![100.0, 0.2];
+        let geojson_geometry = Geometry::from(Value::Point(coords.clone()));
+        let geo_geometry: geo_types::Geometry<f64> = geojson_geometry.try_into().expect("Shoudl be able to convert to geo_types::Geometry");
+        let geo_point: geo_types::Point<_> = geo_geometry.try_into().expect("this should be a point");
+        assert_almost_eq!(geo_point.x(), coords[0], 1e-6);
+        assert_almost_eq!(geo_point.y(), coords[1], 1e-6);
     }
 }
