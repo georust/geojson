@@ -550,7 +550,7 @@ mod tests {
     }
 
     #[test]
-    fn geokson_geometry_conversion() {
+    fn geojson_geometry_conversion() {
         let coords = vec![100.0, 0.2];
         let geojson_geometry = Geometry::from(Value::Point(coords.clone()));
         let geo_geometry: geo_types::Geometry<f64> = geojson_geometry.try_into().expect("Shoudl be able to convert to geo_types::Geometry");
