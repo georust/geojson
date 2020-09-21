@@ -255,7 +255,7 @@
 //! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 //! ```
 //!
-//! A `Geojson` may be converted to a `geo_types::Geometry<f64>` like so:
+//! A `GeoJson` may be converted to a `geo_types::Geometry<f64>` like so:
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
