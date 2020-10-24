@@ -139,6 +139,7 @@ impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
 where
     T: Float,
 {
+    /// Convert from `geo_types::Geometry` enums
     fn from(geometry: &'a geo_types::Geometry<T>) -> Self {
         match *geometry {
             geo_types::Geometry::Point(ref point) => geometry::Value::from(point),
