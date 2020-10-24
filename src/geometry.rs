@@ -23,15 +23,20 @@ use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 ///
 /// # Conversion from `geo_types`
 ///
-/// `From` is implemented for `Value` for converting from `geo_types` geospatial
-/// types:
+/// A `Value` can be created by using the `From` impl which is available for both `geo_types`
+/// primitives AND `geo_types::Geometry` enum members:
 ///
 /// ```rust
 /// # #[cfg(feature = "geo-types")]
 /// # fn test() {
 /// let point = geo_types::Point::new(2., 9.);
+/// let genum = geo_types::Geometry::from(point);
 /// assert_eq!(
 ///     geojson::Value::from(&point),
+///     geojson::Value::Point(vec![2., 9.]),
+/// );
+/// assert_eq!(
+///     geojson::Value::from(&genum),
 ///     geojson::Value::Point(vec![2., 9.]),
 /// );
 /// # }
@@ -121,7 +126,7 @@ impl Serialize for Value {
 /// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 /// ```
 ///
-/// Geometries can be created from Values.
+/// Geometries can be created from `Value`s.
 /// ```
 /// # use geojson::{Geometry, Value};
 /// let geometry1: Geometry = Value::Point(vec![7.428959, 1.513394]).into();
@@ -290,7 +295,8 @@ impl<'de> Deserialize<'de> for Geometry {
 }
 
 impl<V> From<V> for Geometry
-    where V: Into<Value>
+where
+    V: Into<Value>,
 {
     fn from(v: V) -> Geometry {
         Geometry::new(v.into())
