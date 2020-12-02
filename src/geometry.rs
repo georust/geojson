@@ -84,7 +84,7 @@ pub enum Value {
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", Geometry::new(self.clone()))
     }
 }
 
@@ -368,6 +368,15 @@ mod tests {
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             geometry.to_string()
+        );
+    }
+
+    #[test]
+    fn test_value_display() {
+        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        assert_eq!(
+            "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
+            v.to_string()
         );
     }
 
