@@ -82,9 +82,37 @@ pub enum Value {
     GeometryCollection(Vec<Geometry>),
 }
 
+impl<'a> From<&'a Value> for JsonObject {
+    fn from(value: &'a Value) -> JsonObject {
+        let mut map = JsonObject::new();
+        let ty = String::from(match value {
+            Value::Point(..) => "Point",
+            Value::MultiPoint(..) => "MultiPoint",
+            Value::LineString(..) => "LineString",
+            Value::MultiLineString(..) => "MultiLineString",
+            Value::Polygon(..) => "Polygon",
+            Value::MultiPolygon(..) => "MultiPolygon",
+            Value::GeometryCollection(..) => "GeometryCollection",
+        });
+
+        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
+
+        map.insert(
+            String::from(match value {
+                Value::GeometryCollection(..) => "geometries",
+                _ => "coordinates",
+            }),
+            ::serde_json::to_value(&value).unwrap(),
+        );
+        map
+    }
+}
+
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", Geometry::new(self.clone()))
+        ::serde_json::to_string(&JsonObject::from(self))
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
     }
 }
 
@@ -192,30 +220,11 @@ impl Geometry {
 
 impl<'a> From<&'a Geometry> for JsonObject {
     fn from(geometry: &'a Geometry) -> JsonObject {
-        let mut map = JsonObject::new();
+        let mut map = JsonObject::from(&geometry.value);
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
 
-        let ty = String::from(match geometry.value {
-            Value::Point(..) => "Point",
-            Value::MultiPoint(..) => "MultiPoint",
-            Value::LineString(..) => "LineString",
-            Value::MultiLineString(..) => "MultiLineString",
-            Value::Polygon(..) => "Polygon",
-            Value::MultiPolygon(..) => "MultiPolygon",
-            Value::GeometryCollection(..) => "GeometryCollection",
-        });
-
-        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
-
-        map.insert(
-            String::from(match geometry.value {
-                Value::GeometryCollection(..) => "geometries",
-                _ => "coordinates",
-            }),
-            ::serde_json::to_value(&geometry.value).unwrap(),
-        );
         if let Some(ref foreign_members) = geometry.foreign_members {
             for (key, value) in foreign_members {
                 map.insert(key.to_owned(), value.to_owned());
