@@ -82,9 +82,67 @@ pub enum Value {
     GeometryCollection(Vec<Geometry>),
 }
 
+impl<'a> From<&'a Value> for JsonObject {
+    fn from(value: &'a Value) -> JsonObject {
+        let mut map = JsonObject::new();
+        let ty = String::from(match value {
+            Value::Point(..) => "Point",
+            Value::MultiPoint(..) => "MultiPoint",
+            Value::LineString(..) => "LineString",
+            Value::MultiLineString(..) => "MultiLineString",
+            Value::Polygon(..) => "Polygon",
+            Value::MultiPolygon(..) => "MultiPolygon",
+            Value::GeometryCollection(..) => "GeometryCollection",
+        });
+
+        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
+
+        map.insert(
+            String::from(match value {
+                Value::GeometryCollection(..) => "geometries",
+                _ => "coordinates",
+            }),
+            ::serde_json::to_value(&value).unwrap(),
+        );
+        map
+    }
+}
+
+impl Value {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+        Self::try_from(object)
+    }
+
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<JsonObject> for Value {
+    type Error = Error;
+
+    fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
+        util::get_value(&mut object)
+    }
+}
+
+impl TryFrom<JsonValue> for Value {
+    type Error = Error;
+
+    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+        if let JsonValue::Object(obj) = value {
+            Self::try_from(obj)
+        } else {
+            Err(Error::GeoJsonExpectedObject(value))
+        }
+    }
+}
+
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        ::serde_json::to_string(&JsonObject::from(self))
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
     }
 }
 
@@ -192,30 +250,11 @@ impl Geometry {
 
 impl<'a> From<&'a Geometry> for JsonObject {
     fn from(geometry: &'a Geometry) -> JsonObject {
-        let mut map = JsonObject::new();
+        let mut map = JsonObject::from(&geometry.value);
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
 
-        let ty = String::from(match geometry.value {
-            Value::Point(..) => "Point",
-            Value::MultiPoint(..) => "MultiPoint",
-            Value::LineString(..) => "LineString",
-            Value::MultiLineString(..) => "MultiLineString",
-            Value::Polygon(..) => "Polygon",
-            Value::MultiPolygon(..) => "MultiPolygon",
-            Value::GeometryCollection(..) => "GeometryCollection",
-        });
-
-        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
-
-        map.insert(
-            String::from(match geometry.value {
-                Value::GeometryCollection(..) => "geometries",
-                _ => "coordinates",
-            }),
-            ::serde_json::to_value(&geometry.value).unwrap(),
-        );
         if let Some(ref foreign_members) = geometry.foreign_members {
             for (key, value) in foreign_members {
                 map.insert(key.to_owned(), value.to_owned());
@@ -239,18 +278,8 @@ impl TryFrom<JsonObject> for Geometry {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
-        let res = &*util::expect_type(&mut object)?;
-        let value = match res {
-            "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
-            "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
-            "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),
-            "MultiLineString" => Value::MultiLineString(util::get_coords_2d_pos(&mut object)?),
-            "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
-            "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
-            "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
-            _ => return Err(Error::GeometryUnknownType(res.to_string())),
-        };
         let bbox = util::get_bbox(&mut object)?;
+        let value = util::get_value(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
         Ok(Geometry {
             bbox,
@@ -368,6 +397,15 @@ mod tests {
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             geometry.to_string()
+        );
+    }
+
+    #[test]
+    fn test_value_display() {
+        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        assert_eq!(
+            "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
+            v.to_string()
         );
     }
 

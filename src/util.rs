@@ -14,7 +14,7 @@
 
 use crate::errors::Error;
 use crate::json::{JsonObject, JsonValue};
-use crate::{feature, Bbox, Feature, Geometry, Position};
+use crate::{feature, Bbox, Feature, Geometry, Position, Value};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;
@@ -163,6 +163,21 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, Error> {
         Some(JsonValue::String(s)) => Ok(Some(feature::Id::String(s))),
         Some(v) => Err(Error::FeatureInvalidIdentifierType(v)),
         None => Ok(None),
+    }
+}
+
+/// Used by Geometry, Value
+pub fn get_value(object: &mut JsonObject) -> Result<Value, Error> {
+    let res = &*expect_type(object)?;
+    match res {
+        "Point" => Ok(Value::Point(get_coords_one_pos(object)?)),
+        "MultiPoint" => Ok(Value::MultiPoint(get_coords_1d_pos(object)?)),
+        "LineString" => Ok(Value::LineString(get_coords_1d_pos(object)?)),
+        "MultiLineString" => Ok(Value::MultiLineString(get_coords_2d_pos(object)?)),
+        "Polygon" => Ok(Value::Polygon(get_coords_2d_pos(object)?)),
+        "MultiPolygon" => Ok(Value::MultiPolygon(get_coords_3d_pos(object)?)),
+        "GeometryCollection" => Ok(Value::GeometryCollection(get_geometries(object)?)),
+        _ => Err(Error::GeometryUnknownType(res.to_string())),
     }
 }
 
