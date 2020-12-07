@@ -1,5 +1,10 @@
 # Changes
 
+## 0.21.0
+
+* `Display` implementation of `geojson::Value` prints` the GeoJSON string
+  * <https://github.com/georust/geojson/issues/149>
+
 ## 0.20.0
 * Switch to thiserror
 * Add more granular errors
