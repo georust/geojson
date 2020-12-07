@@ -64,7 +64,9 @@ impl Feature {
 
     /// Return the value of this property, if it's set
     pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
-        self.properties.as_ref().and_then(|props| props.get(key.as_ref()))
+        self.properties
+            .as_ref()
+            .and_then(|props| props.get(key.as_ref()))
     }
 
     /// Return true iff this key is set
@@ -74,7 +76,6 @@ impl Feature {
             Some(props) => props.contains_key(key.as_ref()),
         }
     }
-
 
     /// Set a property to this value, overwriting any possible older value
     pub fn set_property(&mut self, key: impl Into<String>, value: impl Into<JsonValue>) {
@@ -103,13 +104,12 @@ impl Feature {
     }
 
     /// Returns an iterator over all the properties
-    pub fn properties_iter(&self) -> Box<dyn ExactSizeIterator<Item=(&String, &JsonValue)>+'_> {
+    pub fn properties_iter(&self) -> Box<dyn ExactSizeIterator<Item = (&String, &JsonValue)> + '_> {
         match self.properties.as_ref() {
             None => Box::new(std::iter::empty()),
             Some(props) => Box::new(props.iter()),
         }
     }
-
 }
 
 impl TryFrom<JsonObject> for Feature {
@@ -417,13 +417,15 @@ mod tests {
         assert_eq!(feature.property("foo"), Some(&json!(12)));
         assert_eq!(feature.len_properties(), 1);
         assert_eq!(feature.contains_property("foo"), true);
-        assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![(&"foo".to_string(), &json!(12))]);
+        assert_eq!(
+            feature.properties_iter().collect::<Vec<_>>(),
+            vec![(&"foo".to_string(), &json!(12))]
+        );
 
         feature.remove_property("foo");
         assert_eq!(feature.property("foo"), None);
         assert_eq!(feature.len_properties(), 0);
         assert_eq!(feature.contains_property("foo"), false);
         assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
-
     }
 }

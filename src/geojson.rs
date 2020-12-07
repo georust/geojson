@@ -63,12 +63,11 @@ impl From<GeoJson> for JsonValue {
     fn from(geojson: GeoJson) -> JsonValue {
         match geojson {
             GeoJson::Geometry(geometry) => JsonValue::Object(JsonObject::from(&geometry)),
-            GeoJson::Feature(feature) =>   JsonValue::Object(JsonObject::from(&feature)),
+            GeoJson::Feature(feature) => JsonValue::Object(JsonObject::from(&feature)),
             GeoJson::FeatureCollection(fc) => JsonValue::Object(JsonObject::from(&fc)),
         }
     }
 }
-
 
 impl From<Geometry> for GeoJson {
     fn from(geometry: Geometry) -> Self {
@@ -93,8 +92,14 @@ impl TryFrom<GeoJson> for Geometry {
     fn try_from(value: GeoJson) -> Result<Self, Self::Error> {
         match value {
             GeoJson::Geometry(g) => Ok(g),
-            GeoJson::Feature(_) => Err(Error::ExpectedType{ expected: "Geometry".to_string(), actual: "Feature".to_string() }),
-            GeoJson::FeatureCollection(_) => Err(Error::ExpectedType{ expected: "Geometry".to_string(), actual: "FeatureCollection".to_string() }),
+            GeoJson::Feature(_) => Err(Error::ExpectedType {
+                expected: "Geometry".to_string(),
+                actual: "Feature".to_string(),
+            }),
+            GeoJson::FeatureCollection(_) => Err(Error::ExpectedType {
+                expected: "Geometry".to_string(),
+                actual: "FeatureCollection".to_string(),
+            }),
         }
     }
 }
@@ -103,9 +108,15 @@ impl TryFrom<GeoJson> for Feature {
     type Error = Error;
     fn try_from(value: GeoJson) -> Result<Self, Self::Error> {
         match value {
-            GeoJson::Geometry(_) => Err(Error::ExpectedType{ expected: "Feature".to_string(), actual: "Geometry".to_string() }),
+            GeoJson::Geometry(_) => Err(Error::ExpectedType {
+                expected: "Feature".to_string(),
+                actual: "Geometry".to_string(),
+            }),
             GeoJson::Feature(f) => Ok(f),
-            GeoJson::FeatureCollection(_) => Err(Error::ExpectedType{ expected: "Feature".to_string(), actual: "FeatureCollection".to_string() }),
+            GeoJson::FeatureCollection(_) => Err(Error::ExpectedType {
+                expected: "Feature".to_string(),
+                actual: "FeatureCollection".to_string(),
+            }),
         }
     }
 }
@@ -114,13 +125,18 @@ impl TryFrom<GeoJson> for FeatureCollection {
     type Error = Error;
     fn try_from(value: GeoJson) -> Result<Self, Self::Error> {
         match value {
-            GeoJson::Geometry(_) => Err(Error::ExpectedType{ expected: "FeatureCollection".to_string(), actual: "Geometry".to_string() }),
-            GeoJson::Feature(_) => Err(Error::ExpectedType{ expected: "FeatureCollection".to_string(), actual: "Feature".to_string() }),
+            GeoJson::Geometry(_) => Err(Error::ExpectedType {
+                expected: "FeatureCollection".to_string(),
+                actual: "Geometry".to_string(),
+            }),
+            GeoJson::Feature(_) => Err(Error::ExpectedType {
+                expected: "FeatureCollection".to_string(),
+                actual: "Feature".to_string(),
+            }),
             GeoJson::FeatureCollection(f) => Ok(f),
         }
     }
 }
-
 
 impl GeoJson {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {

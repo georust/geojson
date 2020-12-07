@@ -262,11 +262,11 @@
 //! use geojson::GeoJson;
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::Geometry;
-//! use std::str::FromStr;
 //! use std::convert::TryInto;
+//! use std::str::FromStr;
 //! # #[cfg(feature = "geo-types")]
 //! let geojson_str = r#"
-//!{
+//! {
 //!  "type": "Feature",
 //!  "properties": {},
 //!  "geometry": {
@@ -276,7 +276,7 @@
 //!      51.5218870403801
 //!    ]
 //!  }
-//!}
+//! }
 //! "#;
 //! # #[cfg(feature = "geo-types")]
 //! let geojson = GeoJson::from_str(geojson_str).unwrap();
