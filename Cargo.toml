@@ -1,5 +1,4 @@
 [package]
-
 name = "geojson"
 description = "Library for serializing the GeoJSON vector GIS file format"
 version = "0.20.2"
@@ -19,7 +18,7 @@ num-traits = "0.2"
 thiserror = "1.0.20"
 
 [dev-dependencies]
-criterion = "0.2"
+criterion = "0.3"
 
 [[bench]]
 name = "parse"
