@@ -24,6 +24,10 @@ criterion = "0.3"
 name = "parse"
 harness = false
 
+[[bench]]
+name = "to_geo_types"
+harness = false
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
