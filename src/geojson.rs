@@ -209,6 +209,14 @@ impl GeoJson {
     pub fn to_json_value(self) -> JsonValue {
         JsonValue::from(self)
     }
+
+    // Deserialize a GeoJson object from an IO stream of JSON
+    pub fn from_reader<R>(rdr: R) -> Result<Self, serde_json::Error>
+    where
+        R: std::io::Read,
+    {
+        serde_json::from_reader(rdr)
+    }
 }
 
 impl TryFrom<JsonObject> for GeoJson {
@@ -379,6 +387,33 @@ mod tests {
     use serde_json::json;
     use std::convert::TryInto;
     use std::str::FromStr;
+
+    #[test]
+    fn test_geojson_from_reader() {
+        let json_str = r#"{
+            "type": "Feature",
+            "geometry": {
+                    "type": "Point",
+                    "coordinates": [102.0, 0.5]
+            },
+            "properties": null
+        }"#;
+
+        let g1 = GeoJson::from_reader(json_str.as_bytes()).unwrap();
+
+        let json_value = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [102.0, 0.5]
+            },
+            "properties": null,
+        });
+
+        let g2: GeoJson = json_value.try_into().unwrap();
+
+        assert_eq!(g1, g2);
+    }
 
     #[test]
     fn test_geojson_from_value() {
