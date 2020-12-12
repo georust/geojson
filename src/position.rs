@@ -89,8 +89,8 @@ impl Position for (f64, f64, f64) {
         ))
     }
 
-    fn from_x_y(_x: f64, _y: f64) -> Self {
-        unimplemented!()
+    fn from_x_y(x: f64, y: f64) -> Self {
+        (x, y, 0.)
     }
 
     fn x(&self) -> f64 {
@@ -128,8 +128,8 @@ impl Position for (f64, f64, Option<f64>) {
         }
     }
 
-    fn from_x_y(_x: f64, _y: f64) -> Self {
-        unimplemented!()
+    fn from_x_y(x: f64, y: f64) -> Self {
+        (x, y, None)
     }
 
     fn x(&self) -> f64 {
