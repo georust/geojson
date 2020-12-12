@@ -167,7 +167,7 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, Error> {
 }
 
 /// Used by Geometry, Value
-pub fn get_value(object: &mut JsonObject) -> Result<Value, Error> {
+pub fn get_value<P: Position>(object: &mut JsonObject) -> Result<Value<P>, Error> {
     let res = &*expect_type(object)?;
     match res {
         "Point" => Ok(Value::Point(get_coords_one_pos(object)?)),

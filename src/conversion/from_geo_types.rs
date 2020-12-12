@@ -46,7 +46,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Line<T>> for geometry::Value
+impl<'a, T, P: Position> From<&'a geo_types::Line<T>> for geometry::Value<P>
 where
     T: Float,
 {
@@ -58,7 +58,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Triangle<T>> for geometry::Value
+impl<'a, T, P: Position> From<&'a geo_types::Triangle<T>> for geometry::Value<P>
 where
     T: Float,
 {
@@ -70,7 +70,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Rect<T>> for geometry::Value
+impl<'a, T, P: Position> From<&'a geo_types::Rect<T>> for geometry::Value<P>
 where
     T: Float,
 {
@@ -82,7 +82,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
+impl<'a, T, P: Position> From<&'a geo_types::MultiLineString<T>> for geometry::Value<P>
 where
     T: Float,
 {
@@ -179,7 +179,7 @@ where
         .collect()
 }
 
-fn create_from_line_type<T>(line_string: &geo_types::Line<T>) -> LineStringType
+fn create_from_line_type<T, P: Position>(line_string: &geo_types::Line<T>) -> LineStringType<P>
 where
     T: Float,
 {
@@ -189,21 +189,21 @@ where
     ]
 }
 
-fn create_from_triangle_type<T>(triangle: &geo_types::Triangle<T>) -> PolygonType
+fn create_from_triangle_type<T, P: Position>(triangle: &geo_types::Triangle<T>) -> PolygonType<P>
 where
     T: Float,
 {
     create_polygon_type(&triangle.to_polygon())
 }
 
-fn create_from_rect_type<T>(rect: &geo_types::Rect<T>) -> PolygonType
+fn create_from_rect_type<T, P: Position>(rect: &geo_types::Rect<T>) -> PolygonType<P>
 where
     T: Float,
 {
     create_polygon_type(&rect.to_polygon())
 }
 
-fn create_multi_line_string_type<T>(
+fn create_multi_line_string_type<T, P: Position>(
     multi_line_string: &geo_types::MultiLineString<T>,
 ) -> Vec<Vec<P>>
 where

@@ -17,7 +17,7 @@ use std::{convert::TryFrom, fmt};
 use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{util, Bbox, LineStringType, PointType, PolygonType};
+use crate::{util, Bbox, LineStringType, PointType, PolygonType, Position};
 
 /// The underlying value for a `Geometry`.
 ///
@@ -323,7 +323,7 @@ impl<'de, Pos: Position> Deserialize<'de> for Geometry<Pos> {
     }
 }
 
-impl<V> From<V> for Geometry
+impl<V, P: Position> From<V> for Geometry<P>
 where
     V: Into<Value>,
 {

@@ -14,7 +14,6 @@
 
 use std::convert::TryFrom;
 
-use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Bbox, Error, Feature, Position};
@@ -84,19 +83,19 @@ impl<'a, P: Position> From<&'a FeatureCollection<P>> for JsonObject {
 }
 
 impl<Pos: Position> FeatureCollection<Pos> {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<Pos>> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<Pos>> {
         Self::try_from(value)
     }
 }
 
 impl<P: Position> TryFrom<JsonObject> for FeatureCollection<P> {
-    type Error = Error;
+    type Error = Error<P>;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self, Error<P>> {
         match util::expect_type(&mut object)? {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
@@ -112,9 +111,9 @@ impl<P: Position> TryFrom<JsonObject> for FeatureCollection<P> {
 }
 
 impl<Pos: Position> TryFrom<JsonValue> for FeatureCollection<Pos> {
-    type Error = Error;
+    type Error = Error<Pos>;
 
-    fn try_from(value: JsonValue) -> Result<Self, Error> {
+    fn try_from(value: JsonValue) -> Result<Self, Error<Pos>> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {

@@ -6,7 +6,7 @@ use std::fmt::Debug;
 ///
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
 pub trait Position: Sized + Clone + Debug + serde::Serialize {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error>;
+    fn from_json_value(json: &JsonValue) -> Result<Self, Error<Self>>;
     fn from_x_y(x: f64, y: f64) -> Self;
     fn x(&self) -> f64;
     fn y(&self) -> f64;
@@ -14,7 +14,7 @@ pub trait Position: Sized + Clone + Debug + serde::Serialize {
 // TODO: should this derivce serialize unconditionally?
 
 impl Position for Vec<f64> {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error> {
+    fn from_json_value(json: &JsonValue) -> Result<Self, Error<Self>> {
         let coords_array = util::expect_array(json)?;
         let mut coords = Vec::with_capacity(coords_array.len());
         for position in coords_array {
@@ -37,7 +37,7 @@ impl Position for Vec<f64> {
 }
 
 impl Position for (f64, f64) {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error> {
+    fn from_json_value(json: &JsonValue) -> Result<Self, Error<Self>> {
         let coords_array = util::expect_array(json)?;
         if coords_array.len() != 2 {
             unimplemented!()
@@ -62,7 +62,7 @@ impl Position for (f64, f64) {
 }
 
 impl Position for (f64, f64, f64) {
-    fn from_json_value(json: &JsonValue) -> Result<Self, Error> {
+    fn from_json_value(json: &JsonValue) -> Result<Self, Error<Self>> {
         let coords_array = util::expect_array(json)?;
         if coords_array.len() != 3 {
             unimplemented!()

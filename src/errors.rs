@@ -1,12 +1,12 @@
 //! Module for all GeoJSON-related errors
 use crate::geometry::Value as GValue;
-use crate::Feature;
+use crate::{Feature, Position};
 use serde_json::value::Value;
 use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
-pub enum Error {
+pub enum Error<P: Position> {
     #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
     BboxExpectedArray(Value),
     #[error("Encountered non-numeric value within 'bbox' array")]
@@ -20,11 +20,11 @@ pub enum Error {
     #[error("Expected a Feature mapping, but got a `{0}`")]
     NotAFeature(String),
     #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
-    InvalidGeometryConversion(GValue),
+    InvalidGeometryConversion(GValue<P>),
     #[error(
         "Attempted to a convert a feature without a geometry into a geo_types::Geometry: `{0}`"
     )]
-    FeatureHasNoGeometry(Feature),
+    FeatureHasNoGeometry(Feature<P>),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     #[error("Encountered malformed JSON: {0}")]

@@ -14,7 +14,6 @@
 
 use std::convert::TryFrom;
 
-use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Error, Feature, Position};
@@ -54,11 +53,11 @@ impl<'a, P: Position> From<&'a Feature<P>> for JsonObject {
 }
 
 impl<P: Position> Feature<P> {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<P>> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<P>> {
         Self::try_from(value)
     }
 
@@ -113,9 +112,9 @@ impl<P: Position> Feature<P> {
 }
 
 impl<P: Position> TryFrom<JsonObject> for Feature<P> {
-    type Error = Error;
+    type Error = Error<P>;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let res = &*util::expect_type(&mut object)?;
         match res {
             "Feature" => Ok(Feature {
@@ -131,7 +130,7 @@ impl<P: Position> TryFrom<JsonObject> for Feature<P> {
 }
 
 impl<P: Position> TryFrom<JsonValue> for Feature<P> {
-    type Error = Error;
+    type Error = Error<P>;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
@@ -367,7 +366,6 @@ mod tests {
             _ => false,
         };
         assert_eq!(result, true,)
->>>>>>> origin/master
     }
 
     #[test]
