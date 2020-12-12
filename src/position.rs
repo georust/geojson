@@ -71,7 +71,7 @@ impl Position for (f64, f64) {
         self.1
     }
 
-    fn z(&self) -> Self::Z { }
+    fn z(&self) -> Self::Z {}
 }
 
 impl Position for (f64, f64, f64) {

@@ -186,7 +186,7 @@ impl<Pos: Position> GeoJson<Pos> {
     /// use geojson::GeoJson;
     /// use serde_json::json;
     ///
-    /// let geojson = GeoJson::try_from( json!({
+    /// let geojson = GeoJson::<Vec<f64>>::try_from( json!({
     ///        "type": "Feature",
     ///        "geometry": {
     ///            "type": "Point",
@@ -325,7 +325,7 @@ impl<'de, Pos: Position> Deserialize<'de> for GeoJson<Pos> {
 ///   ]
 /// }
 /// "#;
-/// let geo_json = GeoJson::from_str(&geojson_str).unwrap();
+/// let geo_json = GeoJson::<Vec<f64>>::from_str(&geojson_str).unwrap();
 /// if let GeoJson::FeatureCollection(collection) = geo_json {
 ///     assert_eq!(1, collection.features.len());
 /// } else {

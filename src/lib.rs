@@ -279,7 +279,7 @@
 //! }
 //! "#;
 //! # #[cfg(feature = "geo-types")]
-//! let geojson = GeoJson::from_str(geojson_str).unwrap();
+//! let geojson = GeoJson::<Vec<f64>>::from_str(geojson_str).unwrap();
 //! // Turn the GeoJSON string into a geo_types Geometry
 //! # #[cfg(feature = "geo-types")]
 //! let geom: geo_types::Geometry<f64> = geojson.try_into().unwrap();
