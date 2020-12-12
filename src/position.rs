@@ -105,3 +105,42 @@ impl Position for (f64, f64, f64) {
         self.2
     }
 }
+
+impl Position for (f64, f64, Option<f64>) {
+    type Z = Option<f64>;
+
+    fn from_json_value(json: &JsonValue) -> Result<Self, Error<Self>> {
+        let coords_array = util::expect_array(json)?;
+        if coords_array.len() == 2 {
+            Ok((
+                util::expect_f64(&coords_array[0])?,
+                util::expect_f64(&coords_array[1])?,
+                None,
+            ))
+        } else if coords_array.len() == 2 {
+            Ok((
+                util::expect_f64(&coords_array[0])?,
+                util::expect_f64(&coords_array[1])?,
+                Some(util::expect_f64(&coords_array[2])?),
+            ))
+        } else {
+            unimplemented!()
+        }
+    }
+
+    fn from_x_y(_x: f64, _y: f64) -> Self {
+        unimplemented!()
+    }
+
+    fn x(&self) -> f64 {
+        self.0
+    }
+
+    fn y(&self) -> f64 {
+        self.1
+    }
+
+    fn z(&self) -> Self::Z {
+        self.2
+    }
+}
