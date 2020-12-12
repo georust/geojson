@@ -4,8 +4,7 @@ use crate::{geometry, Position};
 
 use crate::Error as GJError;
 use crate::{
-    quick_collection, Feature, FeatureCollection, GeoJson, Geometry, LineStringType, PointType,
-    PolygonType,
+    quick_collection, Feature, FeatureCollection, GeoJson, Geometry,
 };
 use num_traits::Float;
 use std::convert::{TryFrom, TryInto};
@@ -15,11 +14,11 @@ impl<T, P: Position> TryInto<geo_types::Point<T>> for geometry::Value<P>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::Point<T>, Self::Error> {
         match self {
-            geometry::Value::Point(point_type) => Ok(create_geo_point(&point_type)),
+            geometry::Value::Point(point_type) => Ok(create_geo_point(point_type)),
             _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
@@ -30,7 +29,7 @@ impl<T, P: Position> TryInto<geo_types::MultiPoint<T>> for geometry::Value<P>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::MultiPoint<T>, Self::Error> {
         match self {
@@ -50,7 +49,7 @@ impl<T, P: Position> TryInto<geo_types::LineString<T>> for geometry::Value<P>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::LineString<T>, Self::Error> {
         match self {
@@ -67,7 +66,7 @@ impl<T, P: Position> TryInto<geo_types::MultiLineString<T>> for geometry::Value<
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::MultiLineString<T>, Self::Error> {
         match self {
@@ -84,11 +83,11 @@ impl<T, P: Position> TryInto<geo_types::Polygon<T>> for geometry::Value<P>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::Polygon<T>, Self::Error> {
         match self {
-            geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(&polygon_type)),
+            geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(polygon_type)),
             _ => Err(GJError::InvalidGeometryConversion(self)),
         }
     }
@@ -99,7 +98,7 @@ impl<T, P: Position> TryInto<geo_types::MultiPolygon<T>> for geometry::Value<P>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::MultiPolygon<T>, Self::Error> {
         match self {
@@ -116,7 +115,7 @@ impl<T, P: Position> TryInto<geo_types::GeometryCollection<T>> for geometry::Val
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::GeometryCollection<T>, Self::Error> {
         match self {
@@ -138,7 +137,7 @@ impl<T, P: Position> TryInto<geo_types::Geometry<T>> for geometry::Value<P>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
     fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
         match self {
@@ -168,25 +167,25 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<Geometry> for geo_types::Geometry<T>
+impl<T, Pos: Position> TryFrom<Geometry<Pos>> for geo_types::Geometry<T>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<Pos>;
 
-    fn try_from(val: Geometry) -> Result<geo_types::Geometry<T>, Self::Error> {
+    fn try_from(val: Geometry<Pos>) -> Result<geo_types::Geometry<T>, Self::Error> {
         val.value.try_into()
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<Feature> for geo_types::Geometry<T>
+impl<T, P: Position> TryFrom<Feature<P>> for geo_types::Geometry<T>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<P>;
 
-    fn try_from(val: Feature) -> Result<geo_types::Geometry<T>, Self::Error> {
+    fn try_from(val: Feature<P>) -> Result<geo_types::Geometry<T>, Self::Error> {
         match val.geometry {
             None => Err(GJError::FeatureHasNoGeometry(val)),
             Some(geom) => geom.try_into(),
@@ -195,13 +194,13 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<FeatureCollection> for geo_types::Geometry<T>
+impl<T, Pos: Position> TryFrom<FeatureCollection<Pos>> for geo_types::Geometry<T>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<Pos>;
 
-    fn try_from(val: FeatureCollection) -> Result<geo_types::Geometry<T>, Self::Error> {
+    fn try_from(val: FeatureCollection<Pos>) -> Result<geo_types::Geometry<T>, Self::Error> {
         Ok(geo_types::Geometry::GeometryCollection(quick_collection(
             &GeoJson::FeatureCollection(val),
         )?))
@@ -209,13 +208,13 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<GeoJson> for geo_types::Geometry<T>
+impl<T, Pos: Position> TryFrom<GeoJson<Pos>> for geo_types::Geometry<T>
 where
     T: Float,
 {
-    type Error = GJError;
+    type Error = GJError<Pos>;
 
-    fn try_from(val: GeoJson) -> Result<geo_types::Geometry<T>, Self::Error> {
+    fn try_from(val: GeoJson<Pos>) -> Result<geo_types::Geometry<T>, Self::Error> {
         match val {
             GeoJson::Geometry(geom) => geom.try_into(),
             GeoJson::Feature(feat) => feat.try_into(),

@@ -76,7 +76,7 @@ pub(crate) mod to_geo_types;
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
 fn process_geojson<T, P: Position>(
     gj: &GeoJson<P>,
-) -> Result<geo_types::GeometryCollection<T>, GJError>
+) -> Result<geo_types::GeometryCollection<T>, GJError<P>>
 where
     T: Float,
 {
@@ -104,7 +104,7 @@ where
 // Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
 fn process_geometry<T, P: Position>(
     geometry: &GjGeometry<P>,
-) -> Result<geo_types::Geometry<T>, GJError>
+) -> Result<geo_types::Geometry<T>, GJError<P>>
 where
     T: Float,
 {
@@ -127,7 +127,7 @@ where
             let gc = GtGeometry::GeometryCollection(GeometryCollection(
                 gc.iter()
                     .map(|geom| process_geometry(&geom))
-                    .collect::<Result<Vec<geo_types::Geometry<T>>, GJError>>()?,
+                    .collect::<Result<Vec<geo_types::Geometry<T>>, GJError<P>>>()?,
             ));
             Ok(gc)
         }
@@ -170,7 +170,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T, P: Position>(
     gj: &GeoJson<P>,
-) -> Result<geo_types::GeometryCollection<T>, GJError>
+) -> Result<geo_types::GeometryCollection<T>, GJError<P>>
 where
     T: Float,
 {

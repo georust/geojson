@@ -139,18 +139,7 @@ impl<P: Position> TryFrom<GeoJson<P>> for FeatureCollection<P> {
 
 impl<P: Position> GeoJson<P> {
     pub fn from_json_object(object: JsonObject) -> Result<Self, Error<P>> {
-        let type_ = match object.get("type") {
-            Some(json::JsonValue::String(t)) => Type::from_str(t),
-            _ => return Err(Error::ExpectedProperty("type".to_owned())),
-        };
-        let type_ = type_.ok_or(Error::GeoJsonUnknownType)?;
-        match type_ {
-            Type::Feature => Feature::try_from(object).map(GeoJson::Feature),
-            Type::FeatureCollection => {
-                FeatureCollection::try_from(object).map(GeoJson::FeatureCollection)
-            }
-            _ => Geometry::try_from(object).map(GeoJson::Geometry),
-        }
+        Self::try_from(object)
     }
 }
 
