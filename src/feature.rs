@@ -18,8 +18,8 @@ use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, S
 use crate::serde_json::json;
 use crate::{util, Error, Feature, Position};
 
-impl<'a, P: Position> From<&'a Feature<P>> for JsonObject {
-    fn from(feature: &'a Feature<P>) -> JsonObject {
+impl<'a, Pos: Position> From<&'a Feature<Pos>> for JsonObject {
+    fn from(feature: &'a Feature<Pos>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("Feature"));
         map.insert(
@@ -52,12 +52,12 @@ impl<'a, P: Position> From<&'a Feature<P>> for JsonObject {
     }
 }
 
-impl<P: Position> Feature<P> {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<P>> {
+impl<Pos: Position> Feature<Pos> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<Pos>> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<P>> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<Pos>> {
         Self::try_from(value)
     }
 
@@ -111,8 +111,8 @@ impl<P: Position> Feature<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for Feature<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonObject> for Feature<Pos> {
+    type Error = Error<Pos>;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let res = &*util::expect_type(&mut object)?;
@@ -129,8 +129,8 @@ impl<P: Position> TryFrom<JsonObject> for Feature<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonValue> for Feature<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonValue> for Feature<Pos> {
+    type Error = Error<Pos>;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
@@ -141,7 +141,7 @@ impl<P: Position> TryFrom<JsonValue> for Feature<P> {
     }
 }
 
-impl<P: Position> Serialize for Feature<P> {
+impl<Pos: Position> Serialize for Feature<Pos> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

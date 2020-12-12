@@ -82,8 +82,8 @@ pub enum Value<Pos> {
     GeometryCollection(Vec<Geometry<Pos>>),
 }
 
-impl<'a, P: Position> From<&'a Value<P>> for JsonObject {
-    fn from(value: &'a Value<P>) -> JsonObject {
+impl<'a, Pos: Position> From<&'a Value<Pos>> for JsonObject {
+    fn from(value: &'a Value<Pos>) -> JsonObject {
         let mut map = JsonObject::new();
         let ty = String::from(match value {
             Value::Point(..) => "Point",
@@ -108,26 +108,26 @@ impl<'a, P: Position> From<&'a Value<P>> for JsonObject {
     }
 }
 
-impl<P: Position> Value<P> {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<P>> {
+impl<Pos: Position> Value<Pos> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<Pos>> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<P>> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<Pos>> {
         Self::try_from(value)
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for Value<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonObject> for Value<Pos> {
+    type Error = Error<Pos>;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         util::get_value(&mut object)
     }
 }
 
-impl<P: Position> TryFrom<JsonValue> for Value<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonValue> for Value<Pos> {
+    type Error = Error<Pos>;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
@@ -138,7 +138,7 @@ impl<P: Position> TryFrom<JsonValue> for Value<P> {
     }
 }
 
-impl<P: Position> fmt::Display for Value<P> {
+impl<Pos: Position> fmt::Display for Value<Pos> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         ::serde_json::to_string(&JsonObject::from(self))
             .map_err(|_| fmt::Error)
@@ -146,8 +146,8 @@ impl<P: Position> fmt::Display for Value<P> {
     }
 }
 
-impl<'a, P: Position> From<&'a Value<P>> for JsonValue {
-    fn from(value: &'a Value<P>) -> JsonValue {
+impl<'a, Pos: Position> From<&'a Value<Pos>> for JsonValue {
+    fn from(value: &'a Value<Pos>) -> JsonValue {
         match *value {
             Value::Point(ref x) => ::serde_json::to_value(x),
             Value::MultiPoint(ref x) => ::serde_json::to_value(x),
@@ -161,7 +161,7 @@ impl<'a, P: Position> From<&'a Value<P>> for JsonValue {
     }
 }
 
-impl<P: Position> Serialize for Value<P> {
+impl<Pos: Position> Serialize for Value<Pos> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -236,10 +236,10 @@ pub struct Geometry<Pos> {
     pub foreign_members: Option<JsonObject>,
 }
 
-impl<P: Position> Geometry<P> {
+impl<Pos: Position> Geometry<Pos> {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
     /// set to `None`.
-    pub fn new(value: Value<P>) -> Self {
+    pub fn new(value: Value<Pos>) -> Self {
         Geometry {
             bbox: None,
             value,
@@ -248,8 +248,8 @@ impl<P: Position> Geometry<P> {
     }
 }
 
-impl<'a, P: Position> From<&'a Geometry<P>> for JsonObject {
-    fn from(geometry: &'a Geometry<P>) -> JsonObject {
+impl<'a, Pos: Position> From<&'a Geometry<Pos>> for JsonObject {
+    fn from(geometry: &'a Geometry<Pos>) -> JsonObject {
         let mut map = JsonObject::from(&geometry.value);
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
@@ -264,18 +264,18 @@ impl<'a, P: Position> From<&'a Geometry<P>> for JsonObject {
     }
 }
 
-impl<P: Position> Geometry<P> {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<P>> {
+impl<Pos: Position> Geometry<Pos> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error<Pos>> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<P>> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error<Pos>> {
         Self::try_from(value)
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for Geometry<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonObject> for Geometry<Pos> {
+    type Error = Error<Pos>;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
         let bbox = util::get_bbox(&mut object)?;
@@ -289,8 +289,8 @@ impl<P: Position> TryFrom<JsonObject> for Geometry<P> {
     }
 }
 
-impl<P: Position> TryFrom<JsonValue> for Geometry<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonValue> for Geometry<Pos> {
+    type Error = Error<Pos>;
 
     fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
@@ -301,7 +301,7 @@ impl<P: Position> TryFrom<JsonValue> for Geometry<P> {
     }
 }
 
-impl<P: Position> Serialize for Geometry<P> {
+impl<Pos: Position> Serialize for Geometry<Pos> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -323,11 +323,11 @@ impl<'de, Pos: Position> Deserialize<'de> for Geometry<Pos> {
     }
 }
 
-impl<V, P: Position> From<V> for Geometry<P>
+impl<V, Pos: Position> From<V> for Geometry<Pos>
 where
-    V: Into<Value<P>>,
+    V: Into<Value<Pos>>,
 {
-    fn from(v: V) -> Geometry<P> {
+    fn from(v: V) -> Geometry<Pos> {
         Geometry::new(v.into())
     }
 }
@@ -338,10 +338,10 @@ mod tests {
     use crate::json::JsonObject;
     use crate::{GeoJson, Geometry, Position, Value};
 
-    fn encode<P: Position>(geometry: &Geometry<P>) -> String {
+    fn encode<Pos: Position>(geometry: &Geometry<Pos>) -> String {
         serde_json::to_string(&geometry).unwrap()
     }
-    fn decode<P: Position>(json_string: String) -> GeoJson<P> {
+    fn decode<Pos: Position>(json_string: String) -> GeoJson<Pos> {
         json_string.parse().unwrap()
     }
 

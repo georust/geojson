@@ -3,18 +3,16 @@ use crate::geo_types;
 use crate::{geometry, Position};
 
 use crate::Error as GJError;
-use crate::{
-    quick_collection, Feature, FeatureCollection, GeoJson, Geometry,
-};
+use crate::{quick_collection, Feature, FeatureCollection, GeoJson, Geometry};
 use num_traits::Float;
 use std::convert::{TryFrom, TryInto};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::Point<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::Point<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::Point<T>, Self::Error> {
         match self {
@@ -25,11 +23,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::MultiPoint<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::MultiPoint<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::MultiPoint<T>, Self::Error> {
         match self {
@@ -45,11 +43,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::LineString<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::LineString<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::LineString<T>, Self::Error> {
         match self {
@@ -62,11 +60,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::MultiLineString<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::MultiLineString<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::MultiLineString<T>, Self::Error> {
         match self {
@@ -79,11 +77,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::Polygon<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::Polygon<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::Polygon<T>, Self::Error> {
         match self {
@@ -94,11 +92,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::MultiPolygon<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::MultiPolygon<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::MultiPolygon<T>, Self::Error> {
         match self {
@@ -111,11 +109,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::GeometryCollection<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::GeometryCollection<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::GeometryCollection<T>, Self::Error> {
         match self {
@@ -133,11 +131,11 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryInto<geo_types::Geometry<T>> for geometry::Value<P>
+impl<T, Pos: Position> TryInto<geo_types::Geometry<T>> for geometry::Value<Pos>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
     fn try_into(self) -> Result<geo_types::Geometry<T>, Self::Error> {
         match self {
@@ -179,13 +177,13 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T, P: Position> TryFrom<Feature<P>> for geo_types::Geometry<T>
+impl<T, Pos: Position> TryFrom<Feature<Pos>> for geo_types::Geometry<T>
 where
     T: Float,
 {
-    type Error = GJError<P>;
+    type Error = GJError<Pos>;
 
-    fn try_from(val: Feature<P>) -> Result<geo_types::Geometry<T>, Self::Error> {
+    fn try_from(val: Feature<Pos>) -> Result<geo_types::Geometry<T>, Self::Error> {
         match val.geometry {
             None => Err(GJError::FeatureHasNoGeometry(val)),
             Some(geom) => geom.try_into(),
@@ -223,7 +221,7 @@ where
     }
 }
 
-fn create_geo_coordinate<T, P: Position>(point_type: P) -> geo_types::Coordinate<T>
+fn create_geo_coordinate<T, Pos: Position>(point_type: Pos) -> geo_types::Coordinate<T>
 where
     T: Float,
 {
@@ -233,7 +231,7 @@ where
     }
 }
 
-fn create_geo_point<T, P: Position>(point_type: P) -> geo_types::Point<T>
+fn create_geo_point<T, Pos: Position>(point_type: Pos) -> geo_types::Point<T>
 where
     T: Float,
 {
@@ -243,7 +241,7 @@ where
     )
 }
 
-fn create_geo_multi_point<T, P: Position>(multi_point: Vec<P>) -> geo_types::MultiPoint<T>
+fn create_geo_multi_point<T, Pos: Position>(multi_point: Vec<Pos>) -> geo_types::MultiPoint<T>
 where
     T: Float,
 {
@@ -255,7 +253,7 @@ where
     )
 }
 
-fn create_geo_line_string<T, P: Position>(line_type: Vec<P>) -> geo_types::LineString<T>
+fn create_geo_line_string<T, Pos: Position>(line_type: Vec<Pos>) -> geo_types::LineString<T>
 where
     T: Float,
 {
@@ -267,8 +265,8 @@ where
     )
 }
 
-fn create_geo_multi_line_string<T, P: Position>(
-    multi_line_type: Vec<Vec<P>>,
+fn create_geo_multi_line_string<T, Pos: Position>(
+    multi_line_type: Vec<Vec<Pos>>,
 ) -> geo_types::MultiLineString<T>
 where
     T: Float,
@@ -281,7 +279,7 @@ where
     )
 }
 
-fn create_geo_polygon<T, P: Position>(mut polygon_type: Vec<Vec<P>>) -> geo_types::Polygon<T>
+fn create_geo_polygon<T, Pos: Position>(mut polygon_type: Vec<Vec<Pos>>) -> geo_types::Polygon<T>
 where
     T: Float,
 {
@@ -299,8 +297,8 @@ where
     geo_types::Polygon::new(exterior, interiors)
 }
 
-fn create_geo_multi_polygon<T, P: Position>(
-    multi_polygon_type: Vec<Vec<Vec<P>>>,
+fn create_geo_multi_polygon<T, Pos: Position>(
+    multi_polygon_type: Vec<Vec<Vec<Pos>>>,
 ) -> geo_types::MultiPolygon<T>
 where
     T: Float,

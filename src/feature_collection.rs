@@ -59,8 +59,8 @@ pub struct FeatureCollection<Pos> {
     pub foreign_members: Option<JsonObject>,
 }
 
-impl<'a, P: Position> From<&'a FeatureCollection<P>> for JsonObject {
-    fn from(fc: &'a FeatureCollection<P>) -> JsonObject {
+impl<'a, Pos: Position> From<&'a FeatureCollection<Pos>> for JsonObject {
+    fn from(fc: &'a FeatureCollection<Pos>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(String::from("type"), json!("FeatureCollection"));
         map.insert(
@@ -92,10 +92,10 @@ impl<Pos: Position> FeatureCollection<Pos> {
     }
 }
 
-impl<P: Position> TryFrom<JsonObject> for FeatureCollection<P> {
-    type Error = Error<P>;
+impl<Pos: Position> TryFrom<JsonObject> for FeatureCollection<Pos> {
+    type Error = Error<Pos>;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Error<P>> {
+    fn try_from(mut object: JsonObject) -> Result<Self, Error<Pos>> {
         match util::expect_type(&mut object)? {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
@@ -122,7 +122,7 @@ impl<Pos: Position> TryFrom<JsonValue> for FeatureCollection<Pos> {
     }
 }
 
-impl<P: Position> Serialize for FeatureCollection<P> {
+impl<Pos: Position> Serialize for FeatureCollection<Pos> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -131,8 +131,8 @@ impl<P: Position> Serialize for FeatureCollection<P> {
     }
 }
 
-impl<'de, P: Position> Deserialize<'de> for FeatureCollection<P> {
-    fn deserialize<D>(deserializer: D) -> Result<FeatureCollection<P>, D::Error>
+impl<'de, Pos: Position> Deserialize<'de> for FeatureCollection<Pos> {
+    fn deserialize<D>(deserializer: D) -> Result<FeatureCollection<Pos>, D::Error>
     where
         D: Deserializer<'de>,
     {

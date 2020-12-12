@@ -131,7 +131,7 @@
 //! use geojson::{GeoJson, Geometry, Position, Value};
 //!
 //! /// Process top-level GeoJSON items
-//! fn process_geojson<P: Position>(gj: &GeoJson<P>) {
+//! fn process_geojson<Pos: Position>(gj: &GeoJson<Pos>) {
 //!     match *gj {
 //!         GeoJson::FeatureCollection(ref ctn) => {
 //!             for feature in &ctn.features {
@@ -150,7 +150,7 @@
 //! }
 //!
 //! /// Process GeoJSON geometries
-//! fn match_geometry<P: Position>(geom: &Geometry<P>) {
+//! fn match_geometry<Pos: Position>(geom: &Geometry<Pos>) {
 //!     match geom.value {
 //!         Value::Polygon(_) => println!("Matched a Polygon"),
 //!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),

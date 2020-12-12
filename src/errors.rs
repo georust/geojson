@@ -6,7 +6,7 @@ use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
-pub enum Error<P: Position> {
+pub enum Error<Pos: Position> {
     #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
     BboxExpectedArray(Value),
     #[error("Encountered non-numeric value within 'bbox' array")]
@@ -20,11 +20,11 @@ pub enum Error<P: Position> {
     #[error("Expected a Feature mapping, but got a `{0}`")]
     NotAFeature(String),
     #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
-    InvalidGeometryConversion(GValue<P>),
+    InvalidGeometryConversion(GValue<Pos>),
     #[error(
         "Attempted to a convert a feature without a geometry into a geo_types::Geometry: `{0}`"
     )]
-    FeatureHasNoGeometry(Feature<P>),
+    FeatureHasNoGeometry(Feature<Pos>),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     #[error("Encountered malformed JSON: {0}")]
