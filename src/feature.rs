@@ -88,11 +88,10 @@ impl Feature {
         self.properties.as_mut().unwrap().insert(key, value);
     }
 
-    /// Delete a property if it is set, otherwise do nothing.
-    pub fn remove_property(&mut self, key: impl AsRef<str>) {
-        if let Some(props) = self.properties.as_mut() {
-            props.remove(key.as_ref());
-        }
+    /// Removes a key from the `properties` map, returning the value at the key if the key
+    /// was previously in the `properties` map.
+    pub fn remove_property(&mut self, key: impl AsRef<str>) -> Option<JsonValue> {
+        self.properties.as_mut().and_then(|props| props.remove(key.as_ref()))
     }
 
     /// The number of properties
@@ -422,7 +421,7 @@ mod tests {
             vec![(&"foo".to_string(), &json!(12))]
         );
 
-        feature.remove_property("foo");
+        assert_eq!(Some(json!(12)), feature.remove_property("foo"));
         assert_eq!(feature.property("foo"), None);
         assert_eq!(feature.len_properties(), 0);
         assert_eq!(feature.contains_property("foo"), false);
