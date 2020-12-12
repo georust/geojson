@@ -332,11 +332,13 @@ mod conversion;
 #[cfg(feature = "geo-types")]
 pub use conversion::quick_collection;
 
+pub type DefaultPositionImpl = Vec<f64>;
+
 /// Feature Objects
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
-pub struct Feature<Pos> {
+pub struct Feature<Pos: Position = DefaultPositionImpl> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)

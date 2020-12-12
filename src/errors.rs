@@ -6,7 +6,7 @@ use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
-pub enum Error<Pos: Position> {
+pub enum Error<Pos: Position = crate::DefaultPositionImpl> {
     #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
     BboxExpectedArray(Value),
     #[error("Encountered non-numeric value within 'bbox' array")]

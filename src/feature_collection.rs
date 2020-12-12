@@ -47,7 +47,7 @@ use crate::{util, Bbox, Error, Feature, Position};
 /// # }
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct FeatureCollection<Pos> {
+pub struct FeatureCollection<Pos: Position = crate::DefaultPositionImpl> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)

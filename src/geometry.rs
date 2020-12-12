@@ -45,7 +45,7 @@ use crate::{util, Bbox, Position};
 /// # test()
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub enum Value<Pos> {
+pub enum Value<Pos: Position = crate::DefaultPositionImpl> {
     /// Point
     ///
     /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
@@ -224,7 +224,7 @@ impl<Pos: Position> Serialize for Value<Pos> {
 /// );
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct Geometry<Pos> {
+pub struct Geometry<Pos: Position = crate::DefaultPositionImpl> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)

@@ -42,7 +42,7 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq)]
-pub enum GeoJson<Pos> {
+pub enum GeoJson<Pos: Position = crate::DefaultPositionImpl> {
     Geometry(Geometry<Pos>),
     Feature(Feature<Pos>),
     FeatureCollection(FeatureCollection<Pos>),
