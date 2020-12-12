@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::errors::Error;
 use crate::json::{JsonObject, JsonValue};
-use crate::{feature, Bbox, Error, Feature, Geometry, Position};
+use crate::{feature, Bbox, Feature, Geometry, Position, Value};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;
@@ -23,7 +24,7 @@ pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
 pub fn expect_string(value: JsonValue) -> Result<String, Error> {
     match value {
         JsonValue::String(s) => Ok(s),
-        _ => Err(Error::ExpectedStringValue),
+        _ => Err(Error::ExpectedStringValue(value)),
     }
 }
 
@@ -37,7 +38,7 @@ pub fn expect_f64(value: &JsonValue) -> Result<f64, Error> {
 pub fn expect_array(value: &JsonValue) -> Result<&Vec<JsonValue>, Error> {
     match value.as_array() {
         Some(v) => Ok(v),
-        None => Err(Error::ExpectedArrayValue),
+        None => Err(Error::ExpectedArrayValue("None".to_string())),
     }
 }
 
@@ -51,14 +52,22 @@ fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue
 fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>, Error> {
     match value {
         JsonValue::Array(v) => Ok(v),
-        _ => Err(Error::ExpectedArrayValue),
+        _ => match value {
+            // it can never be Array, but that's exhaustive matches for you
+            JsonValue::Array(_) => Err(Error::ExpectedArrayValue("Array".to_string())),
+            JsonValue::Null => Err(Error::ExpectedArrayValue("Null".to_string())),
+            JsonValue::Bool(_) => Err(Error::ExpectedArrayValue("Bool".to_string())),
+            JsonValue::Number(_) => Err(Error::ExpectedArrayValue("Number".to_string())),
+            JsonValue::String(_) => Err(Error::ExpectedArrayValue("String".to_string())),
+            JsonValue::Object(_) => Err(Error::ExpectedArrayValue("Object".to_string())),
+        },
     }
 }
 
 fn expect_owned_object(value: JsonValue) -> Result<JsonObject, Error> {
     match value {
         JsonValue::Object(o) => Ok(o),
-        _ => Err(Error::ExpectedObjectValue),
+        _ => Err(Error::ExpectedObjectValue(value)),
     }
 }
 
@@ -74,11 +83,11 @@ pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>, Error> {
     };
     let bbox_array = match bbox_json {
         JsonValue::Array(a) => a,
-        _ => return Err(Error::BboxExpectedArray),
+        _ => return Err(Error::BboxExpectedArray(bbox_json)),
     };
     let bbox = bbox_array
         .into_iter()
-        .map(|i| i.as_f64().ok_or(Error::BboxExpectedNumericValues))
+        .map(|i| i.as_f64().ok_or(Error::BboxExpectedNumericValues(i)))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(Some(bbox))
 }
@@ -98,7 +107,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Err
     match properties {
         JsonValue::Object(x) => Ok(Some(x)),
         JsonValue::Null => Ok(None),
-        _ => Err(Error::PropertiesExpectedObjectOrNull),
+        _ => Err(Error::PropertiesExpectedObjectOrNull(properties)),
     }
 }
 
@@ -152,8 +161,23 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>, Error> {
     match object.remove("id") {
         Some(JsonValue::Number(x)) => Ok(Some(feature::Id::Number(x))),
         Some(JsonValue::String(s)) => Ok(Some(feature::Id::String(s))),
-        Some(_) => Err(Error::FeatureInvalidIdentifierType),
+        Some(v) => Err(Error::FeatureInvalidIdentifierType(v)),
         None => Ok(None),
+    }
+}
+
+/// Used by Geometry, Value
+pub fn get_value(object: &mut JsonObject) -> Result<Value, Error> {
+    let res = &*expect_type(object)?;
+    match res {
+        "Point" => Ok(Value::Point(get_coords_one_pos(object)?)),
+        "MultiPoint" => Ok(Value::MultiPoint(get_coords_1d_pos(object)?)),
+        "LineString" => Ok(Value::LineString(get_coords_1d_pos(object)?)),
+        "MultiLineString" => Ok(Value::MultiLineString(get_coords_2d_pos(object)?)),
+        "Polygon" => Ok(Value::Polygon(get_coords_2d_pos(object)?)),
+        "MultiPolygon" => Ok(Value::MultiPolygon(get_coords_3d_pos(object)?)),
+        "GeometryCollection" => Ok(Value::GeometryCollection(get_geometries(object)?)),
+        _ => Err(Error::GeometryUnknownType(res.to_string())),
     }
 }
 
@@ -166,7 +190,7 @@ pub fn get_geometry<P: Position>(object: &mut JsonObject) -> Result<Option<Geome
             Ok(Some(geometry_object))
         }
         JsonValue::Null => Ok(None),
-        _ => Err(Error::FeatureInvalidGeometryValue),
+        _ => Err(Error::FeatureInvalidGeometryValue(geometry)),
     }
 }
 

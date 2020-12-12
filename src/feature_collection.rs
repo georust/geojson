@@ -14,6 +14,7 @@
 
 use std::convert::TryFrom;
 
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Bbox, Error, Feature, Position};
@@ -117,7 +118,7 @@ impl<Pos: Position> TryFrom<JsonValue> for FeatureCollection<Pos> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }

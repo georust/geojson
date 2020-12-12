@@ -12,25 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::convert::TryFrom;
+use std::{convert::TryFrom, fmt};
 
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde;
-use crate::{util, Bbox, Error, Position};
+use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 
 /// The underlying value for a `Geometry`.
 ///
 /// # Conversion from `geo_types`
 ///
-/// `From` is implemented for `Value` for converting from `geo_types` geospatial
-/// types:
+/// A `Value` can be created by using the `From` impl which is available for both `geo_types`
+/// primitives AND `geo_types::Geometry` enum members:
 ///
 /// ```rust
 /// # #[cfg(feature = "geo-types")]
 /// # fn test() {
 /// let point = geo_types::Point::new(2., 9.);
+/// let genum = geo_types::Geometry::from(point);
 /// assert_eq!(
 ///     geojson::Value::from(&point),
+///     geojson::Value::Point(vec![2., 9.]),
+/// );
+/// assert_eq!(
+///     geojson::Value::from(&genum),
 ///     geojson::Value::Point(vec![2., 9.]),
 /// );
 /// # }
@@ -76,6 +82,70 @@ pub enum Value<Pos> {
     GeometryCollection(Vec<Geometry<Pos>>),
 }
 
+impl<'a> From<&'a Value> for JsonObject {
+    fn from(value: &'a Value) -> JsonObject {
+        let mut map = JsonObject::new();
+        let ty = String::from(match value {
+            Value::Point(..) => "Point",
+            Value::MultiPoint(..) => "MultiPoint",
+            Value::LineString(..) => "LineString",
+            Value::MultiLineString(..) => "MultiLineString",
+            Value::Polygon(..) => "Polygon",
+            Value::MultiPolygon(..) => "MultiPolygon",
+            Value::GeometryCollection(..) => "GeometryCollection",
+        });
+
+        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
+
+        map.insert(
+            String::from(match value {
+                Value::GeometryCollection(..) => "geometries",
+                _ => "coordinates",
+            }),
+            ::serde_json::to_value(&value).unwrap(),
+        );
+        map
+    }
+}
+
+impl Value {
+    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+        Self::try_from(object)
+    }
+
+    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+        Self::try_from(value)
+    }
+}
+
+impl TryFrom<JsonObject> for Value {
+    type Error = Error;
+
+    fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
+        util::get_value(&mut object)
+    }
+}
+
+impl TryFrom<JsonValue> for Value {
+    type Error = Error;
+
+    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+        if let JsonValue::Object(obj) = value {
+            Self::try_from(obj)
+        } else {
+            Err(Error::GeoJsonExpectedObject(value))
+        }
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        ::serde_json::to_string(&JsonObject::from(self))
+            .map_err(|_| fmt::Error)
+            .and_then(|s| f.write_str(&s))
+    }
+}
+
 impl<'a, P: Position> From<&'a Value<P>> for JsonValue {
     fn from(value: &'a Value<P>) -> JsonValue {
         match *value {
@@ -111,9 +181,13 @@ impl<P: Position> Serialize for Value<P> {
 /// ```
 /// use geojson::{Geometry, Value};
 ///
-/// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
-/// );
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
+/// ```
+///
+/// Geometries can be created from `Value`s.
+/// ```
+/// # use geojson::{Geometry, Value};
+/// let geometry1: Geometry = Value::Point(vec![7.428959, 1.513394]).into();
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
@@ -122,9 +196,7 @@ impl<P: Position> Serialize for Value<P> {
 /// use geojson::{GeoJson, Geometry, Value};
 /// use serde_json;
 ///
-/// let geometry = Geometry::new(
-///     Value::Point(vec![7.428959, 1.513394]),
-/// );
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
 ///
 /// let geojson_string = geometry.to_string();
 ///
@@ -147,9 +219,7 @@ impl<P: Position> Serialize for Value<P> {
 /// };
 ///
 /// assert_eq!(
-///     Geometry::new(
-///         Value::Point((7.428959, 1.513394)),
-///     ),
+///     Geometry::new(Value::Point(vec![7.428959, 1.513394]),),
 ///     geometry,
 /// );
 /// ```
@@ -178,32 +248,13 @@ impl<P: Position> Geometry<P> {
     }
 }
 
-impl<'a, P: Position> From<&'a Geometry<P>> for JsonObject {
-    fn from(geometry: &'a Geometry<P>) -> JsonObject {
-        let mut map = JsonObject::new();
+impl<'a> From<&'a Geometry> for JsonObject {
+    fn from(geometry: &'a Geometry) -> JsonObject {
+        let mut map = JsonObject::from(&geometry.value);
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
         }
 
-        let ty = String::from(match geometry.value {
-            Value::Point(..) => "Point",
-            Value::MultiPoint(..) => "MultiPoint",
-            Value::LineString(..) => "LineString",
-            Value::MultiLineString(..) => "MultiLineString",
-            Value::Polygon(..) => "Polygon",
-            Value::MultiPolygon(..) => "MultiPolygon",
-            Value::GeometryCollection(..) => "GeometryCollection",
-        });
-
-        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
-
-        map.insert(
-            String::from(match geometry.value {
-                Value::GeometryCollection(..) => "geometries",
-                _ => "coordinates",
-            }),
-            ::serde_json::to_value(&geometry.value).unwrap(),
-        );
         if let Some(ref foreign_members) = geometry.foreign_members {
             for (key, value) in foreign_members {
                 map.insert(key.to_owned(), value.to_owned());
@@ -227,17 +278,8 @@ impl<P: Position> TryFrom<JsonObject> for Geometry<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
-        let value: Value<P> = match &*util::expect_type(&mut object)? {
-            "Point" => Value::Point(util::get_coords_one_pos(&mut object)?),
-            "MultiPoint" => Value::MultiPoint(util::get_coords_1d_pos(&mut object)?),
-            "LineString" => Value::LineString(util::get_coords_1d_pos(&mut object)?),
-            "MultiLineString" => Value::MultiLineString(util::get_coords_2d_pos(&mut object)?),
-            "Polygon" => Value::Polygon(util::get_coords_2d_pos(&mut object)?),
-            "MultiPolygon" => Value::MultiPolygon(util::get_coords_3d_pos(&mut object)?),
-            "GeometryCollection" => Value::GeometryCollection(util::get_geometries(&mut object)?),
-            _ => return Err(Error::GeometryUnknownType),
-        };
         let bbox = util::get_bbox(&mut object)?;
+        let value = util::get_value(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
         Ok(Geometry {
             bbox,
@@ -254,7 +296,7 @@ impl<P: Position> TryFrom<JsonValue> for Geometry<P> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }
@@ -278,6 +320,15 @@ impl<'de, Pos: Position> Deserialize<'de> for Geometry<Pos> {
         let val = JsonObject::deserialize(deserializer)?;
 
         Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+    }
+}
+
+impl<V> From<V> for Geometry
+where
+    V: Into<Value>,
+{
+    fn from(v: V) -> Geometry {
+        Geometry::new(v.into())
     }
 }
 
@@ -346,6 +397,15 @@ mod tests {
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             geometry.to_string()
+        );
+    }
+
+    #[test]
+    fn test_value_display() {
+        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        assert_eq!(
+            "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
+            v.to_string()
         );
     }
 

@@ -81,13 +81,10 @@
 //! ```
 //! use serde_json;
 //!
-//! use serde_json::{Map, to_value};
+//! use serde_json::{to_value, Map};
 //!
 //! let mut properties = Map::new();
-//! properties.insert(
-//!     String::from("name"),
-//!     to_value("Firestone Grill").unwrap(),
-//! );
+//! properties.insert(String::from("name"), to_value("Firestone Grill").unwrap());
 //! ```
 //!
 //! `GeoJson` can then be serialized by calling `to_string`:
@@ -105,16 +102,14 @@
 //! # fn main() {
 //! # let properties = properties();
 //!
-//! let geometry = Geometry::new(
-//!     Value::Point(vec![-120.66029,35.2812])
-//! );
+//! let geometry = Geometry::new(Value::Point(vec![-120.66029, 35.2812]));
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
 //!     geometry: Some(geometry),
 //!     id: None,
 //!     properties: Some(properties),
-//!     foreign_members: None
+//!     foreign_members: None,
 //! });
 //!
 //! let geojson_string = geojson.to_string();
@@ -138,11 +133,13 @@
 //! /// Process top-level GeoJSON items
 //! fn process_geojson<P: Position>(gj: &GeoJson<P>) {
 //!     match *gj {
-//!         GeoJson::FeatureCollection(ref ctn) => for feature in &ctn.features {
-//!             if let Some(ref geom) = feature.geometry {
-//!                 match_geometry(geom)
+//!         GeoJson::FeatureCollection(ref ctn) => {
+//!             for feature in &ctn.features {
+//!                 if let Some(ref geom) = feature.geometry {
+//!                     match_geometry(geom)
+//!                 }
 //!             }
-//!         },
+//!         }
 //!         GeoJson::Feature(ref feature) => {
 //!             if let Some(ref geom) = feature.geometry {
 //!                 match_geometry(geom)
@@ -229,7 +226,7 @@
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
-//! use geojson::{GeoJson, quick_collection};
+//! use geojson::{quick_collection, GeoJson};
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
 //! # #[cfg(feature = "geo-types")]
@@ -257,6 +254,36 @@
 //! # #[cfg(feature = "geo-types")]
 //! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 //! ```
+//!
+//! A `Geojson` may be converted to a `geo_types::Geometry<f64>` like so:
+//!
+//! ```
+//! # #[cfg(feature = "geo-types")]
+//! use geojson::GeoJson;
+//! # #[cfg(feature = "geo-types")]
+//! use geo_types::Geometry;
+//! use std::convert::TryInto;
+//! use std::str::FromStr;
+//! # #[cfg(feature = "geo-types")]
+//! let geojson_str = r#"
+//! {
+//!  "type": "Feature",
+//!  "properties": {},
+//!  "geometry": {
+//!    "type": "Point",
+//!    "coordinates": [
+//!      -0.13583511114120483,
+//!      51.5218870403801
+//!    ]
+//!  }
+//! }
+//! "#;
+//! # #[cfg(feature = "geo-types")]
+//! let geojson = GeoJson::from_str(geojson_str).unwrap();
+//! // Turn the GeoJSON string into a geo_types Geometry
+//! # #[cfg(feature = "geo-types")]
+//! let geom: geo_types::Geometry<f64> = geojson.try_into().unwrap();
+//! ```
 //! ### Caveats
 //! - Round-tripping with intermediate processing using the `geo` types may not produce identical output,
 //! as e.g. outer `Polygon` rings are automatically closed.
@@ -267,6 +294,9 @@
 //! implementations which may be useful if you wish to perform this kind of processing yourself and require
 //! more granular control over performance and / or memory allocation.
 
+// only enables the `doc_cfg` feature when
+// the `docsrs` configuration attribute is defined
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #[cfg(feature = "geo-types")]
 use geo_types;
 use serde;
@@ -292,6 +322,9 @@ pub mod feature;
 
 mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
+
+pub mod errors;
+pub use crate::errors::Error;
 
 #[cfg(feature = "geo-types")]
 mod conversion;
@@ -324,131 +357,6 @@ pub struct Feature<Pos> {
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<json::JsonObject>,
-}
-
-/// Error when reading a GeoJSON object from a str or Object
-#[derive(Debug, PartialEq, Eq)]
-pub enum Error {
-    BboxExpectedArray,
-    BboxExpectedNumericValues,
-    GeoJsonExpectedObject,
-    GeoJsonUnknownType,
-    GeometryUnknownType,
-    MalformedJson,
-    PropertiesExpectedObjectOrNull,
-    FeatureInvalidGeometryValue,
-    FeatureInvalidIdentifierType,
-    ExpectedType { expected: String, actual: String },
-
-    // FIXME: make these types more specific
-    ExpectedStringValue,
-    ExpectedProperty(String),
-    ExpectedF64Value,
-    ExpectedArrayValue,
-    ExpectedObjectValue,
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match *self {
-            Error::BboxExpectedArray =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered non-array type for a 'bbox' object.")
-            }
-            Error::BboxExpectedNumericValues =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered non-numeric value within 'bbox' array.")
-            }
-            Error::GeoJsonExpectedObject =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered non-object type for GeoJSON.")
-            }
-            Error::GeoJsonUnknownType =>
-            // FIXME: inform what type we actually found
-            {
-                write!(f, "Encountered unknown GeoJSON object type.")
-            }
-            Error::GeometryUnknownType => write!(f, "Encountered unknown 'geometry' object type."),
-            Error::MalformedJson =>
-            // FIXME: can we report specific serialization error?
-            {
-                write!(f, "Encountered malformed JSON.")
-            }
-            Error::PropertiesExpectedObjectOrNull =>
-            // FIXME: inform what type we actually found
-            {
-                write!(
-                    f,
-                    "Encountered neither object type nor null type for \
-                     'properties' object."
-                )
-            }
-            Error::FeatureInvalidGeometryValue =>
-            // FIXME: inform what type we actually found
-            {
-                write!(
-                    f,
-                    "Encountered neither object type nor null type for \
-                     'geometry' field on 'feature' object."
-                )
-            }
-            Error::FeatureInvalidIdentifierType =>
-            // FIXME: inform what type we actually found
-            {
-                write!(
-                    f,
-                    "Encountered neither number type nor string type for \
-                     'id' field on 'feature' object."
-                )
-            }
-            Error::ExpectedType {
-                ref expected,
-                ref actual,
-            } => write!(
-                f,
-                "Expected GeoJSON type '{}', found '{}'",
-                expected, actual,
-            ),
-            Error::ExpectedStringValue => write!(f, "Expected a string value."),
-            Error::ExpectedProperty(ref prop_name) => {
-                write!(f, "Expected GeoJSON property '{}'.", prop_name)
-            }
-            Error::ExpectedF64Value => write!(f, "Expected a floating-point value."),
-            Error::ExpectedArrayValue => write!(f, "Expected an array."),
-            Error::ExpectedObjectValue => write!(f, "Expected an object."),
-        }
-    }
-}
-
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::BboxExpectedArray => "non-array 'bbox' type",
-            Error::BboxExpectedNumericValues => "non-numeric 'bbox' array",
-            Error::GeoJsonExpectedObject => "non-object GeoJSON type",
-            Error::GeoJsonUnknownType => "unknown GeoJSON object type",
-            Error::GeometryUnknownType => "unknown 'geometry' object type",
-            Error::MalformedJson => "malformed JSON",
-            Error::PropertiesExpectedObjectOrNull => {
-                "neither object type nor null type for properties' object."
-            }
-            Error::FeatureInvalidGeometryValue => {
-                "neither object type nor null type for 'geometry' field on 'feature' object."
-            }
-            Error::FeatureInvalidIdentifierType => {
-                "neither number type nor string type for 'id' field on 'feature' object."
-            }
-            Error::ExpectedType { .. } => "mismatched GeoJSON type",
-            Error::ExpectedStringValue => "expected a string value",
-            Error::ExpectedProperty(..) => "expected a GeoJSON property",
-            Error::ExpectedF64Value => "expected a floating-point value",
-            Error::ExpectedArrayValue => "expected an array",
-            Error::ExpectedObjectValue => "expected an object",
-        }
-    }
 }
 
 mod json {

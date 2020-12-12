@@ -1,5 +1,17 @@
 # Changes
 
+## 0.21.0
+
+* `Display` implementation of `geojson::Value` prints` the GeoJSON string
+  * <https://github.com/georust/geojson/issues/149>
+
+## 0.20.0
+* Switch to thiserror
+* Add more granular errors
+  * `GeoJsonUnknownType` has been split into `NotAFeature` and `EmptyType`
+* Add additional Value context to errors where possible
+* Add conversions from Geo-Types Line, Triangle, Rect and GeometryCollection
+
 ## 0.19.0
 
 * Update `geo-types` to 0.6.0

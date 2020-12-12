@@ -14,6 +14,7 @@
 
 use std::convert::TryFrom;
 
+use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
 use crate::{util, Error, Feature, Position};
@@ -60,13 +61,63 @@ impl<P: Position> Feature<P> {
     pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
         Self::try_from(value)
     }
+
+    /// Return the value of this property, if it's set
+    pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
+        self.properties
+            .as_ref()
+            .and_then(|props| props.get(key.as_ref()))
+    }
+
+    /// Return true iff this key is set
+    pub fn contains_property(&self, key: impl AsRef<str>) -> bool {
+        match &self.properties {
+            None => false,
+            Some(props) => props.contains_key(key.as_ref()),
+        }
+    }
+
+    /// Set a property to this value, overwriting any possible older value
+    pub fn set_property(&mut self, key: impl Into<String>, value: impl Into<JsonValue>) {
+        let key: String = key.into();
+        let value: JsonValue = value.into();
+        if self.properties.is_none() {
+            self.properties = Some(JsonObject::new());
+        }
+
+        self.properties.as_mut().unwrap().insert(key, value);
+    }
+
+    /// Delete a property if it is set, otherwise do nothing.
+    pub fn remove_property(&mut self, key: impl AsRef<str>) {
+        if let Some(props) = self.properties.as_mut() {
+            props.remove(key.as_ref());
+        }
+    }
+
+    /// The number of properties
+    pub fn len_properties(&self) -> usize {
+        match &self.properties {
+            None => 0,
+            Some(props) => props.len(),
+        }
+    }
+
+    /// Returns an iterator over all the properties
+    pub fn properties_iter(&self) -> Box<dyn ExactSizeIterator<Item = (&String, &JsonValue)> + '_> {
+        match self.properties.as_ref() {
+            None => Box::new(std::iter::empty()),
+            Some(props) => Box::new(props.iter()),
+        }
+    }
 }
 
 impl<P: Position> TryFrom<JsonObject> for Feature<P> {
     type Error = Error;
 
     fn try_from(mut object: JsonObject) -> Result<Self, Error> {
-        match &*util::expect_type(&mut object)? {
+        let res = &*util::expect_type(&mut object)?;
+        match res {
             "Feature" => Ok(Feature {
                 geometry: util::get_geometry(&mut object)?,
                 properties: util::get_properties(&mut object)?,
@@ -74,7 +125,7 @@ impl<P: Position> TryFrom<JsonObject> for Feature<P> {
                 bbox: util::get_bbox(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
             }),
-            _ => Err(Error::GeoJsonUnknownType),
+            _ => Err(Error::NotAFeature(res.to_string())),
         }
     }
 }
@@ -82,11 +133,11 @@ impl<P: Position> TryFrom<JsonObject> for Feature<P> {
 impl<P: Position> TryFrom<JsonValue> for Feature<P> {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Error> {
+    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject)
+            Err(Error::GeoJsonExpectedObject(value))
         }
     }
 }
@@ -239,7 +290,7 @@ mod tests {
     fn feature_json_invalid_geometry() {
         let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
         match geojson_str.parse::<GeoJson<(f64, f64)>>().unwrap_err() {
-            Error::FeatureInvalidGeometryValue => (),
+            Error::FeatureInvalidGeometryValue(_) => (),
             _ => unreachable!(),
         }
     }
@@ -299,19 +350,24 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        assert_eq!(
-            feature_json_str.parse::<GeoJson<(f64, f64)>>(),
-            Err(Error::FeatureInvalidIdentifierType),
-        )
+        let result = match feature_json_str.parse::<GeoJson<(f64, f64)>>() {
+            Err(Error::FeatureInvalidIdentifierType(_)) => true,
+            Ok(_) => false,
+            _ => false,
+        };
+        assert_eq!(result, true,)
     }
 
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        assert_eq!(
-            feature_json_str.parse::<GeoJson<(f64, f64)>>(),
-            Err(Error::FeatureInvalidIdentifierType),
-        )
+        let result = match feature_json_str.parse::<GeoJson<(f64, f64)>>() {
+            Err(Error::FeatureInvalidIdentifierType(_)) => true,
+            Ok(_) => false,
+            _ => false,
+        };
+        assert_eq!(result, true,)
+>>>>>>> origin/master
     }
 
     #[test]
@@ -345,5 +401,32 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn feature_ergonomic_property_access() {
+        use serde_json::json;
+
+        let mut feature = feature();
+
+        assert_eq!(feature.len_properties(), 0);
+        assert_eq!(feature.property("foo"), None);
+        assert_eq!(feature.contains_property("foo"), false);
+        assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
+
+        feature.set_property("foo", 12);
+        assert_eq!(feature.property("foo"), Some(&json!(12)));
+        assert_eq!(feature.len_properties(), 1);
+        assert_eq!(feature.contains_property("foo"), true);
+        assert_eq!(
+            feature.properties_iter().collect::<Vec<_>>(),
+            vec![(&"foo".to_string(), &json!(12))]
+        );
+
+        feature.remove_property("foo");
+        assert_eq!(feature.property("foo"), None);
+        assert_eq!(feature.len_properties(), 0);
+        assert_eq!(feature.contains_property("foo"), false);
+        assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
     }
 }
