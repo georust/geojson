@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::geo_types;
+use crate::geo_types::{self, CoordFloat};
 use crate::geo_types::{
     Geometry as GtGeometry, GeometryCollection, LineString as GtLineString,
     MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
@@ -24,7 +24,6 @@ use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;
 use crate::Value;
-use num_traits::Float;
 use std::convert::TryInto;
 
 #[cfg(test)]
@@ -76,7 +75,7 @@ pub(crate) mod to_geo_types;
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
 fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
-    T: Float,
+    T: CoordFloat,
 {
     match &*gj {
         FeatureCollection(collection) => Ok(GeometryCollection(
@@ -102,7 +101,7 @@ where
 // Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
 fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
 where
-    T: Float,
+    T: CoordFloat,
 {
     match &geometry.value {
         Value::Point(_) => Ok(TryInto::<GtPoint<_>>::try_into(geometry.value.clone())?.into()),
@@ -166,7 +165,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
-    T: Float,
+    T: CoordFloat,
 {
     process_geojson(gj)
 }

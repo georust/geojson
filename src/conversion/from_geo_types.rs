@@ -1,15 +1,14 @@
-use crate::geo_types;
+use crate::geo_types::{self, CoordFloat};
 
 use crate::geometry;
 
 use crate::{LineStringType, PointType, PolygonType};
-use num_traits::Float;
 use std::convert::From;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(point: &geo_types::Point<T>) -> Self {
         let coords = create_point_type(point);
@@ -21,7 +20,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiPoint<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(multi_point: &geo_types::MultiPoint<T>) -> Self {
         let coords = multi_point
@@ -37,7 +36,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::LineString<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(line_string: &geo_types::LineString<T>) -> Self {
         let coords = create_line_string_type(line_string);
@@ -49,7 +48,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Line<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(line: &geo_types::Line<T>) -> Self {
         let coords = create_from_line_type(line);
@@ -61,7 +60,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Triangle<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(triangle: &geo_types::Triangle<T>) -> Self {
         let coords = create_from_triangle_type(triangle);
@@ -73,7 +72,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Rect<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(rect: &geo_types::Rect<T>) -> Self {
         let coords = create_from_rect_type(rect);
@@ -85,7 +84,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(multi_line_string: &geo_types::MultiLineString<T>) -> Self {
         let coords = create_multi_line_string_type(multi_line_string);
@@ -97,7 +96,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Polygon<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(polygon: &geo_types::Polygon<T>) -> Self {
         let coords = create_polygon_type(polygon);
@@ -109,7 +108,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::MultiPolygon<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(multi_polygon: &geo_types::MultiPolygon<T>) -> Self {
         let coords = create_multi_polygon_type(multi_polygon);
@@ -121,7 +120,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     fn from(geometry_collection: &geo_types::GeometryCollection<T>) -> Self {
         let values = geometry_collection
@@ -137,7 +136,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
 where
-    T: Float,
+    T: CoordFloat,
 {
     /// Convert from `geo_types::Geometry` enums
     fn from(geometry: &'a geo_types::Geometry<T>) -> Self {
@@ -162,7 +161,7 @@ where
 
 fn create_point_type<T>(point: &geo_types::Point<T>) -> PointType
 where
-    T: Float,
+    T: CoordFloat,
 {
     let x: f64 = point.x().to_f64().unwrap();
     let y: f64 = point.y().to_f64().unwrap();
@@ -172,7 +171,7 @@ where
 
 fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType
 where
-    T: Float,
+    T: CoordFloat,
 {
     line_string
         .points_iter()
@@ -182,7 +181,7 @@ where
 
 fn create_from_line_type<T>(line_string: &geo_types::Line<T>) -> LineStringType
 where
-    T: Float,
+    T: CoordFloat,
 {
     vec![
         create_point_type(&line_string.start_point()),
@@ -192,14 +191,14 @@ where
 
 fn create_from_triangle_type<T>(triangle: &geo_types::Triangle<T>) -> PolygonType
 where
-    T: Float,
+    T: CoordFloat,
 {
     create_polygon_type(&triangle.to_polygon())
 }
 
 fn create_from_rect_type<T>(rect: &geo_types::Rect<T>) -> PolygonType
 where
-    T: Float,
+    T: CoordFloat,
 {
     create_polygon_type(&rect.to_polygon())
 }
@@ -208,7 +207,7 @@ fn create_multi_line_string_type<T>(
     multi_line_string: &geo_types::MultiLineString<T>,
 ) -> Vec<LineStringType>
 where
-    T: Float,
+    T: CoordFloat,
 {
     multi_line_string
         .0
@@ -219,7 +218,7 @@ where
 
 fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
 where
-    T: Float,
+    T: CoordFloat,
 {
     let mut coords = vec![polygon
         .exterior()
@@ -239,7 +238,7 @@ where
 
 fn create_multi_polygon_type<T>(multi_polygon: &geo_types::MultiPolygon<T>) -> Vec<PolygonType>
 where
-    T: Float,
+    T: CoordFloat,
 {
     multi_polygon
         .0
