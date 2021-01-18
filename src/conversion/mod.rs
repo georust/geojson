@@ -76,7 +76,7 @@ pub(crate) mod to_geo_types;
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
 fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     match &*gj {
         FeatureCollection(collection) => Ok(GeometryCollection(
@@ -102,7 +102,7 @@ where
 // Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
 fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     match &geometry.value {
         Value::Point(_) => Ok(TryInto::<GtPoint<_>>::try_into(geometry.value.clone())?.into()),
@@ -166,7 +166,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     process_geojson(gj)
 }

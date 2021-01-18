@@ -13,7 +13,7 @@ use std::convert::{TryFrom, TryInto};
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::Point<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -28,7 +28,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::MultiPoint<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -48,7 +48,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::LineString<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -65,7 +65,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::MultiLineString<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -82,7 +82,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::Polygon<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -97,7 +97,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::MultiPolygon<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -114,7 +114,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::GeometryCollection<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -136,7 +136,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<geometry::Value> for geo_types::Geometry<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -175,7 +175,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<Geometry> for geo_types::Geometry<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -187,7 +187,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<Feature> for geo_types::Geometry<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -202,7 +202,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<FeatureCollection> for geo_types::Geometry<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -216,7 +216,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<GeoJson> for geo_types::Geometry<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     type Error = GJError;
 
@@ -231,7 +231,7 @@ where
 
 fn create_geo_coordinate<T>(point_type: &PointType) -> geo_types::Coordinate<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     geo_types::Coordinate {
         x: T::from(point_type[0]).unwrap(),
@@ -241,7 +241,7 @@ where
 
 fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     geo_types::Point::new(
         T::from(point_type[0]).unwrap(),
@@ -251,7 +251,7 @@ where
 
 fn create_geo_line_string<T>(line_type: &LineStringType) -> geo_types::LineString<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     geo_types::LineString(
         line_type
@@ -265,7 +265,7 @@ fn create_geo_multi_line_string<T>(
     multi_line_type: &[LineStringType],
 ) -> geo_types::MultiLineString<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     geo_types::MultiLineString(
         multi_line_type
@@ -277,7 +277,7 @@ where
 
 fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     let exterior = polygon_type
         .get(0)
@@ -298,7 +298,7 @@ where
 
 fn create_geo_multi_polygon<T>(multi_polygon_type: &[PolygonType]) -> geo_types::MultiPolygon<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     geo_types::MultiPolygon(
         multi_polygon_type
