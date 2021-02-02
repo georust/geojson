@@ -1,5 +1,9 @@
 # Changes
 
+## 0.22.0
+
+* Update `geo-types` to 0.7.0
+
 ## 0.21.0
 
 * `Display` implementation of `geojson::Value` prints` the GeoJSON string
