@@ -40,6 +40,9 @@
 //! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
 //! See [here](#conversion-to-geo-objects) for details.
 //!
+//! Conversely, if you wish to produce a `FeatureCollection` from a collection of `geo` types, a `From` impl is
+//! provided for `&geo_types::GeometryCollection`.
+//!
 //! This crate uses `serde` for serialization.
 //! To get started, add `geojson` to your `Cargo.toml`:
 //!
