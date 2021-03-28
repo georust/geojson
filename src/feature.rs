@@ -17,7 +17,31 @@ use std::convert::TryFrom;
 use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::serde_json::json;
-use crate::{util, Feature};
+use crate::{util, Feature, Geometry, Value};
+
+impl From<Geometry> for Feature {
+    fn from(geom: Geometry) -> Feature {
+        Feature {
+            bbox: geom.bbox.clone(),
+            foreign_members: geom.foreign_members.clone(),
+            geometry: Some(geom),
+            id: None,
+            properties: None,
+        }
+    }
+}
+
+impl From<Value> for Feature {
+    fn from(val: Value) -> Feature {
+        Feature {
+            bbox: None,
+            foreign_members: None,
+            geometry: Some(Geometry::from(val)),
+            id: None,
+            properties: None,
+        }
+    }
+}
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
@@ -91,7 +115,9 @@ impl Feature {
     /// Removes a key from the `properties` map, returning the value at the key if the key
     /// was previously in the `properties` map.
     pub fn remove_property(&mut self, key: impl AsRef<str>) -> Option<JsonValue> {
-        self.properties.as_mut().and_then(|props| props.remove(key.as_ref()))
+        self.properties
+            .as_mut()
+            .and_then(|props| props.remove(key.as_ref()))
     }
 
     /// The number of properties
@@ -200,7 +226,7 @@ mod tests {
     fn feature() -> Feature {
         crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: value(),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -209,6 +235,14 @@ mod tests {
             id: None,
             foreign_members: None,
         }
+    }
+
+    fn value() -> Value {
+        Value::Point(vec![1.1, 2.1])
+    }
+
+    fn geometry() -> Geometry {
+        Geometry::new(value())
     }
 
     fn encode(feature: &Feature) -> String {
@@ -244,7 +278,7 @@ mod tests {
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [102.0, 0.5]
+                "coordinates": [1.1, 2.1]
             },
             "properties": null,
         });
@@ -255,7 +289,7 @@ mod tests {
             feature,
             Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
+                geometry: Some(geometry()),
                 id: None,
                 properties: None,
                 foreign_members: None,

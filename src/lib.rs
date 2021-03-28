@@ -27,6 +27,8 @@
 //!
 //! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects.
 //! A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object, which may be empty.
+//! Since the most common uses cases for GeoJSON involve the use of `Feature` and `FeatureCollection` objects,
+//! conversions to `Feature` are provided for both `Value` enum members and Geometry objects via the `From` trait.
 //! A potentially complicating factor is the `GeometryCollection` geometry type, which can contain
 //! one more `Geometry` objects, _including nested `GeometryCollection` objects_.
 //! The use of `GeometryCollection` is discouraged, however.
