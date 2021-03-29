@@ -40,8 +40,30 @@
 //! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
 //! See [here](#conversion-to-geo-objects) for details.
 //!
-//! Conversely, if you wish to produce a `FeatureCollection` from a collection of `geo` types, a `From` impl is
-//! provided for `&geo_types::GeometryCollection`.
+//! Conversely, if you wish to produce a `FeatureCollection` from a homogenous collection of `geo` types, a `From` impl is
+//! provided for `geo_types::GeometryCollection`:
+//!
+//! ```rust
+//! # #[cfg(feature = "geo-types")]
+//! use geo::{polygon, GeometryCollection};
+//! # #[cfg(feature = "geo-types")]
+//! use std::iter::FromIterator;
+//! 
+//! # #[cfg(feature = "geo-types")]
+//! let poly = polygon![
+//!     (x: -111., y: 45.),
+//!     (x: -111., y: 41.),
+//!     (x: -104., y: 41.),
+//!     (x: -104., y: 45.),
+//! ];
+//! 
+//! # #[cfg(feature = "geo-types")]
+//! let polys = vec![poly];
+//! # #[cfg(feature = "geo-types")]
+//! let gc = GeometryCollection::from_iter(polys);
+//! # #[cfg(feature = "geo-types")]
+//! let fc = FeatureCollection::from(polys)
+//! ```
 //!
 //! This crate uses `serde` for serialization.
 //! To get started, add `geojson` to your `Cargo.toml`:
