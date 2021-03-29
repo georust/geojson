@@ -62,7 +62,7 @@
 //! # #[cfg(feature = "geo-types")]
 //! let gc = GeometryCollection::from_iter(polys);
 //! # #[cfg(feature = "geo-types")]
-//! let fc = FeatureCollection::from(polys)
+//! let fc = FeatureCollection::from(polys);
 //! ```
 //!
 //! This crate uses `serde` for serialization.
