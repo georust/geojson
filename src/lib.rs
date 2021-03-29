@@ -45,6 +45,8 @@
 //!
 //! ```rust
 //! # #[cfg(feature = "geo-types")]
+//! // The geo-types feature is required for this functionality
+//! # #[cfg(feature = "geo-types")]
 //! use geojson::FeatureCollection;
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::{GeometryCollection, LineString, Polygon};
