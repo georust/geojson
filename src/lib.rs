@@ -45,24 +45,24 @@
 //!
 //! ```rust
 //! # #[cfg(feature = "geo-types")]
-//! use geo::{polygon, GeometryCollection};
+//! use geojson::FeatureCollection;
+//! # #[cfg(feature = "geo-types")]
+//! use geo_types::{GeometryCollection, LineString, Polygon};
 //! # #[cfg(feature = "geo-types")]
 //! use std::iter::FromIterator;
 //! 
 //! # #[cfg(feature = "geo-types")]
-//! let poly = polygon![
-//!     (x: -111., y: 45.),
-//!     (x: -111., y: 41.),
-//!     (x: -104., y: 41.),
-//!     (x: -104., y: 45.),
-//! ];
+//! let poly = Polygon::new(
+//!    LineString::from(vec![(0., 0.), (1., 1.), (1., 0.), (0., 0.)]),
+//!    vec![],
+//! );
 //! 
 //! # #[cfg(feature = "geo-types")]
 //! let polys = vec![poly];
 //! # #[cfg(feature = "geo-types")]
 //! let gc = GeometryCollection::from_iter(polys);
 //! # #[cfg(feature = "geo-types")]
-//! let fc = FeatureCollection::from(polys);
+//! let fc = FeatureCollection::from(&gc);
 //! ```
 //!
 //! This crate uses `serde` for serialization.
