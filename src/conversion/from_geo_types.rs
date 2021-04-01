@@ -1,6 +1,6 @@
 use crate::geo_types::{self, CoordFloat};
 
-use crate::geometry;
+use crate::{geometry, Feature, FeatureCollection};
 
 use crate::{LineStringType, PointType, PolygonType};
 use std::convert::From;
@@ -130,6 +130,26 @@ where
             .collect();
 
         geometry::Value::GeometryCollection(values)
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for FeatureCollection
+where
+    T: CoordFloat,
+{
+    fn from(geometry_collection: &geo_types::GeometryCollection<T>) -> Self {
+        let values: Vec<Feature> = geometry_collection
+            .0
+            .iter()
+            .map(|geometry| geometry::Geometry::new(geometry::Value::from(geometry)).into())
+            .collect();
+
+        FeatureCollection {
+            bbox: None,
+            features: values,
+            foreign_members: None,
+        }
     }
 }
 

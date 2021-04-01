@@ -27,6 +27,8 @@
 //!
 //! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects.
 //! A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object, which may be empty.
+//! Since the most common uses cases for GeoJSON involve the use of `Feature` and `FeatureCollection` objects,
+//! conversions to `Feature` are provided for both `Value` enum members and Geometry objects via the `From` trait.
 //! A potentially complicating factor is the `GeometryCollection` geometry type, which can contain
 //! one more `Geometry` objects, _including nested `GeometryCollection` objects_.
 //! The use of `GeometryCollection` is discouraged, however.
@@ -37,6 +39,33 @@
 //! parse [`GeoJson`](enum.GeoJson.html) objects into
 //! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
 //! See [here](#conversion-to-geo-objects) for details.
+//!
+//! Conversely, if you wish to produce a `FeatureCollection` from a homogenous collection of `geo` types, a `From` impl is
+//! provided for `geo_types::GeometryCollection`:
+//!
+//! ```rust
+//! # #[cfg(feature = "geo-types")]
+//! // The geo-types feature is required for this functionality
+//! # #[cfg(feature = "geo-types")]
+//! use geojson::FeatureCollection;
+//! # #[cfg(feature = "geo-types")]
+//! use geo_types::{GeometryCollection, LineString, Polygon};
+//! # #[cfg(feature = "geo-types")]
+//! use std::iter::FromIterator;
+//! 
+//! # #[cfg(feature = "geo-types")]
+//! let poly = Polygon::new(
+//!    LineString::from(vec![(0., 0.), (1., 1.), (1., 0.), (0., 0.)]),
+//!    vec![],
+//! );
+//! 
+//! # #[cfg(feature = "geo-types")]
+//! let polys = vec![poly];
+//! # #[cfg(feature = "geo-types")]
+//! let gc = GeometryCollection::from_iter(polys);
+//! # #[cfg(feature = "geo-types")]
+//! let fc = FeatureCollection::from(&gc);
+//! ```
 //!
 //! This crate uses `serde` for serialization.
 //! To get started, add `geojson` to your `Cargo.toml`:
