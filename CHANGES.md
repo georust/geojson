@@ -1,5 +1,10 @@
 # Changes
 
+## 0.22.1
+
+* Added convenience methods to convert from Geometry and Value to Feature
+  * <https://github.com/georust/geojson/pull/162>
+
 ## 0.22.0
 
 * Update `geo-types` to 0.7.0
