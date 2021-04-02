@@ -18,6 +18,7 @@ use crate::serde;
 use crate::{Feature, FeatureCollection, Geometry};
 use std::convert::TryFrom;
 use std::fmt;
+use std::iter::FromIterator;
 use std::str::FromStr;
 
 /// GeoJSON Objects
@@ -72,6 +73,15 @@ impl From<GeoJson> for JsonValue {
 impl<G: Into<Geometry>> From<G> for GeoJson {
     fn from(geometry: G) -> Self {
         GeoJson::Geometry(geometry.into())
+    }
+}
+
+impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
+    fn from_iter<I: IntoIterator<Item = G>>(iter: I) -> Self {
+        use crate::Value;
+        let geometries = iter.into_iter().map(|g| g.into()).collect();
+        let collection = Value::GeometryCollection(geometries);
+        GeoJson::Geometry(Geometry::new(collection))
     }
 }
 
