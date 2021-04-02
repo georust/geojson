@@ -52,13 +52,13 @@
 //! use geo_types::{GeometryCollection, LineString, Polygon};
 //! # #[cfg(feature = "geo-types")]
 //! use std::iter::FromIterator;
-//! 
+//!
 //! # #[cfg(feature = "geo-types")]
 //! let poly = Polygon::new(
-//!    LineString::from(vec![(0., 0.), (1., 1.), (1., 0.), (0., 0.)]),
-//!    vec![],
+//!     LineString::from(vec![(0., 0.), (1., 1.), (1., 0.), (0., 0.)]),
+//!     vec![],
 //! );
-//! 
+//!
 //! # #[cfg(feature = "geo-types")]
 //! let polys = vec![poly];
 //! # #[cfg(feature = "geo-types")]
