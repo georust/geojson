@@ -69,9 +69,9 @@ impl From<GeoJson> for JsonValue {
     }
 }
 
-impl From<Geometry> for GeoJson {
-    fn from(geometry: Geometry) -> Self {
-        GeoJson::Geometry(geometry)
+impl<G: Into<Geometry>> From<G> for GeoJson {
+    fn from(geometry: G) -> Self {
+        GeoJson::Geometry(geometry.into())
     }
 }
 
