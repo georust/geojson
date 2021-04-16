@@ -269,7 +269,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Geometry, Value};
+    use crate::{GeoJson, Geometry, Value};
     use geo_types;
     use geo_types::{
         Coordinate, GeometryCollection, Line, LineString, MultiLineString, MultiPoint,
@@ -543,5 +543,36 @@ mod tests {
         } else {
             panic!("Not valid geometry {:?}", geojson_geometry_collection);
         }
+    }
+
+    #[test]
+    fn test_from_geo_type_to_geojson() {
+        let p1 = geo_types::Point::new(100.0f64, 0.0f64);
+        let actual = serde_json::Value::from(GeoJson::from(&p1));
+        let expected: serde_json::Value =
+            serde_json::json!({"coordinates": [100.0, 0.0], "type": "Point"});
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_from_iter_geo_type_to_geojson() {
+        let p1 = geo_types::Point::new(100.0f64, 0.0f64);
+        let p2 = geo_types::Point::new(200.0f64, 0.0f64);
+        let points: Vec<_> = vec![p1, p2];
+
+        use std::iter::FromIterator;
+
+        let actual = GeoJson::from_iter(points.iter());
+        let actual2 = points.iter().collect::<GeoJson>();
+        assert_eq!(actual, actual2);
+
+        let expected: serde_json::Value = serde_json::json!({
+            "type": "GeometryCollection",
+            "geometries": [
+                {"coordinates": [100.0, 0.0], "type": "Point"},
+                {"coordinates": [200.0, 0.0], "type": "Point"},
+            ]
+        });
+        assert_eq!(expected, serde_json::Value::from(actual));
     }
 }

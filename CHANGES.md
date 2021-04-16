@@ -2,8 +2,9 @@
 
 ## 0.22.1
 
-* Added convenience methods to convert from Geometry and Value to Feature
+* Added convenience methods to make common conversions more succinct.
   * <https://github.com/georust/geojson/pull/162>
+  * <https://github.com/georust/geojson/pull/164>
 
 ## 0.22.0
 
