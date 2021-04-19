@@ -1,10 +1,14 @@
 # Changes
 
+## 0.22.2
+
+* Added convenience methods to convert from geo_types::Geometry directly to GeoJson
+  * <https://github.com/georust/geojson/pull/164>
+
 ## 0.22.1
 
-* Added convenience methods to make common conversions more succinct.
+* Added convenience methods to convert from Geometry and Value to Feature
   * <https://github.com/georust/geojson/pull/162>
-  * <https://github.com/georust/geojson/pull/164>
 
 ## 0.22.0
 
