@@ -162,7 +162,7 @@ impl TryFrom<JsonValue> for Feature {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject(value))
+            Err(Error::ExpectedObject(value))
         }
     }
 }
@@ -212,7 +212,7 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
+    use crate::{feature, Error, Feature, Geometry, Object, Value};
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -249,7 +249,7 @@ mod tests {
         serde_json::to_string(&feature).unwrap()
     }
 
-    fn decode(json_string: String) -> GeoJson {
+    fn decode(json_string: String) -> Object {
         json_string.parse().unwrap()
     }
 
@@ -263,7 +263,7 @@ mod tests {
 
         // Test decoding
         let decoded_feature = match decode(json_string) {
-            GeoJson::Feature(f) => f,
+            Object::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
@@ -311,9 +311,9 @@ mod tests {
             "properties":{},
             "type":"Feature"
         }"#;
-        let geojson = geojson_str.parse::<GeoJson>().unwrap();
+        let geojson = geojson_str.parse::<Object>().unwrap();
         let feature = match geojson {
-            GeoJson::Feature(feature) => feature,
+            Object::Feature(feature) => feature,
             _ => unimplemented!(),
         };
         assert!(feature.geometry.is_none());
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn feature_json_invalid_geometry() {
         let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
-        match geojson_str.parse::<GeoJson>().unwrap_err() {
+        match geojson_str.parse::<Object>().unwrap_err() {
             Error::FeatureInvalidGeometryValue(_) => (),
             _ => unreachable!(),
         }
@@ -348,7 +348,7 @@ mod tests {
 
         // Test decode
         let decoded_feature = match decode(feature_json_str.into()) {
-            GeoJson::Feature(f) => f,
+            Object::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
@@ -374,7 +374,7 @@ mod tests {
 
         // Test decode
         let decoded_feature = match decode(feature_json_str.into()) {
-            GeoJson::Feature(f) => f,
+            Object::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
@@ -383,7 +383,7 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        let result = match feature_json_str.parse::<GeoJson>() {
+        let result = match feature_json_str.parse::<Object>() {
             Err(Error::FeatureInvalidIdentifierType(_)) => true,
             Ok(_) => false,
             _ => false,
@@ -394,7 +394,7 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        let result = match feature_json_str.parse::<GeoJson>() {
+        let result = match feature_json_str.parse::<Object>() {
             Err(Error::FeatureInvalidIdentifierType(_)) => true,
             Ok(_) => false,
             _ => false,
@@ -429,7 +429,7 @@ mod tests {
 
         // Test decode
         let decoded_feature = match decode(feature_json_str.into()) {
-            GeoJson::Feature(f) => f,
+            Object::Feature(f) => f,
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);

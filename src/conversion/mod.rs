@@ -18,8 +18,8 @@ use crate::geo_types::{
     MultiLineString as GtMultiLineString, MultiPoint as GtMultiPoint,
     MultiPolygon as GtMultiPolygon, Point as GtPoint, Polygon as GtPolygon,
 };
-use crate::geojson::GeoJson;
-use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
+use crate::geojson::Object;
+use crate::geojson::Object::{Feature, FeatureCollection, Geometry};
 
 use crate::geometry::Geometry as GjGeometry;
 use crate::Error as GJError;
@@ -73,7 +73,7 @@ pub(crate) mod from_geo_types;
 pub(crate) mod to_geo_types;
 
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
-fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+fn process_geojson<T>(gj: &Object) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
     T: CoordFloat,
 {
@@ -98,7 +98,7 @@ where
     }
 }
 
-// Process GeoJson Geometry objects, returning their geo_types equivalents, or an error
+// Process Object Geometry objects, returning their geo_types equivalents, or an error
 fn process_geometry<T>(geometry: &GjGeometry) -> Result<geo_types::Geometry<T>, GJError>
 where
     T: CoordFloat,
@@ -138,7 +138,7 @@ where
 ///
 /// ```
 /// use geo_types::GeometryCollection;
-/// use geojson::{quick_collection, GeoJson};
+/// use geojson::{quick_collection, Object};
 ///
 /// let geojson_str = r#"
 /// {
@@ -158,12 +158,12 @@ where
 ///   ]
 /// }
 /// "#;
-/// let geojson = geojson_str.parse::<GeoJson>().unwrap();
+/// let geojson = geojson_str.parse::<Object>().unwrap();
 /// // Turn the GeoJSON string into a geo_types GeometryCollection
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+pub fn quick_collection<T>(gj: &Object) -> Result<geo_types::GeometryCollection<T>, GJError>
 where
     T: CoordFloat,
 {

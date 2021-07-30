@@ -8,7 +8,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson>());
+            let _ = test::black_box(geojson_str.parse::<geojson::Object>());
         });
     });
 
@@ -16,7 +16,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/geometry_collection.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson>());
+            let _ = test::black_box(geojson_str.parse::<geojson::Object>());
         });
     });
 }

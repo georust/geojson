@@ -4,7 +4,7 @@ use crate::geometry;
 
 use crate::Error as GJError;
 use crate::{
-    quick_collection, Feature, FeatureCollection, GeoJson, Geometry, LineStringType, PointType,
+    quick_collection, Feature, FeatureCollection, Object, Geometry, LineStringType, PointType,
     PolygonType,
 };
 use std::convert::{TryFrom, TryInto};
@@ -207,23 +207,23 @@ where
 
     fn try_from(val: FeatureCollection) -> Result<geo_types::Geometry<T>, Self::Error> {
         Ok(geo_types::Geometry::GeometryCollection(quick_collection(
-            &GeoJson::FeatureCollection(val),
+            &Object::FeatureCollection(val),
         )?))
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<GeoJson> for geo_types::Geometry<T>
+impl<T> TryFrom<Object> for geo_types::Geometry<T>
 where
     T: CoordFloat,
 {
     type Error = GJError;
 
-    fn try_from(val: GeoJson) -> Result<geo_types::Geometry<T>, Self::Error> {
+    fn try_from(val: Object) -> Result<geo_types::Geometry<T>, Self::Error> {
         match val {
-            GeoJson::Geometry(geom) => geom.try_into(),
-            GeoJson::Feature(feat) => feat.try_into(),
-            GeoJson::FeatureCollection(fc) => fc.try_into(),
+            Object::Geometry(geom) => geom.try_into(),
+            Object::Feature(feat) => feat.try_into(),
+            Object::FeatureCollection(fc) => fc.try_into(),
         }
     }
 }

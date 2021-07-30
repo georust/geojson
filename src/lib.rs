@@ -18,7 +18,7 @@
 //! optionally using `serde` for serialisation. Crate users are encouraged to familiarise themselves with the spec,
 //! as the crate is structured around it.
 //! # Structure of the Crate
-//! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::GeoJson`
+//! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::Object`
 //! enum members of the same name:
 //!
 //! - [`Feature`](struct.Feature.html)
@@ -36,7 +36,7 @@
 //! If your primary use case for this crate is ingesting `GeoJSON` strings in order to process geometries
 //! using the algorithms in the [`geo`](https://docs.rs/geo) crate, you can do so by enabling the `geo-types` feature in
 //! your `Cargo.toml`, and using the [`quick_collection`](fn.quick_collection.html) function to
-//! parse [`GeoJson`](enum.GeoJson.html) objects into
+//! parse [`Object`](enum.Object.html) objects into
 //! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
 //! See [here](#conversion-to-geo-objects) for details.
 //!
@@ -78,7 +78,7 @@
 //! ## Reading
 //!
 //! ```
-//! use geojson::GeoJson;
+//! use geojson::Object;
 //!
 //! let geojson_str = r#"
 //! {
@@ -99,7 +99,7 @@
 //! }
 //! "#;
 //!
-//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! let geojson = geojson_str.parse::<Object>().unwrap();
 //! ```
 //!
 //! ## Writing
@@ -116,10 +116,10 @@
 //! properties.insert(String::from("name"), to_value("Firestone Grill").unwrap());
 //! ```
 //!
-//! `GeoJson` can then be serialized by calling `to_string`:
+//! `Object` can then be serialized by calling `to_string`:
 //!
 //! ```rust
-//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! use geojson::{Feature, Geometry, Object, Value};
 //! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
 //! # let mut properties = ::serde_json::Map::new();
 //! # properties.insert(
@@ -133,7 +133,7 @@
 //!
 //! let geometry = Geometry::new(Value::Point(vec![-120.66029, 35.2812]));
 //!
-//! let geojson = GeoJson::Feature(Feature {
+//! let geojson = Object::Feature(Feature {
 //!     bbox: None,
 //!     geometry: Some(geometry),
 //!     id: None,
@@ -157,24 +157,24 @@
 //! ownership of it.
 //!
 //! ```rust
-//! use geojson::{GeoJson, Geometry, Value};
+//! use geojson::{Geometry, Object, Value};
 //!
 //! /// Process top-level GeoJSON items
-//! fn process_geojson(gj: &GeoJson) {
+//! fn process_geojson(gj: &Object) {
 //!     match *gj {
-//!         GeoJson::FeatureCollection(ref ctn) => {
+//!         Object::FeatureCollection(ref ctn) => {
 //!             for feature in &ctn.features {
 //!                 if let Some(ref geom) = feature.geometry {
 //!                     match_geometry(geom)
 //!                 }
 //!             }
 //!         }
-//!         GeoJson::Feature(ref feature) => {
+//!         Object::Feature(ref feature) => {
 //!             if let Some(ref geom) = feature.geometry {
 //!                 match_geometry(geom)
 //!             }
 //!         }
-//!         GeoJson::Geometry(ref geometry) => match_geometry(geometry),
+//!         Object::Geometry(ref geometry) => match_geometry(geometry),
 //!     }
 //! }
 //!
@@ -228,7 +228,7 @@
 //!       ]
 //!     }
 //!     "#;
-//!     let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//!     let geojson = geojson_str.parse::<Object>().unwrap();
 //!     process_geojson(&geojson);
 //! }
 //! ```
@@ -248,14 +248,14 @@
 //! coordinate, point, linestring, polygon, or its multi- equivalent, **and each of these has
 //! an equivalent `geo` primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
 //!
-//! Unifying these features, the [`quick_collection`](fn.quick_collection.html) function accepts a [`GeoJson`](enum.GeoJson.html) enum
+//! Unifying these features, the [`quick_collection`](fn.quick_collection.html) function accepts a [`Object`](enum.Object.html) enum
 //! and processes it, producing a [`GeometryCollection`](../geo_types/struct.GeometryCollection.html)
 //! whose members can be transformed, measured, rotated, etc using the algorithms and functions in
 //! the [`geo`](https://docs.rs/geo) crate:
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
-//! use geojson::{quick_collection, GeoJson};
+//! use geojson::{quick_collection, Object};
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
 //! # #[cfg(feature = "geo-types")]
@@ -278,7 +278,7 @@
 //! }
 //! "#;
 //! # #[cfg(feature = "geo-types")]
-//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! let geojson = geojson_str.parse::<Object>().unwrap();
 //! // Turn the GeoJSON string into a geo_types GeometryCollection
 //! # #[cfg(feature = "geo-types")]
 //! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
@@ -288,7 +288,7 @@
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
-//! use geojson::GeoJson;
+//! use geojson::Object;
 //! # #[cfg(feature = "geo-types")]
 //! use geo_types::Geometry;
 //! use std::convert::TryInto;
@@ -308,7 +308,7 @@
 //! }
 //! "#;
 //! # #[cfg(feature = "geo-types")]
-//! let geojson = GeoJson::from_str(geojson_str).unwrap();
+//! let geojson = Object::from_str(geojson_str).unwrap();
 //! // Turn the GeoJSON string into a geo_types Geometry
 //! # #[cfg(feature = "geo-types")]
 //! let geom: geo_types::Geometry<f64> = geojson.try_into().unwrap();
@@ -348,7 +348,9 @@ pub type PolygonType = Vec<Vec<Position>>;
 mod util;
 
 mod geojson;
-pub use crate::geojson::GeoJson;
+pub use crate::geojson::Object;
+// preserve backwards compatibility for old name
+pub use crate::geojson::Object as GeoJson;
 
 mod geometry;
 pub use crate::geometry::{Geometry, Value};

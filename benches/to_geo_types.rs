@@ -5,7 +5,7 @@ extern crate test;
 
 fn parse_benchmark(c: &mut Criterion) {
     let geojson_str = include_str!("../tests/fixtures/countries.geojson");
-    let geojson = geojson_str.parse::<geojson::GeoJson>().unwrap();
+    let geojson = geojson_str.parse::<geojson::Object>().unwrap();
 
     c.bench_function("quick_collection", move |b| {
         b.iter(|| {

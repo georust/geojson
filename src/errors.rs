@@ -12,7 +12,7 @@ pub enum Error {
     #[error("Encountered non-numeric value within 'bbox' array")]
     BboxExpectedNumericValues(Value),
     #[error("Encountered a non-object type for GeoJSON: `{0}`")]
-    GeoJsonExpectedObject(Value),
+    ExpectedObject(Value),
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
     #[error("Expected a Feature, FeatureCollection, or Geometry, but got an empty type")]
     EmptyType,
