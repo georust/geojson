@@ -347,10 +347,11 @@ pub type PolygonType = Vec<Vec<Position>>;
 
 mod util;
 
-mod geojson;
-pub use crate::geojson::Object;
+mod object;
+
+pub use crate::object::Object;
 // preserve backwards compatibility for old name
-pub use crate::geojson::Object as GeoJson;
+pub use crate::object::Object as GeoJson;
 
 mod geometry;
 pub use crate::geometry::{Geometry, Value};
