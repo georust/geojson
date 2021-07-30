@@ -133,7 +133,7 @@ impl TryFrom<JsonValue> for Value {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject(value))
+            Err(Error::ExpectedObject(value))
         }
     }
 }
@@ -193,7 +193,7 @@ impl Serialize for Value {
 /// Serializing a `Geometry` to a GeoJSON string:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, Value};
+/// use geojson::{Object, Geometry, Value};
 /// use serde_json;
 ///
 /// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
@@ -209,12 +209,12 @@ impl Serialize for Value {
 /// Deserializing a GeoJSON string into a `Geometry`:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, Value};
+/// use geojson::{Object, Geometry, Value};
 ///
 /// let geojson_str = "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}";
 ///
-/// let geometry = match geojson_str.parse::<GeoJson>() {
-///     Ok(GeoJson::Geometry(g)) => g,
+/// let geometry = match geojson_str.parse::<Object>() {
+///     Ok(Object::Geometry(g)) => g,
 ///     _ => return,
 /// };
 ///
@@ -296,7 +296,7 @@ impl TryFrom<JsonValue> for Geometry {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject(value))
+            Err(Error::ExpectedObject(value))
         }
     }
 }
@@ -336,12 +336,12 @@ where
 mod tests {
 
     use crate::json::JsonObject;
-    use crate::{GeoJson, Geometry, Value};
+    use crate::{Geometry, Object, Value};
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()
     }
-    fn decode(json_string: String) -> GeoJson {
+    fn decode(json_string: String) -> Object {
         json_string.parse().unwrap()
     }
 
@@ -360,7 +360,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(json_string) {
-            GeoJson::Geometry(g) => g,
+            Object::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
@@ -430,7 +430,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(geometry_json_str.into()) {
-            GeoJson::Geometry(g) => g,
+            Object::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry);
@@ -462,7 +462,7 @@ mod tests {
 
         // Test decode
         let decoded_geometry = match decode(geometry_collection_string.into()) {
-            GeoJson::Geometry(g) => g,
+            Object::Geometry(g) => g,
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry_collection);

@@ -31,7 +31,7 @@ use crate::{util, Bbox, Feature};
 /// # extern crate geojson;
 /// # fn main() {
 /// use geojson::FeatureCollection;
-/// use geojson::GeoJson;
+/// use geojson::Object;
 ///
 /// let feature_collection = FeatureCollection {
 ///     bbox: None,
@@ -39,7 +39,7 @@ use crate::{util, Bbox, Feature};
 ///     foreign_members: None,
 /// };
 ///
-/// let serialized = GeoJson::from(feature_collection).to_string();
+/// let serialized = Object::from(feature_collection).to_string();
 ///
 /// assert_eq!(
 ///     serialized,
@@ -118,7 +118,7 @@ impl TryFrom<JsonValue> for FeatureCollection {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
-            Err(Error::GeoJsonExpectedObject(value))
+            Err(Error::ExpectedObject(value))
         }
     }
 }

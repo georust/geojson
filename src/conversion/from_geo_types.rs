@@ -269,7 +269,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{GeoJson, Geometry, Value};
+    use crate::{Object, Geometry, Value};
     use geo_types;
     use geo_types::{
         Coordinate, GeometryCollection, Line, LineString, MultiLineString, MultiPoint,
@@ -548,7 +548,7 @@ mod tests {
     #[test]
     fn test_from_geo_type_to_geojson() {
         let p1 = geo_types::Point::new(100.0f64, 0.0f64);
-        let actual = serde_json::Value::from(GeoJson::from(&p1));
+        let actual = serde_json::Value::from(Object::from(&p1));
         let expected: serde_json::Value =
             serde_json::json!({"coordinates": [100.0, 0.0], "type": "Point"});
         assert_eq!(expected, actual);
@@ -562,8 +562,8 @@ mod tests {
 
         use std::iter::FromIterator;
 
-        let actual = GeoJson::from_iter(points.iter());
-        let actual2 = points.iter().collect::<GeoJson>();
+        let actual = Object::from_iter(points.iter());
+        let actual2 = points.iter().collect::<Object>();
         assert_eq!(actual, actual2);
 
         let expected: serde_json::Value = serde_json::json!({

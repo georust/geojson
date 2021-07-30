@@ -14,7 +14,7 @@ This library requires a minimum Rust version of 1.34 (released April 11 2019)
 ### Reading
 
 ```rust
-use geojson::GeoJson;
+use geojson::Object;
 
 let geojson_str = r#"
 {
@@ -29,13 +29,13 @@ let geojson_str = r#"
 }
 "#;
 
-let geojson = geojson_str.parse::<GeoJson>().unwrap();
+let geojson = geojson_str.parse::<Object>().unwrap();
 ```
 
 ### Writing
 
 ```rust
-use geojson::{Feature, GeoJson, Geometry, Value};
+use geojson::{Feature, Object, Geometry, Value};
 use serde_json::{Map, to_value};
 
 let geometry = Geometry::new(
@@ -48,7 +48,7 @@ properties.insert(
     to_value("Firestone Grill").unwrap(),
 );
 
-let geojson = GeoJson::Feature(Feature {
+let geojson = Object::Feature(Feature {
     bbox: None,
     geometry: Some(geometry),
     id: None,

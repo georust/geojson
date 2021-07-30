@@ -1,5 +1,9 @@
 # Changes
 
+## 0.23.0
+* Renamed `geojson::GeoJson` to `geojson::Object`
+* moved `src/geojson.rs` to `src/object.rs`
+
 ## 0.22.2
 
 * Added convenience methods to convert from geo_types::Geometry directly to GeoJson
