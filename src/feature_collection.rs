@@ -48,6 +48,21 @@ use crate::{util, Bbox, Feature};
 /// );
 /// # }
 /// ```
+///
+/// Collect from an iterator:
+///
+/// ```rust
+/// # extern crate geojson;
+/// # fn main() {
+/// use geojson::{FeatureCollection, Feature, Value};
+///
+/// let fc: FeatureCollection = (0..10).map(|idx| -> Feature {
+///     let c = idx as f64;
+///     Value::Point(vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
+/// }).collect();
+/// assert_eq!(fc.features.len(), 10);
+/// # }
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeatureCollection {
     /// Bounding Box
@@ -209,5 +224,44 @@ impl FromIterator<Feature> for FeatureCollection {
             features,
             foreign_members: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Feature, FeatureCollection, Value};
+
+    #[test]
+    fn test_fc_from_iterator() {
+        let features: Vec<Feature> = vec![
+            {
+                let mut feat: Feature = Value::Point(vec![0., 0., 0.]).into();
+                feat.bbox = Some(vec![-1., -1., -1., 1., 1., 1.]);
+                feat
+            },
+            {
+                let mut feat: Feature = Value::MultiPoint(vec![
+                    vec![10., 10., 10.],
+                    vec![11., 11., 11.],
+                ]).into();
+                feat.bbox = Some(vec![10., 10., 10., 11., 11., 11.]);
+                feat
+            },
+        ];
+
+        let fc: FeatureCollection = features.into_iter().collect();
+        assert_eq!(fc.features.len(), 2);
+
+        assert!(fc.bbox.is_some());
+        let bbox = fc.bbox.as_ref().unwrap();
+        assert_eq!(bbox.len(), 6);
+        for (i, coord) in bbox.iter().enumerate() {
+            if i < bbox.len() / 2 {
+                assert!(*coord <= -1.);
+            } else {
+                assert!(*coord >= 11.);
+            }
+        }
+
     }
 }
