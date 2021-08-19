@@ -29,8 +29,6 @@ use crate::{util, Bbox, Feature};
 /// Serialization:
 ///
 /// ```
-/// # extern crate geojson;
-/// # fn main() {
 /// use geojson::FeatureCollection;
 /// use geojson::GeoJson;
 ///
@@ -46,14 +44,11 @@ use crate::{util, Bbox, Feature};
 ///     serialized,
 ///     "{\"features\":[],\"type\":\"FeatureCollection\"}"
 /// );
-/// # }
 /// ```
 ///
 /// Collect from an iterator:
 ///
 /// ```rust
-/// # extern crate geojson;
-/// # fn main() {
 /// use geojson::{FeatureCollection, Feature, Value};
 ///
 /// let fc: FeatureCollection = (0..10).map(|idx| -> Feature {
@@ -61,7 +56,6 @@ use crate::{util, Bbox, Feature};
 ///     Value::Point(vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
 /// }).collect();
 /// assert_eq!(fc.features.len(), 10);
-/// # }
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct FeatureCollection {
@@ -251,17 +245,6 @@ mod tests {
 
         let fc: FeatureCollection = features.into_iter().collect();
         assert_eq!(fc.features.len(), 2);
-
-        assert!(fc.bbox.is_some());
-        let bbox = fc.bbox.as_ref().unwrap();
-        assert_eq!(bbox.len(), 6);
-        for (i, coord) in bbox.iter().enumerate() {
-            if i < bbox.len() / 2 {
-                assert!(*coord <= -1.);
-            } else {
-                assert!(*coord >= 11.);
-            }
-        }
-
+        assert_eq!(fc.bbox, Some(vec![-1., -1., -1., 11., 11., 11.]));
     }
 }
