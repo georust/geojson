@@ -1,5 +1,10 @@
 # Changes
 
+## Unreleased
+
+* Added `FromIterator<Feature>` impl for `FeatureCollection`
+  * <https://github.com/georust/geojson/pull/171>
+
 ## 0.22.2
 
 * Added convenience methods to convert from geo_types::Geometry directly to GeoJson
