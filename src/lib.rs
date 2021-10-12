@@ -235,12 +235,13 @@
 //!
 //! ## Conversion to Geo objects
 //!
-//! The [`TryFrom`](../std/convert/trait.TryFrom.html) trait provides
-//! **fallible** conversions _to_ [Geo](../geo_types/index.html#structs) types from GeoJSON [`Value`](enum.Value.html) enums,
-//! allowing them to be measured or used in calculations. Conversely, `From` is
-//! implemented on the [`Value`](enum.Value.html) enum variants to allow conversion _from_ `Geo` types.
+//! With the optional `geo-types` feature, the [`TryFrom`](../std/convert/trait.TryFrom.html) trait
+//! provides **fallible** conversions _to_ [Geo](../geo_types/index.html#structs) types from
+//! GeoJSON [`Value`](enum.Value.html) enums, allowing them to be measured or used in calculations.
+//! Conversely, `From` is implemented on the [`Value`](enum.Value.html) enum variants to allow
+//! conversion _from_ `Geo` types.
 //!
-//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in order to process, transform, or measure them:**  
+//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in order to process, transform, or measure them:**
 //! - `match` on `geojson`, iterating over its `features` field, yielding `Option<Feature>`.
 //! - process each `Feature`, accessing its `Value` field, yielding `Option<Value>`.
 //!
