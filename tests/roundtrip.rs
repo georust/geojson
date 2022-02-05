@@ -45,7 +45,7 @@ mod roundtrip_tests {
         test_null_geometry: "nullgeometry.geojson",
     }
 
-    /// Verifies that we can parse and then reencode geojson back to the same representation
+    /// Verifies that we can parse and then re-encode geojson back to the same representation
     /// without losing any data.
     fn test_round_trip(file_path: &str) {
         let mut file = File::open(&file_path).unwrap();
