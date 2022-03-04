@@ -15,8 +15,7 @@
 use std::convert::TryFrom;
 
 use crate::errors::Error;
-use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
-use crate::serde_json::json;
+use crate::json::{json, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::{util, Feature, Geometry, Value};
 
 impl From<Geometry> for Feature {

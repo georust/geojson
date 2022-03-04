@@ -329,8 +329,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #[cfg(feature = "geo-types")]
 use geo_types;
-use serde;
-use serde_json;
 
 /// Bounding Boxes
 ///
@@ -397,6 +395,6 @@ pub struct Feature {
 
 mod json {
     pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    pub use serde_json::{Map, Value as JsonValue};
+    pub use serde_json::{json, Map, Value as JsonValue};
     pub type JsonObject = Map<String, JsonValue>;
 }

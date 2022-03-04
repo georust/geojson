@@ -16,8 +16,7 @@ use std::convert::TryFrom;
 use std::iter::FromIterator;
 
 use crate::errors::Error;
-use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
-use crate::serde_json::json;
+use crate::json::{json, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
 use crate::{util, Bbox, Feature};
 
 /// Feature Collection Objects
@@ -234,10 +233,8 @@ mod tests {
                 feat
             },
             {
-                let mut feat: Feature = Value::MultiPoint(vec![
-                    vec![10., 10., 10.],
-                    vec![11., 11., 11.],
-                ]).into();
+                let mut feat: Feature =
+                    Value::MultiPoint(vec![vec![10., 10., 10.], vec![11., 11., 11.]]).into();
                 feat.bbox = Some(vec![10., 10., 10., 11., 11., 11.]);
                 feat
             },

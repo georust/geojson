@@ -14,7 +14,6 @@
 
 use crate::errors::Error;
 use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
-use crate::serde;
 use crate::{Feature, FeatureCollection, Geometry};
 use std::convert::TryFrom;
 use std::fmt;
