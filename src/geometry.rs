@@ -16,7 +16,6 @@ use std::{convert::TryFrom, fmt};
 
 use crate::errors::Error;
 use crate::json::{Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
-use crate::serde;
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 
 /// The underlying value for a `Geometry`.
