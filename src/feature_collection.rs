@@ -186,7 +186,7 @@ impl FromIterator<Feature> for FeatureCollection {
                     None => {
                         bbox = None;
                     }
-                    Some(fbox) if fbox.len() == 0 || fbox.len() % 2 != 0 => {
+                    Some(fbox) if fbox.is_empty() || fbox.len() % 2 != 0 => {
                         bbox = None;
                     }
                     Some(fbox) if curr_len == 0 => {
