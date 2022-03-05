@@ -189,7 +189,7 @@ impl GeoJson {
         Self::try_from(value)
     }
 
-    /// Convience method to convert to a JSON Value. Uses `From`.
+    /// Convenience method to convert to a JSON Value. Uses `From`.
     /// ```
     /// use std::convert::TryFrom;
     /// use geojson::GeoJson;
