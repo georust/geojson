@@ -21,6 +21,15 @@ use crate::Feature;
 use std::io;
 use std::marker::PhantomData;
 
+/// FeatureIterator
+///
+/// Can be used to iteratively deserialize individual features from a stream containing a
+/// GeoJSON FeatureCollection with the benefit of not having to wait until the end of the
+/// stream to get results and avoids having to allocate memory for the complete collection.
+///
+/// Based on example code found at https://github.com/serde-rs/serde/issues/903#issuecomment-297488118.
+///
+/// [GeoJSON Format Specification § 3.3](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3)
 pub struct FeatureIterator<R> {
     reader: R,
     skip: Option<u8>,
