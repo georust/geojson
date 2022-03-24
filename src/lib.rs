@@ -357,6 +357,9 @@ pub mod feature;
 mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
 
+mod feature_iterator;
+pub use crate::feature_iterator::FeatureIterator;
+
 pub mod errors;
 pub use crate::errors::Error;
 

@@ -4,6 +4,8 @@
 
 * Added `FromIterator<Feature>` impl for `FeatureCollection`
   * <https://github.com/georust/geojson/pull/171>
+* Added `'FeatureIterator` streaming feature collection deserializer
+  * <https://github.com/georust/geojson/pull/181>
 
 ## 0.22.2
 
