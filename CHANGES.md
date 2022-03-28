@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## 0.22.3
 
 * Added `FromIterator<Feature>` impl for `FeatureCollection`
   * <https://github.com/georust/geojson/pull/171>
