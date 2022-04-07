@@ -452,6 +452,31 @@ mod tests {
     }
 
     #[test]
+    fn test_missing_properties_key() {
+        let json_value = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [102.0, 0.5]
+            },
+        });
+
+        assert!(json_value.is_object());
+
+        let geojson: GeoJson = json_value.try_into().unwrap();
+        assert_eq!(
+            geojson,
+            GeoJson::Feature(Feature {
+                bbox: None,
+                geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
+                id: None,
+                properties: None,
+                foreign_members: None,
+            })
+        );
+    }
+
+    #[test]
     fn test_invalid_json() {
         let geojson_str = r#"{
            "type": "FeatureCollection",

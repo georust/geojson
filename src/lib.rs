@@ -389,6 +389,10 @@ pub struct Feature {
     /// Properties
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+    ///
+    /// NOTE: This crate will permissively parse a Feature whose json is missing a `properties` key.
+    /// Because the spec implies that the `properties` key must be present, we will always include
+    /// the `properties` key when serializing.
     pub properties: Option<json::JsonObject>,
     /// Foreign Members
     ///
