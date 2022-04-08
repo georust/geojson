@@ -103,11 +103,12 @@ pub fn get_foreign_members(object: JsonObject) -> Result<Option<JsonObject>, Err
 
 /// Used by Feature
 pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Error> {
-    let properties = expect_property(object, "properties")?;
+    let properties = expect_property(object, "properties");
     match properties {
-        JsonValue::Object(x) => Ok(Some(x)),
-        JsonValue::Null => Ok(None),
-        _ => Err(Error::PropertiesExpectedObjectOrNull(properties)),
+        Ok(JsonValue::Object(x)) => Ok(Some(x)),
+        Ok(JsonValue::Null) | Err(Error::ExpectedProperty(_)) => Ok(None),
+        Ok(not_a_dictionary) => Err(Error::PropertiesExpectedObjectOrNull(not_a_dictionary)),
+        Err(e) => Err(e)
     }
 }
 

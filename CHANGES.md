@@ -1,5 +1,10 @@
 # Changes
 
+## UNRELEASED
+
+* Allow parsing Feature/FeatureCollection that are missing a "properties" key.
+  * <https://github.com/georust/geojson/pull/182>
+
 ## 0.22.3
 
 * Added `FromIterator<Feature>` impl for `FeatureCollection`
