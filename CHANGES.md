@@ -4,6 +4,8 @@
 
 * Allow parsing Feature/FeatureCollection that are missing a "properties" key.
   * <https://github.com/georust/geojson/pull/182>
+* Overhauled front page documentation.
+  * <https://github.com/georust/geojson/pull/183>
 
 ## 0.22.3
 

@@ -108,7 +108,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>, Err
         Ok(JsonValue::Object(x)) => Ok(Some(x)),
         Ok(JsonValue::Null) | Err(Error::ExpectedProperty(_)) => Ok(None),
         Ok(not_a_dictionary) => Err(Error::PropertiesExpectedObjectOrNull(not_a_dictionary)),
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }
 
