@@ -14,122 +14,98 @@
 // limitations under the License.
 //!
 //! # Introduction
-//! The `geojson` crate reads and writes `GeoJSON` ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)) files,
-//! optionally using `serde` for serialisation. Crate users are encouraged to familiarise themselves with the spec,
-//! as the crate is structured around it.
-//! # Structure of the Crate
-//! GeoJSON can contain one of three top-level objects, reflected in the top-level `geojson::GeoJson`
-//! enum members of the same name:
 //!
-//! - [`Feature`](struct.Feature.html)
-//! - [`FeatureCollection`](struct.FeatureCollection.html)
-//! - [`Geometry`](struct.Geometry.html)
+//! This crate helps you read and write [GeoJSON](https://geojson.org) — a format for encoding
+//! geographic data structures.
 //!
-//! With `FeatureCollection` being the most commonly used, since it can contain multiple child objects.
-//! A `FeatureCollection` contains `Feature` objects, each of which contains a `Geometry` object, which may be empty.
-//! Since the most common uses cases for GeoJSON involve the use of `Feature` and `FeatureCollection` objects,
-//! conversions to `Feature` are provided for both `Value` enum members and Geometry objects via the `From` trait.
-//! A potentially complicating factor is the `GeometryCollection` geometry type, which can contain
-//! one more `Geometry` objects, _including nested `GeometryCollection` objects_.
-//! The use of `GeometryCollection` is discouraged, however.
-//!
-//! If your primary use case for this crate is ingesting `GeoJSON` strings in order to process geometries
-//! using the algorithms in the [`geo`](https://docs.rs/geo) crate, you can do so by enabling the `geo-types` feature in
-//! your `Cargo.toml`, and using the [`quick_collection`](fn.quick_collection.html) function to
-//! parse [`GeoJson`](enum.GeoJson.html) objects into
-//! a [`geo_types::GeometryCollection`](../geo_types/struct.GeometryCollection.html).
-//! See [here](#conversion-to-geo-objects) for details.
-//!
-//! Conversely, if you wish to produce a `FeatureCollection` from a homogenous collection of `geo` types, a `From` impl is
-//! provided for `geo_types::GeometryCollection`:
-//!
-//! ```rust
-//! # #[cfg(feature = "geo-types")]
-//! // The geo-types feature is required for this functionality
-//! # #[cfg(feature = "geo-types")]
-//! use geojson::FeatureCollection;
-//! # #[cfg(feature = "geo-types")]
-//! use geo_types::{GeometryCollection, LineString, Polygon};
-//! # #[cfg(feature = "geo-types")]
-//! use std::iter::FromIterator;
-//!
-//! # #[cfg(feature = "geo-types")]
-//! let poly = Polygon::new(
-//!     LineString::from(vec![(0., 0.), (1., 1.), (1., 0.), (0., 0.)]),
-//!     vec![],
-//! );
-//!
-//! # #[cfg(feature = "geo-types")]
-//! let polys = vec![poly];
-//! # #[cfg(feature = "geo-types")]
-//! let gc = GeometryCollection::from_iter(polys);
-//! # #[cfg(feature = "geo-types")]
-//! let fc = FeatureCollection::from(&gc);
-//! ```
-//!
-//! This crate uses `serde` for serialization.
-//! To get started, add `geojson` to your `Cargo.toml`:
+//! To get started, add `geojson` to your `Cargo.toml`.
 //!
 //! ```text
 //! [dependencies]
-//! geojson= "*"
+//! geojson = "*"
 //! ```
+//!
+//! If you want to use GeoJSON as input to or output from a geometry processing crate like
+//! [`geo`](https://docs.rs/geo), see the section on [using geojson with
+//! geo-types](#use-geojson-with-other-crates-by-converting-to-geo-types).
+//!
+//! # Types and crate structure
+//!
+//! This crate is structured around the GeoJSON spec ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)),
+//! and users are encouraged to familiarise themselves with it.
+//!
+//! A GeoJSON object can be one of three top-level objects, reflected in this crate as the
+//! [`GeoJson`] enum members of the same name.
+//!
+//! 1. A [`Geometry`] represents points, curves, and surfaces in coordinate space.
+//! 2. A [`Feature`] usually contains a `Geometry` and some associated data, for example a "name"
+//!    field or any other properties you'd like associated with the `Geometry`.
+//! 3. A [`FeatureCollection`] is a list of one or more `Feature`s.
+//!
+//! Because [`Feature`] and [`FeatureCollection`] are more flexible, bare [`Geometry`] GeoJSON
+//! documents are rarely encountered in the wild. As such, conversions from [`Geometry`]
+//! or [Geometry `Value`](Value) to [`Feature`] objects are provided via the [`From`] trait.
+//!
+//! *Beware:* A common point of confusion arises when converting a [GeoJson
+//! `GeometryCollection`](Value::GeometryCollection). Do you want it converted to a single
+//! [`Feature`] whose geometry is a [`GeometryCollection`](Value::GeometryCollection), or do you
+//! want a [`FeatureCollection`] with each *element* of the
+//! [`GeometryCollection`](Value::GeometryCollection) converted to its own [`Feature`], potentially
+//! with their own individual properties. Either is possible, but it's important you understand
+//! which one you want.
+//!
 //! # Examples
 //! ## Reading
 //!
+//! [`GeoJson`] can be deserialized by calling [`str::parse`](https://doc.rust-lang.org/std/primitive.str.html#method.parse):
+//!
 //! ```
-//! use geojson::GeoJson;
+//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! use std::convert::TryFrom;
 //!
 //! let geojson_str = r#"
 //! {
-//!   "type": "FeatureCollection",
-//!   "features": [
-//!     {
-//!       "type": "Feature",
-//!       "properties": {},
-//!       "geometry": {
-//!         "type": "Point",
-//!         "coordinates": [
-//!           -0.13583511114120483,
-//!           51.5218870403801
-//!         ]
-//!       }
-//!     }
-//!   ]
+//!   "type": "Feature",
+//!   "properties": { "food": "donuts" },
+//!   "geometry": {
+//!     "type": "Point",
+//!     "coordinates": [ -118.2836, 34.0956 ]
+//!   }
 //! }
 //! "#;
 //!
-//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
+//! let geojson: GeoJson = geojson_str.parse::<GeoJson>().unwrap();
+//! let feature: Feature = Feature::try_from(geojson).unwrap();
+//!
+//! // read property data
+//! assert_eq!("donuts", feature.property("food").unwrap());
+//!
+//! // read geometry data
+//! let geometry: Geometry = feature.geometry.unwrap();
+//! if let Value::Point(coords) = geometry.value {
+//!     assert_eq!(coords, vec![ -118.2836, 34.0956 ]);
+//! }
+//!
+//! # else {
+//! #    unreachable!("should be point");
+//! # }
 //! ```
 //!
 //! ## Writing
 //!
-//! Writing `geojson` depends on the serialization framework because some structs
-//! (like `Feature`) use json values for properties.
-//!
-//! ```
-//! use serde_json;
-//!
-//! use serde_json::{to_value, Map};
-//!
-//! let mut properties = Map::new();
-//! properties.insert(String::from("name"), to_value("Firestone Grill").unwrap());
-//! ```
-//!
-//! `GeoJson` can then be serialized by calling `to_string`:
+//! `GeoJson` can be serialized by calling [`to_string`](geojson/enum.GeoJson.html#impl-ToString):
 //!
 //! ```rust
 //! use geojson::{Feature, GeoJson, Geometry, Value};
-//! # fn properties() -> ::serde_json::Map<String, ::serde_json::Value> {
+//! # fn get_properties() -> ::serde_json::Map<String, ::serde_json::Value> {
 //! # let mut properties = ::serde_json::Map::new();
 //! # properties.insert(
 //! #     String::from("name"),
-//! #     ::serde_json::Value::String(String::from("Firestone Grill")),
+//! #     ::serde_json::Value::String("Firestone Grill".to_string()),
 //! # );
 //! # properties
 //! # }
 //! # fn main() {
-//! # let properties = properties();
 //!
 //! let geometry = Geometry::new(Value::Point(vec![-120.66029, 35.2812]));
 //!
@@ -137,7 +113,8 @@
 //!     bbox: None,
 //!     geometry: Some(geometry),
 //!     id: None,
-//!     properties: Some(properties),
+//!     // See the next section about Feature properties
+//!     properties: Some(get_properties()),
 //!     foreign_members: None,
 //! });
 //!
@@ -145,16 +122,32 @@
 //! # }
 //! ```
 //!
+//! ### Feature properties
+//!
+//! The `geojson` crate is built on top of [`serde_json`](../serde_json/index.html). Consequently,
+//! some fields like [`feature.properties`](Feature#structfield.properties) hold [serde_json
+//! values](../serde_json/value/index.html).
+//!
+//! ```
+//! use serde_json;
+//!
+//! let mut properties = serde_json::Map::new();
+//! let key = "name".to_string();
+//! let value = "Firestone Grill".to_string();
+//! properties.insert(key, serde_json::to_value(value).unwrap());
+//! ```
+//!
 //! ## Parsing
 //!
 //! GeoJSON's [spec](https://tools.ietf.org/html/rfc7946) is quite simple, but
-//! it has several subtleties that must be taken into account when parsing it:  
+//! it has several subtleties that must be taken into account when parsing it:
 //!
-//! - The `geometry` field of a `Feature` is an `Option`
-//! - `GeometryCollection`s contain other `Geometry` objects, and can nest.
+//! - The `geometry` field of a [`Feature`] is an [`Option`] — it can be blank.
+//! - [`GeometryCollection`](Value::GeometryCollection)s contain other [`Geometry`] objects, and can nest.
+//! - We strive to produce strictly valid output, but we are more permissive about what we accept
+//!   as input.
 //!
-//! Here's a minimal example which will parse valid GeoJSON without taking
-//! ownership of it.
+//! Here's a minimal example which will parse and process a GeoJSON string.
 //!
 //! ```rust
 //! use geojson::{GeoJson, Geometry, Value};
@@ -185,8 +178,8 @@
 //!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
 //!         Value::GeometryCollection(ref gc) => {
 //!             println!("Matched a GeometryCollection");
-//!             // GeometryCollections contain other Geometry types, and can nest
-//!             // we deal with this by recursively processing each geometry
+//!             // !!! GeometryCollections contain other Geometry types, and can
+//!             // nest — we deal with this by recursively processing each geometry
 //!             for geometry in gc {
 //!                 match_geometry(geometry)
 //!             }
@@ -233,21 +226,82 @@
 //! }
 //! ```
 //!
-//! ## Conversion to Geo objects
+//! ## Use geojson with other crates by converting to geo-types
 //!
-//! With the optional `geo-types` feature, the [`TryFrom`](../std/convert/trait.TryFrom.html) trait
-//! provides **fallible** conversions _to_ [Geo](../geo_types/index.html#structs) types from
-//! GeoJSON [`Value`](enum.Value.html) enums, allowing them to be measured or used in calculations.
-//! Conversely, `From` is implemented on the [`Value`](enum.Value.html) enum variants to allow
-//! conversion _from_ `Geo` types.
+//! [`geo-types`](../geo_types/index.html#structs) are a common geometry format used across many
+//! geospatial processing crates. To enable geo-types integration, enable the `geo-types` feature
+//! in your Cargo.toml.
 //!
-//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in order to process, transform, or measure them:**
+//! ```text
+//! [dependencies]
+//! geojson = { version = "*", features = ["geo-types"] }
+//! ```
+//! ### From geo-types to geojson
+//!
+//! [`From`] is implemented on the [`Value`] enum variants to allow conversion _from_ [`geo-types`
+//! Geometries](../geo_types/index.html#structs).
+//!
+//! ```
+//! # #[cfg(feature = "geo-types")]
+//! # {
+//! // requires enabling the `geo-types` feature
+//! let geo_point: geo_types::Point<f64> = geo_types::Point::new(2., 9.);
+//! let geo_geometry: geo_types::Geometry<f64> = geo_types::Geometry::from(geo_point);
+//!
+//! assert_eq!(
+//!     geojson::Value::from(&geo_point),
+//!     geojson::Value::Point(vec![2., 9.]),
+//! );
+//! assert_eq!(
+//!     geojson::Value::from(&geo_geometry),
+//!     geojson::Value::Point(vec![2., 9.]),
+//! );
+//! # }
+//! ```
+//!
+//! If you wish to produce a [`FeatureCollection`] from a homogenous collection of `geo-types`, a
+//! `From` impl is provided for `geo_types::GeometryCollection`:
+//!
+//! ```rust
+//! # #[cfg(feature = "geo-types")]
+//! # {
+//! // requires enabling the `geo-types` feature
+//! use geojson::FeatureCollection;
+//! use geo_types::{polygon, point, Geometry, GeometryCollection};
+//! use std::iter::FromIterator;
+//!
+//! let poly: Geometry<f64> = polygon![
+//!     (x: -111., y: 45.),
+//!     (x: -111., y: 41.),
+//!     (x: -104., y: 41.),
+//!     (x: -104., y: 45.),
+//! ].into();
+//!
+//! let point: Geometry<f64> = point!(x: 1.0, y: 2.0).into();
+//!
+//! let geometry_collection = GeometryCollection::from_iter(vec![poly, point]);
+//! let feature_collection = FeatureCollection::from(&geometry_collection);
+//!
+//! assert_eq!(2, feature_collection.features.len());
+//! # }
+//! ```
+//!
+//! ### From geojson to geo-types
+//!
+//! The optional `geo-types` feature implements the [`TryFrom`](../std/convert/trait.TryFrom.html)
+//! trait, providing **fallible** conversions _to_ [geo-types Geometries](../geo_types/index.html#structs)
+//! from [GeoJSON `Value`](enum.Value.html) enums.
+//!
+//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in
+//! order to process, transform, or measure them:**
 //! - `match` on `geojson`, iterating over its `features` field, yielding `Option<Feature>`.
 //! - process each `Feature`, accessing its `Value` field, yielding `Option<Value>`.
 //!
-//! Each [`Value`](enum.Value.html) represents a primitive type, such as a
-//! coordinate, point, linestring, polygon, or its multi- equivalent, **and each of these has
-//! an equivalent `geo` primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
+//! Each [`Value`](enum.Value.html) represents a primitive type, such as a coordinate, point,
+//! linestring, polygon, or its multi- equivalent, **and each of these has an equivalent `geo`
+//! primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
+//!
+//! #### GeoJSON to geo_types::GeometryCollection
 //!
 //! Unifying these features, the [`quick_collection`](fn.quick_collection.html) function accepts a [`GeoJson`](enum.GeoJson.html) enum
 //! and processes it, producing a [`GeometryCollection`](../geo_types/struct.GeometryCollection.html)
@@ -256,10 +310,10 @@
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
+//! # {
+//! // requires enabling the `geo-types` feature
 //! use geojson::{quick_collection, GeoJson};
-//! # #[cfg(feature = "geo-types")]
 //! use geo_types::GeometryCollection;
-//! # #[cfg(feature = "geo-types")]
 //! let geojson_str = r#"
 //! {
 //!   "type": "FeatureCollection",
@@ -278,23 +332,23 @@
 //!   ]
 //! }
 //! "#;
-//! # #[cfg(feature = "geo-types")]
 //! let geojson = geojson_str.parse::<GeoJson>().unwrap();
 //! // Turn the GeoJSON string into a geo_types GeometryCollection
-//! # #[cfg(feature = "geo-types")]
 //! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
+//! # }
 //! ```
 //!
-//! A `Geojson` may be converted to a `geo_types::Geometry<f64>` like so:
+//! #### Convert `GeoJson` to `geo_types::Geometry<f64>`
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
+//! # {
+//! // requires enabling the `geo-types` feature
 //! use geojson::GeoJson;
-//! # #[cfg(feature = "geo-types")]
 //! use geo_types::Geometry;
 //! use std::convert::TryInto;
 //! use std::str::FromStr;
-//! # #[cfg(feature = "geo-types")]
+//!
 //! let geojson_str = r#"
 //! {
 //!  "type": "Feature",
@@ -308,12 +362,12 @@
 //!  }
 //! }
 //! "#;
-//! # #[cfg(feature = "geo-types")]
 //! let geojson = GeoJson::from_str(geojson_str).unwrap();
 //! // Turn the GeoJSON string into a geo_types Geometry
-//! # #[cfg(feature = "geo-types")]
 //! let geom: geo_types::Geometry<f64> = geojson.try_into().unwrap();
+//! # }
 //! ```
+//!
 //! ### Caveats
 //! - Round-tripping with intermediate processing using the `geo` types may not produce identical output,
 //! as e.g. outer `Polygon` rings are automatically closed.
