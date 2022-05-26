@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::Error;
@@ -300,6 +301,14 @@ impl TryFrom<JsonValue> for Geometry {
     }
 }
 
+impl FromStr for Geometry {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::try_from(crate::GeoJson::from_str(s)?)
+    }
+}
+
 impl Serialize for Geometry {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -333,9 +342,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
 
-    use crate::json::JsonObject;
-    use crate::{GeoJson, Geometry, Value};
+    use crate::json::{json, JsonObject};
+    use crate::{Error, GeoJson, Geometry, Value};
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()
@@ -465,5 +475,41 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_geometry, geometry_collection);
+    }
+
+    #[test]
+    fn test_from_str_ok() {
+        let geometry_json = json!({
+            "type": "Point",
+            "coordinates": [125.6f64, 10.1]
+        })
+        .to_string();
+
+        let geometry = Geometry::from_str(&geometry_json).unwrap();
+        assert!(matches!(geometry.value, Value::Point(_)));
+    }
+
+    #[test]
+    fn test_from_str_with_unexpected_type() {
+        let feature_json = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [125.6, 10.1]
+            },
+            "properties": {
+                "name": "Dinagat Islands"
+            }
+        })
+        .to_string();
+
+        let actual_failure = Geometry::from_str(&feature_json).unwrap_err();
+        match actual_failure {
+            Error::ExpectedType { actual, expected } => {
+                assert_eq!(actual, "Feature");
+                assert_eq!(expected, "Geometry");
+            }
+            e => panic!("unexpected error: {}", e),
+        };
     }
 }

@@ -6,6 +6,9 @@
   * <https://github.com/georust/geojson/pull/182>
 * Overhauled front page documentation.
   * <https://github.com/georust/geojson/pull/183>
+* Parse `Geometry`/`Feature`/`FeatureCollection` directly from str rather than
+  via `GeoJson` when you know what you're expecting.
+  * <https://github.com/georust/geojson/pull/188>
 * `Feature` now derives `Default`
   * <https://github.com/georust/geojson/pull/190>
 

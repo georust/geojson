@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 use crate::errors::Error;
 use crate::json::{json, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
@@ -39,6 +40,14 @@ impl From<Value> for Feature {
             id: None,
             properties: None,
         }
+    }
+}
+
+impl FromStr for Feature {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::try_from(crate::GeoJson::from_str(s)?)
     }
 }
 
@@ -211,7 +220,10 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
+    use crate::json::json;
     use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
+
+    use std::str::FromStr;
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -459,5 +471,41 @@ mod tests {
         assert_eq!(feature.len_properties(), 0);
         assert_eq!(feature.contains_property("foo"), false);
         assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
+    }
+
+    #[test]
+    fn test_from_str_ok() {
+        let feature_json = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [125.6, 10.1]
+            },
+            "properties": {
+                "name": "Dinagat Islands"
+            }
+        })
+        .to_string();
+
+        let feature = Feature::from_str(&feature_json).unwrap();
+        assert_eq!("Dinagat Islands", feature.property("name").unwrap());
+    }
+
+    #[test]
+    fn test_from_str_with_unexpected_type() {
+        let geometry_json = json!({
+            "type": "Point",
+            "coordinates": [125.6, 10.1]
+        })
+        .to_string();
+
+        let actual_failure = Feature::from_str(&geometry_json).unwrap_err();
+        match actual_failure {
+            Error::ExpectedType { actual, expected } => {
+                assert_eq!(actual, "Geometry");
+                assert_eq!(expected, "Feature");
+            }
+            e => panic!("unexpected error: {}", e),
+        };
     }
 }
