@@ -1,6 +1,6 @@
 # Changes
 
-## UNRELEASED
+## 0.22.4
 
 * Allow parsing `Feature`/`FeatureCollection` that are missing a `"properties"` key.
   * <https://github.com/georust/geojson/pull/182>
