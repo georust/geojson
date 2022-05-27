@@ -16,7 +16,9 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::Error;
-use crate::json::{json, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
+use crate::{JsonObject, JsonValue};
+use serde_json::json;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::{util, Feature, Geometry, Value};
 
 impl From<Geometry> for Feature {
@@ -220,7 +222,8 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::json::json;
+    use serde_json::json;
+    use crate::JsonObject;
     use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
 
     use std::str::FromStr;
@@ -230,8 +233,8 @@ mod tests {
          \"Feature\"}"
     }
 
-    fn properties() -> Option<crate::json::JsonObject> {
-        Some(crate::json::JsonObject::new())
+    fn properties() -> Option<JsonObject> {
+        Some(JsonObject::new())
     }
 
     fn feature() -> Feature {
@@ -415,7 +418,7 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_foreign_member() {
-        use crate::json::JsonObject;
+        use crate::JsonObject;
         use serde_json;
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"other_member\":\"some_value\",\"properties\":{},\"type\":\"Feature\"}";
         let mut foreign_members = JsonObject::new();

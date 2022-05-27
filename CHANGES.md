@@ -2,7 +2,7 @@
 
 ## UNRELEASED
 
-* Allow parsing Feature/FeatureCollection that are missing a "properties" key.
+* Allow parsing `Feature`/`FeatureCollection` that are missing a `"properties"` key.
   * <https://github.com/georust/geojson/pull/182>
 * Overhauled front page documentation.
   * <https://github.com/georust/geojson/pull/183>
@@ -11,6 +11,8 @@
   * <https://github.com/georust/geojson/pull/188>
 * `Feature` now derives `Default`
   * <https://github.com/georust/geojson/pull/190>
+* Reexport `JsonObject` and `JsonValue` from `serde_json`.
+  * <https://github.com/georust/geojson/pull/191>
 
 ## 0.22.3
 
