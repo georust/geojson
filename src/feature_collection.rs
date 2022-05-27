@@ -14,6 +14,7 @@
 
 use std::convert::TryFrom;
 use std::iter::FromIterator;
+use std::str::FromStr;
 
 use crate::errors::Error;
 use crate::json::{json, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
@@ -132,6 +133,14 @@ impl TryFrom<JsonValue> for FeatureCollection {
     }
 }
 
+impl FromStr for FeatureCollection {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::try_from(crate::GeoJson::from_str(s)?)
+    }
+}
+
 impl Serialize for FeatureCollection {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -222,7 +231,10 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Feature, FeatureCollection, Value};
+    use crate::json::json;
+    use crate::{Error, Feature, FeatureCollection, Value};
+
+    use std::str::FromStr;
 
     #[test]
     fn test_fc_from_iterator() {
@@ -243,5 +255,53 @@ mod tests {
         let fc: FeatureCollection = features.into_iter().collect();
         assert_eq!(fc.features.len(), 2);
         assert_eq!(fc.bbox, Some(vec![-1., -1., -1., 11., 11., 11.]));
+    }
+
+    #[test]
+    fn test_from_str_ok() {
+        let fc_json = json!({ "type": "FeatureCollection", "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [125.6, 10.1]
+                },
+                "properties": {
+                    "name": "Dinagat Islands"
+                }
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [125.6, 10.1]
+                },
+                "properties": {
+                    "name": "Dinagat Islands"
+                }
+            },
+        ]})
+        .to_string();
+
+        let feature_collection = FeatureCollection::from_str(&fc_json).unwrap();
+        assert_eq!(2, feature_collection.features.len());
+    }
+
+    #[test]
+    fn test_from_str_with_unexpected_type() {
+        let geometry_json = json!({
+            "type": "Point",
+            "coordinates": [125.6, 10.1]
+        })
+        .to_string();
+
+        let actual_failure = FeatureCollection::from_str(&geometry_json).unwrap_err();
+        match actual_failure {
+            Error::ExpectedType { actual, expected } => {
+                assert_eq!(actual, "Geometry");
+                assert_eq!(expected, "FeatureCollection");
+            }
+            e => panic!("unexpected error: {}", e),
+        };
     }
 }
