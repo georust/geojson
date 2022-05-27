@@ -1,5 +1,10 @@
 # Changes
 
+## UNRELEASED
+
+* Enable optional geo-types integration by default.
+  * <https://github.com/georust/geojson/pull/189>
+
 ## 0.22.4
 
 * Allow parsing `Feature`/`FeatureCollection` that are missing a `"properties"` key.
