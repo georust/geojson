@@ -17,7 +17,9 @@ use std::iter::FromIterator;
 use std::str::FromStr;
 
 use crate::errors::Error;
-use crate::json::{json, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
+use crate::{JsonObject, JsonValue};
+use serde_json::json;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::{util, Bbox, Feature};
 
 /// Feature Collection Objects
@@ -231,7 +233,7 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::json::json;
+    use serde_json::json;
     use crate::{Error, Feature, FeatureCollection, Value};
 
     use std::str::FromStr;

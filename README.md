@@ -1,5 +1,4 @@
-geojson
-=======
+# geojson
 
 [Documentation](https://docs.rs/geojson/)
 
@@ -35,8 +34,7 @@ let geojson = geojson_str.parse::<GeoJson>().unwrap();
 ### Writing
 
 ```rust
-use geojson::{Feature, GeoJson, Geometry, Value};
-use serde_json::{Map, to_value};
+use geojson::{Feature, GeoJson, Geometry, Value, JsonObject, JsonValue};
 
 let geometry = Geometry::new(
     Value::Point(vec![-120.66029,35.2812])
@@ -45,7 +43,7 @@ let geometry = Geometry::new(
 let mut properties = Map::new();
 properties.insert(
     String::from("name"),
-    to_value("Firestone Grill").unwrap(),
+    JsonValue::from("Firestone Grill"),
 );
 
 let geojson = GeoJson::Feature(Feature {
@@ -63,8 +61,8 @@ let geojson_string = geojson.to_string();
 
 Licensed under either of
 
- * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+* Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
 

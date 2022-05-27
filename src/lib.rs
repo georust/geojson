@@ -97,11 +97,11 @@
 //!
 //! ```rust
 //! use geojson::{Feature, GeoJson, Geometry, Value};
-//! # fn get_properties() -> ::serde_json::Map<String, ::serde_json::Value> {
-//! # let mut properties = ::serde_json::Map::new();
+//! # fn get_properties() -> ::geojson::JsonObject {
+//! # let mut properties = ::geojson::JsonObject::new();
 //! # properties.insert(
 //! #     String::from("name"),
-//! #     ::serde_json::Value::String("Firestone Grill".to_string()),
+//! #     ::geojson::JsonValue::from("Firestone Grill"),
 //! # );
 //! # properties
 //! # }
@@ -129,12 +129,11 @@
 //! values](../serde_json/value/index.html).
 //!
 //! ```
-//! use serde_json;
+//! use geojson::{JsonObject, JsonValue};
 //!
-//! let mut properties = serde_json::Map::new();
+//! let mut properties = JsonObject::new();
 //! let key = "name".to_string();
-//! let value = "Firestone Grill".to_string();
-//! properties.insert(key, serde_json::to_value(value).unwrap());
+//! properties.insert(key, JsonValue::from("Firestone Grill"));
 //! ```
 //!
 //! ## Parsing
@@ -447,15 +446,12 @@ pub struct Feature {
     /// NOTE: This crate will permissively parse a Feature whose json is missing a `properties` key.
     /// Because the spec implies that the `properties` key must be present, we will always include
     /// the `properties` key when serializing.
-    pub properties: Option<json::JsonObject>,
+    pub properties: Option<JsonObject>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    pub foreign_members: Option<json::JsonObject>,
+    pub foreign_members: Option<JsonObject>,
 }
 
-mod json {
-    pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    pub use serde_json::{json, Map, Value as JsonValue};
-    pub type JsonObject = Map<String, JsonValue>;
-}
+pub type JsonValue = serde_json::Value;
+pub type JsonObject = serde_json::Map<String, JsonValue>;

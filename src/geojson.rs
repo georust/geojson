@@ -13,7 +13,8 @@
 // limitations under the License.
 
 use crate::errors::Error;
-use crate::json::{self, Deserialize, Deserializer, JsonObject, JsonValue, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use crate::{JsonObject, JsonValue};
 use crate::{Feature, FeatureCollection, Geometry};
 use std::convert::TryFrom;
 use std::fmt;
@@ -233,7 +234,7 @@ impl TryFrom<JsonObject> for GeoJson {
 
     fn try_from(object: JsonObject) -> Result<Self, Self::Error> {
         let type_ = match object.get("type") {
-            Some(json::JsonValue::String(t)) => Type::from_str(t),
+            Some(JsonValue::String(t)) => Type::from_str(t),
             _ => return Err(Error::GeometryUnknownType("type".to_owned())),
         };
         let type_ = type_.ok_or(Error::EmptyType)?;
@@ -350,9 +351,9 @@ impl FromStr for GeoJson {
     }
 }
 
-fn get_object(s: &str) -> Result<json::JsonObject, Error> {
+fn get_object(s: &str) -> Result<JsonObject, Error> {
     match ::serde_json::from_str(s) {
-        Ok(json::JsonValue::Object(object)) => Ok(object),
+        Ok(JsonValue::Object(object)) => Ok(object),
         Ok(other) => Err(Error::ExpectedObjectValue(other)),
         Err(serde_error) => Err(Error::MalformedJson(serde_error)),
     }
