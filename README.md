@@ -40,7 +40,7 @@ let geometry = Geometry::new(
     Value::Point(vec![-120.66029,35.2812])
 );
 
-let mut properties = Map::new();
+let mut properties = JsonObject::new();
 properties.insert(
     String::from("name"),
     JsonValue::from("Firestone Grill"),
