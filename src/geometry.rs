@@ -16,9 +16,9 @@ use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::Error;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use crate::{JsonObject, JsonValue};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
+use crate::{JsonObject, JsonValue};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// The underlying value for a `Geometry`.
 ///
@@ -343,9 +343,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
+    use crate::{Error, GeoJson, Geometry, JsonObject, Value};
     use serde_json::json;
-    use crate::{Error, GeoJson, Geometry, Value, JsonObject};
+    use std::str::FromStr;
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()

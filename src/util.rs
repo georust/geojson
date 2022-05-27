@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::errors::Error;
-use crate::{JsonObject, JsonValue};
 use crate::{feature, Bbox, Feature, Geometry, Position, Value};
+use crate::{JsonObject, JsonValue};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String, Error> {
     let prop = expect_property(value, "type")?;

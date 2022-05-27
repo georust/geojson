@@ -16,10 +16,10 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::Error;
-use crate::{JsonObject, JsonValue};
-use serde_json::json;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::{util, Feature, Geometry, Value};
+use crate::{JsonObject, JsonValue};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::json;
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
@@ -222,9 +222,9 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
     use crate::JsonObject;
     use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
+    use serde_json::json;
 
     use std::str::FromStr;
 

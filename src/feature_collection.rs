@@ -17,10 +17,10 @@ use std::iter::FromIterator;
 use std::str::FromStr;
 
 use crate::errors::Error;
-use crate::{JsonObject, JsonValue};
-use serde_json::json;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::{util, Bbox, Feature};
+use crate::{JsonObject, JsonValue};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::json;
 
 /// Feature Collection Objects
 ///
@@ -51,12 +51,14 @@ use crate::{util, Bbox, Feature};
 /// Collect from an iterator:
 ///
 /// ```rust
-/// use geojson::{FeatureCollection, Feature, Value};
+/// use geojson::{Feature, FeatureCollection, Value};
 ///
-/// let fc: FeatureCollection = (0..10).map(|idx| -> Feature {
-///     let c = idx as f64;
-///     Value::Point(vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
-/// }).collect();
+/// let fc: FeatureCollection = (0..10)
+///     .map(|idx| -> Feature {
+///         let c = idx as f64;
+///         Value::Point(vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
+///     })
+///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
 #[derive(Clone, Debug, PartialEq)]
@@ -233,8 +235,8 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
     use crate::{Error, Feature, FeatureCollection, Value};
+    use serde_json::json;
 
     use std::str::FromStr;
 

@@ -83,7 +83,7 @@
 //! // read geometry data
 //! let geometry: Geometry = feature.geometry.unwrap();
 //! if let Value::Point(coords) = geometry.value {
-//!     assert_eq!(coords, vec![ -118.2836, 34.0956 ]);
+//!     assert_eq!(coords, vec![-118.2836, 34.0956]);
 //! }
 //!
 //! # else {
@@ -311,8 +311,8 @@
 //! # #[cfg(feature = "geo-types")]
 //! # {
 //! // requires enabling the `geo-types` feature
-//! use geojson::{quick_collection, GeoJson};
 //! use geo_types::GeometryCollection;
+//! use geojson::{quick_collection, GeoJson};
 //! let geojson_str = r#"
 //! {
 //!   "type": "FeatureCollection",
@@ -343,8 +343,8 @@
 //! # #[cfg(feature = "geo-types")]
 //! # {
 //! // requires enabling the `geo-types` feature
-//! use geojson::GeoJson;
 //! use geo_types::Geometry;
+//! use geojson::GeoJson;
 //! use std::convert::TryInto;
 //! use std::str::FromStr;
 //!

@@ -13,9 +13,9 @@
 // limitations under the License.
 
 use crate::errors::Error;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use crate::{JsonObject, JsonValue};
 use crate::{Feature, FeatureCollection, Geometry};
+use crate::{JsonObject, JsonValue};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
