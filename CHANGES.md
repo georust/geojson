@@ -4,6 +4,8 @@
 
 * Enable optional geo-types integration by default.
   * <https://github.com/georust/geojson/pull/189>
+* FIX: converting a single GeometryCollection Feature to geo_types
+  * <https://github.com/georust/geojson/pull/194>
 
 ## 0.22.4
 
