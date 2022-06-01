@@ -166,7 +166,16 @@ where
             geometry::Value::MultiPolygon(ref multi_polygon_type) => Ok(
                 geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
             ),
-            _ => Err(GJError::InvalidGeometryConversion(value)),
+            geometry::Value::GeometryCollection(ref gc_type) => {
+                let gc = geo_types::Geometry::GeometryCollection(geo_types::GeometryCollection(
+                    gc_type
+                        .iter()
+                        .cloned()
+                        .map(|geom| geom.try_into())
+                        .collect::<Result<Vec<geo_types::Geometry<T>>, GJError>>()?,
+                ));
+                Ok(gc)
+            }
         }
     }
 }
@@ -310,8 +319,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{Geometry, Value};
-    use serde_json::json;
     use geo_types;
+    use serde_json::json;
 
     use std::convert::TryInto;
 
@@ -588,7 +597,8 @@ mod tests {
                 "properties": {}
             }
             ]
-        }).to_string();
+        })
+        .to_string();
         let geojson: crate::GeoJson = geojson_str.parse().unwrap();
         let mut geojson_feature_collection: crate::FeatureCollection = geojson.try_into().unwrap();
         let feature: crate::Feature = geojson_feature_collection.features.remove(0);

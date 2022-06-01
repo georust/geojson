@@ -118,13 +118,11 @@ where
         Value::MultiPolygon(_) => {
             Ok(TryInto::<GtMultiPolygon<_>>::try_into(geometry.value.clone())?.into())
         }
-        Value::GeometryCollection(gc) => {
-            let gc = GtGeometry::GeometryCollection(GeometryCollection(
-                gc.iter()
-                    .map(|geom| process_geometry(&geom))
-                    .collect::<Result<Vec<geo_types::Geometry<T>>, GJError>>()?,
-            ));
-            Ok(gc)
+        Value::GeometryCollection(_) => {
+            use std::convert::TryFrom;
+            Ok(GtGeometry::GeometryCollection(
+                GeometryCollection::try_from(geometry.value.clone())?,
+            ))
         }
     }
 }
