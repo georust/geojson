@@ -310,6 +310,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{Geometry, Value};
+    use serde_json::json;
     use geo_types;
 
     use std::convert::TryInto;
@@ -554,10 +555,59 @@ mod tests {
         let geojson_geometry = Geometry::from(Value::Point(coords.clone()));
         let geo_geometry: geo_types::Geometry<f64> = geojson_geometry
             .try_into()
-            .expect("Shoudl be able to convert to geo_types::Geometry");
+            .expect("Should be able to convert to geo_types::Geometry");
         let geo_point: geo_types::Point<_> =
             geo_geometry.try_into().expect("this should be a point");
         assert_almost_eq!(geo_point.x(), coords[0], 1e-6);
         assert_almost_eq!(geo_point.y(), coords[1], 1e-6);
+    }
+
+    #[test]
+    fn feature_collection_with_geom_collection() {
+        let geojson_str = json!({
+            "type": "FeatureCollection",
+            "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "GeometryCollection",
+                    "geometries": [
+                    {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [1.0, 1.0],
+                                [2.0, 2.0],
+                                [3.0, 1.0],
+                                [1.0, 1.0]
+                            ]
+                        ]
+                    }
+                    ]
+                },
+                "properties": {}
+            }
+            ]
+        }).to_string();
+        let geojson: crate::GeoJson = geojson_str.parse().unwrap();
+        let mut geojson_feature_collection: crate::FeatureCollection = geojson.try_into().unwrap();
+        let feature: crate::Feature = geojson_feature_collection.features.remove(0);
+
+        use std::convert::TryFrom;
+        let geo_geom = geo_types::Geometry::try_from(feature).unwrap();
+
+        let expected =
+            geo_types::Geometry::GeometryCollection(geo_types::GeometryCollection(vec![
+                geo_types::Geometry::Polygon(geo_types::Polygon::new(
+                    geo_types::LineString::new(vec![
+                        geo_types::coord!(x: 1.0, y: 1.0),
+                        geo_types::coord!(x: 2.0, y: 2.0),
+                        geo_types::coord!(x: 3.0, y: 1.0),
+                        geo_types::coord!(x: 1.0, y: 1.0),
+                    ]),
+                    vec![],
+                )),
+            ]));
+        assert_eq!(geo_geom, expected);
     }
 }
