@@ -1,6 +1,6 @@
 # Changes
 
-## UNRELEASED
+## 0.23.0
 
 * Enable optional geo-types integration by default.
   * <https://github.com/georust/geojson/pull/189>
