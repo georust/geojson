@@ -224,6 +224,18 @@ impl Serialize for Value {
 ///     geometry,
 /// );
 /// ```
+///
+/// Transforming a `Geometry` into a `geo_types::Geometry<f64>` (which requires the `geo-types`
+/// feature):
+///
+/// ```
+/// use geojson::{Geometry, Value};
+/// use std::convert::TryInto;
+///
+/// let geometry = Geometry::new(Value::Point(vec![7.428959, 1.513394]));
+/// # #[cfg(feature = "geo-types")]
+/// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Geometry {
     /// Bounding Box
