@@ -74,6 +74,24 @@ pub struct FeatureCollection {
     pub foreign_members: Option<JsonObject>,
 }
 
+impl IntoIterator for FeatureCollection {
+    type Item = Feature;
+    type IntoIter = std::vec::IntoIter<Feature>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.features.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a FeatureCollection {
+    type Item = &'a Feature;
+    type IntoIter = std::slice::Iter<'a, Feature>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIterator::into_iter(&self.features)
+    }
+}
+
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
         let mut map = JsonObject::new();
@@ -261,34 +279,54 @@ mod tests {
         assert_eq!(fc.bbox, Some(vec![-1., -1., -1., 11., 11., 11.]));
     }
 
+    fn feature_collection_json() -> String {
+        json!({ "type": "FeatureCollection", "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [11.1, 22.2]
+            },
+            "properties": {
+                "name": "Downtown"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [33.3, 44.4]
+            },
+            "properties": {
+                "name": "Uptown"
+            }
+        },
+        ]})
+        .to_string()
+    }
+
     #[test]
     fn test_from_str_ok() {
-        let fc_json = json!({ "type": "FeatureCollection", "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [125.6, 10.1]
-                },
-                "properties": {
-                    "name": "Dinagat Islands"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [125.6, 10.1]
-                },
-                "properties": {
-                    "name": "Dinagat Islands"
-                }
-            },
-        ]})
-        .to_string();
-
-        let feature_collection = FeatureCollection::from_str(&fc_json).unwrap();
+        let feature_collection = FeatureCollection::from_str(&feature_collection_json()).unwrap();
         assert_eq!(2, feature_collection.features.len());
+    }
+
+    #[test]
+    fn iter_features() {
+        let feature_collection = FeatureCollection::from_str(&feature_collection_json()).unwrap();
+
+        let mut names: Vec<String> = vec![];
+        for feature in &feature_collection {
+            let name = feature
+                .property("name")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string();
+            names.push(name);
+        }
+
+        assert_eq!(names, vec!["Downtown", "Uptown"]);
     }
 
     #[test]

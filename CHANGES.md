@@ -1,5 +1,10 @@
 # Changes
 
+## UNRELEASED
+
+* Added IntoIter implementation for FeatureCollection.
+  * <https://github.com/georust/geojson/pull/196>
+
 ## 0.23.0
 
 * Enable optional geo-types integration by default.
