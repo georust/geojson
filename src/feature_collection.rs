@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::str::FromStr;
 
-use crate::errors::Error;
+use crate::errors::{Error, Result};
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -116,11 +116,11 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
 }
 
 impl FeatureCollection {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
 }
@@ -128,7 +128,7 @@ impl FeatureCollection {
 impl TryFrom<JsonObject> for FeatureCollection {
     type Error = Error;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self> {
         match util::expect_type(&mut object)? {
             ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
                 bbox: util::get_bbox(&mut object)?,
@@ -146,7 +146,7 @@ impl TryFrom<JsonObject> for FeatureCollection {
 impl TryFrom<JsonValue> for FeatureCollection {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Error> {
+    fn try_from(value: JsonValue) -> Result<Self> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -158,13 +158,13 @@ impl TryFrom<JsonValue> for FeatureCollection {
 impl FromStr for FeatureCollection {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Self::try_from(crate::GeoJson::from_str(s)?)
     }
 }
 
 impl Serialize for FeatureCollection {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -173,7 +173,7 @@ impl Serialize for FeatureCollection {
 }
 
 impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> Result<FeatureCollection, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
     where
         D: Deserializer<'de>,
     {

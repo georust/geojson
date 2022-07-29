@@ -414,7 +414,7 @@ mod feature_iterator;
 pub use crate::feature_iterator::FeatureIterator;
 
 pub mod errors;
-pub use crate::errors::Error;
+pub use crate::errors::{Error, Result};
 
 #[cfg(feature = "geo-types")]
 mod conversion;

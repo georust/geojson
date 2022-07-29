@@ -28,7 +28,7 @@ pub enum Error {
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     #[error("Encountered malformed JSON: {0}")]
-    MalformedJson(serde_json::error::Error),
+    MalformedJson(serde_json::Error),
     #[error("Encountered neither object type nor null type for 'properties' object: `{0}`")]
     PropertiesExpectedObjectOrNull(Value),
     #[error("Encountered neither object type nor null type for 'geometry' field on 'feature' object: `{0}`")]
@@ -49,4 +49,12 @@ pub enum Error {
     ExpectedArrayValue(String),
     #[error("Expected an owned Object, but got `{0}`")]
     ExpectedObjectValue(Value),
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Self {
+        Self::MalformedJson(error)
+    }
 }
