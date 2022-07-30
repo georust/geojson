@@ -4,6 +4,8 @@
 
 * Added IntoIter implementation for FeatureCollection.
   * <https://github.com/georust/geojson/pull/196>
+* Add `geojson::Result<T>`
+  * <https://github.com/georust/geojson/pull/198>
 
 ## 0.23.0
 

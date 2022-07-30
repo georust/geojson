@@ -15,7 +15,7 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
-use crate::errors::Error;
+use crate::errors::{Error, Result};
 use crate::{util, Feature, Geometry, Value};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -48,7 +48,7 @@ impl From<Value> for Feature {
 impl FromStr for Feature {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Self::try_from(crate::GeoJson::from_str(s)?)
     }
 }
@@ -88,11 +88,11 @@ impl<'a> From<&'a Feature> for JsonObject {
 }
 
 impl Feature {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
 
@@ -150,7 +150,7 @@ impl Feature {
 impl TryFrom<JsonObject> for Feature {
     type Error = Error;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self> {
         let res = &*util::expect_type(&mut object)?;
         match res {
             "Feature" => Ok(Feature {
@@ -168,7 +168,7 @@ impl TryFrom<JsonObject> for Feature {
 impl TryFrom<JsonValue> for Feature {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+    fn try_from(value: JsonValue) -> Result<Self> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -178,7 +178,7 @@ impl TryFrom<JsonValue> for Feature {
 }
 
 impl Serialize for Feature {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -187,7 +187,7 @@ impl Serialize for Feature {
 }
 
 impl<'de> Deserialize<'de> for Feature {
-    fn deserialize<D>(deserializer: D) -> Result<Feature, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Feature, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -209,7 +209,7 @@ pub enum Id {
 }
 
 impl Serialize for Id {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {

@@ -15,7 +15,7 @@
 use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
-use crate::errors::Error;
+use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -110,11 +110,11 @@ impl<'a> From<&'a Value> for JsonObject {
 }
 
 impl Value {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
 }
@@ -122,7 +122,7 @@ impl Value {
 impl TryFrom<JsonObject> for Value {
     type Error = Error;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self> {
         util::get_value(&mut object)
     }
 }
@@ -130,7 +130,7 @@ impl TryFrom<JsonObject> for Value {
 impl TryFrom<JsonValue> for Value {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+    fn try_from(value: JsonValue) -> Result<Self> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -163,7 +163,7 @@ impl<'a> From<&'a Value> for JsonValue {
 }
 
 impl Serialize for Value {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -278,11 +278,11 @@ impl<'a> From<&'a Geometry> for JsonObject {
 }
 
 impl Geometry {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
 }
@@ -290,7 +290,7 @@ impl Geometry {
 impl TryFrom<JsonObject> for Geometry {
     type Error = Error;
 
-    fn try_from(mut object: JsonObject) -> Result<Self, Self::Error> {
+    fn try_from(mut object: JsonObject) -> Result<Self> {
         let bbox = util::get_bbox(&mut object)?;
         let value = util::get_value(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
@@ -305,7 +305,7 @@ impl TryFrom<JsonObject> for Geometry {
 impl TryFrom<JsonValue> for Geometry {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+    fn try_from(value: JsonValue) -> Result<Self> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -317,13 +317,13 @@ impl TryFrom<JsonValue> for Geometry {
 impl FromStr for Geometry {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         Self::try_from(crate::GeoJson::from_str(s)?)
     }
 }
 
 impl Serialize for Geometry {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -332,7 +332,7 @@ impl Serialize for Geometry {
 }
 
 impl<'de> Deserialize<'de> for Geometry {
-    fn deserialize<D>(deserializer: D) -> Result<Geometry, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Geometry, D::Error>
     where
         D: Deserializer<'de>,
     {

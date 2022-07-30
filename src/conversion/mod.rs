@@ -17,7 +17,7 @@ use crate::geo_types::{self, CoordFloat, GeometryCollection};
 use crate::geojson::GeoJson;
 use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 
-use crate::Error as GJError;
+use crate::Result;
 use std::convert::TryInto;
 
 #[cfg(test)]
@@ -67,7 +67,7 @@ pub(crate) mod from_geo_types;
 pub(crate) mod to_geo_types;
 
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
-fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
 where
     T: CoordFloat,
 {
@@ -79,7 +79,7 @@ where
                 // Only pass on non-empty geometries
                 .filter_map(|feature| feature.geometry.as_ref())
                 .map(|geometry| geometry.clone().try_into())
-                .collect::<Result<_, _>>()?,
+                .collect::<Result<_>>()?,
         )),
         Feature(feature) => {
             if let Some(geometry) = &feature.geometry {
@@ -126,7 +126,7 @@ where
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>, GJError>
+pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
 where
     T: CoordFloat,
 {

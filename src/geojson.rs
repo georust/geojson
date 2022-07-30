@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::errors::Error;
+use crate::errors::{Error, Result};
 use crate::{Feature, FeatureCollection, Geometry};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -99,7 +99,7 @@ impl From<FeatureCollection> for GeoJson {
 
 impl TryFrom<GeoJson> for Geometry {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self, Self::Error> {
+    fn try_from(value: GeoJson) -> Result<Self> {
         match value {
             GeoJson::Geometry(g) => Ok(g),
             GeoJson::Feature(_) => Err(Error::ExpectedType {
@@ -116,7 +116,7 @@ impl TryFrom<GeoJson> for Geometry {
 
 impl TryFrom<GeoJson> for Feature {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self, Self::Error> {
+    fn try_from(value: GeoJson) -> Result<Self> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "Feature".to_string(),
@@ -133,7 +133,7 @@ impl TryFrom<GeoJson> for Feature {
 
 impl TryFrom<GeoJson> for FeatureCollection {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self, Self::Error> {
+    fn try_from(value: GeoJson) -> Result<Self> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "FeatureCollection".to_string(),
@@ -149,7 +149,7 @@ impl TryFrom<GeoJson> for FeatureCollection {
 }
 
 impl GeoJson {
-    pub fn from_json_object(object: JsonObject) -> Result<Self, Error> {
+    pub fn from_json_object(object: JsonObject) -> Result<Self> {
         Self::try_from(object)
     }
 
@@ -185,7 +185,7 @@ impl GeoJson {
     ///     })
     /// );
     /// ```
-    pub fn from_json_value(value: JsonValue) -> Result<Self, Error> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
 
@@ -221,7 +221,7 @@ impl GeoJson {
     }
 
     // Deserialize a GeoJson object from an IO stream of JSON
-    pub fn from_reader<R>(rdr: R) -> Result<Self, serde_json::Error>
+    pub fn from_reader<R>(rdr: R) -> serde_json::Result<Self>
     where
         R: std::io::Read,
     {
@@ -232,7 +232,7 @@ impl GeoJson {
 impl TryFrom<JsonObject> for GeoJson {
     type Error = Error;
 
-    fn try_from(object: JsonObject) -> Result<Self, Self::Error> {
+    fn try_from(object: JsonObject) -> Result<Self> {
         let type_ = match object.get("type") {
             Some(JsonValue::String(t)) => Type::from_str(t),
             _ => return Err(Error::GeometryUnknownType("type".to_owned())),
@@ -251,7 +251,7 @@ impl TryFrom<JsonObject> for GeoJson {
 impl TryFrom<JsonValue> for GeoJson {
     type Error = Error;
 
-    fn try_from(value: JsonValue) -> Result<Self, Self::Error> {
+    fn try_from(value: JsonValue) -> Result<Self> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -291,7 +291,7 @@ impl Type {
 }
 
 impl Serialize for GeoJson {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -300,7 +300,7 @@ impl Serialize for GeoJson {
 }
 
 impl<'de> Deserialize<'de> for GeoJson {
-    fn deserialize<D>(deserializer: D) -> Result<GeoJson, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -344,18 +344,17 @@ impl<'de> Deserialize<'de> for GeoJson {
 impl FromStr for GeoJson {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self> {
         let object = get_object(s)?;
 
         GeoJson::from_json_object(object)
     }
 }
 
-fn get_object(s: &str) -> Result<JsonObject, Error> {
-    match ::serde_json::from_str(s) {
-        Ok(JsonValue::Object(object)) => Ok(object),
-        Ok(other) => Err(Error::ExpectedObjectValue(other)),
-        Err(serde_error) => Err(Error::MalformedJson(serde_error)),
+fn get_object(s: &str) -> Result<JsonObject> {
+    match ::serde_json::from_str(s)? {
+        JsonValue::Object(object) => Ok(object),
+        other => Err(Error::ExpectedObjectValue(other)),
     }
 }
 
