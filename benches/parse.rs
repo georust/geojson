@@ -1,14 +1,12 @@
-#![feature(test)]
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use geojson;
-extern crate test;
 
 fn parse_benchmark(c: &mut Criterion) {
     c.bench_function("parse (countries.geojson)", |b| {
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson>());
+            let _ = black_box(geojson_str.parse::<geojson::GeoJson>());
         });
     });
 
@@ -16,7 +14,7 @@ fn parse_benchmark(c: &mut Criterion) {
         let geojson_str = include_str!("../tests/fixtures/geometry_collection.geojson");
 
         b.iter(|| {
-            let _ = test::black_box(geojson_str.parse::<geojson::GeoJson>());
+            let _ = black_box(geojson_str.parse::<geojson::GeoJson>());
         });
     });
 }
