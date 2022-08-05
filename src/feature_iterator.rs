@@ -214,11 +214,10 @@ mod tests {
 
     mod field_ordering {
         use super::*;
+        use crate::Feature;
 
         #[test]
         fn type_field_before_features_field() {
-            use crate::Feature;
-
             let type_first = r#"
               {
                 type: "FeatureCollection",
@@ -251,9 +250,6 @@ mod tests {
 
         #[test]
         fn features_field_before_type_field() {
-            use crate::Feature;
-            env_logger::init();
-
             let type_first = r#"
               {
                 features: [
