@@ -16,6 +16,8 @@ pub enum Error {
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
     #[error("Expected a Feature, FeatureCollection, or Geometry, but got an empty type")]
     EmptyType,
+    #[error("IO Error: {0}")]
+    Io(std::io::Error),
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
     #[error("Expected a Feature mapping, but got a `{0}`")]
     NotAFeature(String),
@@ -56,5 +58,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl From<serde_json::Error> for Error {
     fn from(error: serde_json::Error) -> Self {
         Self::MalformedJson(error)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
     }
 }
