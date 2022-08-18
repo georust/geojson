@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+* Fix: FeatureIterator errors when reading "features" field before "type" field.
+  * <https://github.com/georust/geojson/pull/200>
 * Added IntoIter implementation for FeatureCollection.
   * <https://github.com/georust/geojson/pull/196>
 * Add `geojson::Result<T>`

@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-extern crate serde;
-extern crate serde_derive;
-extern crate serde_json;
-
-use crate::Feature;
+use crate::{Feature, Result};
 
 use std::io;
 use std::marker::PhantomData;
@@ -32,19 +28,22 @@ use std::marker::PhantomData;
 /// [GeoJSON Format Specification § 3.3](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3)
 pub struct FeatureIterator<R> {
     reader: R,
-    skip: Option<u8>,
-    skip_preamble: bool,
-    skip_appendix: bool,
+    state: State,
     marker: PhantomData<Feature>,
+}
+
+#[derive(Debug, Copy, Clone)]
+enum State {
+    BeforeFeatures,
+    DuringFeatures,
+    AfterFeatures,
 }
 
 impl<R> FeatureIterator<R> {
     pub fn new(reader: R) -> Self {
         FeatureIterator {
-            reader: reader,
-            skip: Some(b'['),
-            skip_preamble: true,
-            skip_appendix: false,
+            reader,
+            state: State::BeforeFeatures,
             marker: PhantomData,
         }
     }
@@ -54,24 +53,40 @@ impl<R> FeatureIterator<R>
 where
     R: io::Read,
 {
-    fn skip_past_byte(&mut self, byte: u8) -> io::Result<bool> {
-        let mut one_byte = [0];
+    fn seek_to_next_feature(&mut self) -> Result<bool> {
+        let mut next_bytes = [0];
         loop {
-            if self.reader.read_exact(&mut one_byte).is_err() {
-                return Ok(false);
+            self.reader.read_exact(&mut next_bytes)?;
+            let next_byte = next_bytes[0] as char;
+            if next_byte.is_whitespace() {
+                continue;
             }
-            if one_byte[0] == byte {
-                return Ok(true);
-            }
-            if one_byte[0] == b']' {
-                self.skip_appendix = true;
-            }
-            if !self.skip_preamble && !self.skip_appendix && !(one_byte[0] as char).is_whitespace()
-            {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    format!("byte {}", one_byte[0]),
-                ));
+
+            match (self.state, next_byte) {
+                (State::BeforeFeatures, '[') => {
+                    self.state = State::DuringFeatures;
+                    return Ok(true);
+                }
+                (State::BeforeFeatures, _) => {
+                    continue;
+                }
+                (State::DuringFeatures, ',') => {
+                    return Ok(true);
+                }
+                (State::DuringFeatures, ']') => {
+                    self.state = State::AfterFeatures;
+                    return Ok(false);
+                }
+                (State::AfterFeatures, _) => {
+                    unreachable!("should not seek if we've already finished processing features")
+                }
+                _ => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        format!("next byte: {}", next_byte),
+                    )
+                    .into());
+                }
             }
         }
     }
@@ -81,27 +96,20 @@ impl<R> Iterator for FeatureIterator<R>
 where
     R: io::Read,
 {
-    type Item = io::Result<Feature>;
+    type Item = Result<Feature>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(skip) = self.skip {
-            match self.skip_past_byte(skip) {
-                Ok(true) => {}
-                Ok(false) => {
-                    return None;
-                }
-                Err(err) => {
-                    return Some(Err(err));
-                }
+        match self.seek_to_next_feature() {
+            Ok(true) => {}
+            Ok(false) => return None,
+            Err(err) => {
+                return Some(Err(err));
             }
-            self.skip = None;
         }
+
         let de = serde_json::Deserializer::from_reader(&mut self.reader);
         match de.into_iter().next() {
-            Some(Ok(v)) => {
-                self.skip = Some(b',');
-                Some(Ok(v))
-            }
+            Some(Ok(v)) => Some(Ok(v)),
             Some(Err(err)) => Some(Err(err.into())),
             None => None,
         }
@@ -202,5 +210,74 @@ mod tests {
             fi.next().unwrap().unwrap().geometry.unwrap()
         );
         assert!(fi.next().is_none());
+    }
+
+    mod field_ordering {
+        use super::*;
+        use crate::Feature;
+
+        #[test]
+        fn type_field_before_features_field() {
+            let type_first = r#"
+              {
+                type: "FeatureCollection",
+                features: [
+                  {
+                    "type": "Feature",
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [1.1, 1.2]
+                    },
+                    "properties": { }
+                  },
+                  {
+                    "type": "Feature",
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [2.1, 2.2]
+                    },
+                    "properties": { }
+                  }
+                ]
+              }
+            "#;
+            let features: Vec<Feature> =
+                FeatureIterator::new(BufReader::new(type_first.as_bytes()))
+                    .map(Result::unwrap)
+                    .collect();
+            assert_eq!(features.len(), 2);
+        }
+
+        #[test]
+        fn features_field_before_type_field() {
+            let type_first = r#"
+              {
+                features: [
+                  {
+                    "type": "Feature",
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [1.1, 1.2]
+                    },
+                    "properties": {}
+                  },
+                  {
+                    "type": "Feature",
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [2.1, 2.2]
+                    },
+                    "properties": { }
+                  }
+                ],
+                type: "FeatureCollection"
+              }
+            "#;
+            let features: Vec<Feature> =
+                FeatureIterator::new(BufReader::new(type_first.as_bytes()))
+                    .map(Result::unwrap)
+                    .collect();
+            assert_eq!(features.len(), 2);
+        }
     }
 }
