@@ -116,7 +116,6 @@ where
 }
 try_from_owned_value!(geo_types::MultiPolygon<T>);
 
-
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<&geometry::Value> for geo_types::GeometryCollection<T>
 where
@@ -140,7 +139,6 @@ where
 }
 
 try_from_owned_value!(geo_types::GeometryCollection<T>);
-
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<&geometry::Value> for geo_types::Geometry<T>
@@ -683,7 +681,7 @@ mod tests {
         let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
         let _: geo_types::Polygon<f64> = (&geojson_polygon).try_into()?;
 
-       let geojson_line_string_type1 = vec![
+        let geojson_line_string_type1 = vec![
             coord1.clone(),
             coord2.clone(),
             coord3.clone(),
@@ -700,7 +698,7 @@ mod tests {
             vec![geojson_line_string_type1],
             vec![geojson_line_string_type2],
         ]);
-        let _: geo_types::MultiPolygon<f64> =  (&geojson_multi_polygon).try_into()?;
+        let _: geo_types::MultiPolygon<f64> = (&geojson_multi_polygon).try_into()?;
 
         let geojson_geometry_collection = Value::GeometryCollection(vec![
             Geometry::new(geojson_multi_point),
