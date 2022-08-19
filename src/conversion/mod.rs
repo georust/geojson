@@ -63,6 +63,22 @@ macro_rules! assert_almost_eq {
     }};
 }
 
+
+macro_rules! try_from_owned_value {
+    ($to:ty) => {
+        #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+        impl<T: CoordFloat> TryFrom<geometry::Value> for $to
+        {
+            type Error = Error;
+
+            fn try_from(value: geometry::Value) -> Result<Self> {
+                (&value).try_into()
+            }
+        }
+    };
+}
+
+
 pub(crate) mod from_geo_types;
 pub(crate) mod to_geo_types;
 

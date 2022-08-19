@@ -10,28 +10,29 @@ use crate::{Error, Result};
 use std::convert::{TryFrom, TryInto};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::Point<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::Point<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::Point(point_type) => Ok(create_geo_point(&point_type)),
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
+try_from_owned_value!(geo_types::Point<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::MultiPoint<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::MultiPoint<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
                 multi_point_type
@@ -39,107 +40,116 @@ where
                     .map(|point_type| create_geo_point(&point_type))
                     .collect(),
             )),
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
+try_from_owned_value!(geo_types::MultiPoint<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::LineString<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::LineString<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::LineString(multi_point_type) => {
                 Ok(create_geo_line_string(&multi_point_type))
             }
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
+try_from_owned_value!(geo_types::LineString<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::MultiLineString<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::MultiLineString<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::MultiLineString(multi_line_string_type) => {
                 Ok(create_geo_multi_line_string(&multi_line_string_type))
             }
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
+try_from_owned_value!(geo_types::MultiLineString<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::Polygon<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::Polygon<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(&polygon_type)),
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
+try_from_owned_value!(geo_types::Polygon<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::MultiPolygon<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::MultiPolygon<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<geo_types::MultiPolygon<T>> {
+    fn try_from(value: &geometry::Value) -> Result<geo_types::MultiPolygon<T>> {
         match value {
             geometry::Value::MultiPolygon(multi_polygon_type) => {
                 Ok(create_geo_multi_polygon(&multi_polygon_type))
             }
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
+try_from_owned_value!(geo_types::MultiPolygon<T>);
+
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::GeometryCollection<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::GeometryCollection<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::GeometryCollection(geometries) => {
                 let geojson_geometries = geometries
                     .iter()
-                    .map(|geometry| geometry.value.clone().try_into().unwrap())
+                    .map(|geometry| (&geometry.value).try_into().unwrap())
                     .collect();
 
                 Ok(geo_types::GeometryCollection(geojson_geometries))
             }
-            _ => Err(Error::InvalidGeometryConversion(value)),
+            _ => Err(Error::InvalidGeometryConversion(value.clone())),
         }
     }
 }
 
+try_from_owned_value!(geo_types::GeometryCollection<T>);
+
+
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<geometry::Value> for geo_types::Geometry<T>
+impl<T> TryFrom<&geometry::Value> for geo_types::Geometry<T>
 where
     T: CoordFloat,
 {
     type Error = Error;
 
-    fn try_from(value: geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::Point(ref point_type) => {
                 Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
@@ -179,6 +189,7 @@ where
         }
     }
 }
+try_from_owned_value!(geo_types::Geometry<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<Geometry> for geo_types::Geometry<T>
@@ -188,7 +199,19 @@ where
     type Error = Error;
 
     fn try_from(val: Geometry) -> Result<geo_types::Geometry<T>> {
-        val.value.try_into()
+        (&val).try_into()
+    }
+}
+
+#[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
+impl<T> TryFrom<&Geometry> for geo_types::Geometry<T>
+where
+    T: CoordFloat,
+{
+    type Error = Error;
+
+    fn try_from(val: &Geometry) -> Result<geo_types::Geometry<T>> {
+        (&val.value).try_into()
     }
 }
 
@@ -619,5 +642,74 @@ mod tests {
                 )),
             ]));
         assert_eq!(geo_geom, expected);
+    }
+
+    #[test]
+    fn borrowed_value_conversions_test() -> crate::Result<()> {
+        let coord1 = vec![100.0, 0.2];
+        let coord2 = vec![101.0, 1.0];
+        let coord3 = vec![102.0, 0.8];
+        let coord4 = vec![104.0, 0.2];
+
+        let geojson_point = Value::Point(coord1.clone());
+        let _: geo_types::Point<f64> = (&geojson_point).try_into()?;
+
+        let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
+        let _: geo_types::MultiPoint<f64> = (&geojson_multi_point).try_into()?;
+
+        let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
+        let _: geo_types::LineString<f64> = (&geojson_line_string).try_into()?;
+
+        let geojson_multi_line_string = Value::MultiLineString(vec![
+            vec![coord1.clone(), coord2.clone()],
+            vec![coord2.clone(), coord3.clone()],
+        ]);
+        let _: geo_types::MultiLineString<f64> = (&geojson_multi_line_string).try_into()?;
+
+        let geojson_multi_line_string_type1 = vec![
+            vec![
+                coord1.clone(),
+                coord2.clone(),
+                coord3.clone(),
+                coord1.clone(),
+            ],
+            vec![
+                coord4.clone(),
+                coord1.clone(),
+                coord2.clone(),
+                coord4.clone(),
+            ],
+        ];
+        let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
+        let _: geo_types::Polygon<f64> = (&geojson_polygon).try_into()?;
+
+       let geojson_line_string_type1 = vec![
+            coord1.clone(),
+            coord2.clone(),
+            coord3.clone(),
+            coord1.clone(),
+        ];
+
+        let geojson_line_string_type2 = vec![
+            coord4.clone(),
+            coord3.clone(),
+            coord2.clone(),
+            coord4.clone(),
+        ];
+        let geojson_multi_polygon = Value::MultiPolygon(vec![
+            vec![geojson_line_string_type1],
+            vec![geojson_line_string_type2],
+        ]);
+        let _: geo_types::MultiPolygon<f64> =  (&geojson_multi_polygon).try_into()?;
+
+        let geojson_geometry_collection = Value::GeometryCollection(vec![
+            Geometry::new(geojson_multi_point),
+            Geometry::new(geojson_multi_line_string),
+            Geometry::new(geojson_multi_polygon),
+        ]);
+
+        let _: geo_types::GeometryCollection<f64> = (&geojson_geometry_collection).try_into()?;
+
+        Ok(())
     }
 }

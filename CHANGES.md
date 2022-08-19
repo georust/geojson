@@ -8,6 +8,8 @@
   * <https://github.com/georust/geojson/pull/196>
 * Add `geojson::Result<T>`
   * <https://github.com/georust/geojson/pull/198>
+* Add `TryFrom<&geometry::Value>` for geo_type variants.
+  * <> 
 
 ## 0.23.0
 
