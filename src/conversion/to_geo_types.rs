@@ -19,7 +19,7 @@ where
     fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::Point(point_type) => Ok(create_geo_point(&point_type)),
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("Point", &other)),
         }
     }
 }
@@ -40,7 +40,7 @@ where
                     .map(|point_type| create_geo_point(&point_type))
                     .collect(),
             )),
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("MultiPoint", &other)),
         }
     }
 }
@@ -58,7 +58,7 @@ where
             geometry::Value::LineString(multi_point_type) => {
                 Ok(create_geo_line_string(&multi_point_type))
             }
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("LineString", &other)),
         }
     }
 }
@@ -76,7 +76,7 @@ where
             geometry::Value::MultiLineString(multi_line_string_type) => {
                 Ok(create_geo_multi_line_string(&multi_line_string_type))
             }
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("MultiLineString", &other)),
         }
     }
 }
@@ -92,7 +92,7 @@ where
     fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(&polygon_type)),
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("Polygon", &other)),
         }
     }
 }
@@ -110,7 +110,7 @@ where
             geometry::Value::MultiPolygon(multi_polygon_type) => {
                 Ok(create_geo_multi_polygon(&multi_polygon_type))
             }
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("MultiPolygon", other)),
         }
     }
 }
@@ -133,7 +133,7 @@ where
 
                 Ok(geo_types::GeometryCollection(geojson_geometries))
             }
-            _ => Err(Error::InvalidGeometryConversion(value.clone())),
+            other => Err(mismatch_geom_err("GeometryCollection", other)),
         }
     }
 }
@@ -335,6 +335,13 @@ where
             .map(|polygon_type| create_geo_polygon(&polygon_type))
             .collect(),
     )
+}
+
+fn mismatch_geom_err(expected_type: &'static str, found: &geometry::Value) -> Error {
+    Error::InvalidGeometryConversion {
+        expected_type,
+        found_type: found.type_name(),
+    }
 }
 
 #[cfg(test)]
@@ -590,6 +597,19 @@ mod tests {
             geo_geometry.try_into().expect("this should be a point");
         assert_almost_eq!(geo_point.x(), coords[0], 1e-6);
         assert_almost_eq!(geo_point.y(), coords[1], 1e-6);
+    }
+
+    #[test]
+    fn geojson_mismatch_geometry_conversion_test() {
+        let coord1 = vec![100.0, 0.2];
+        let coord2 = vec![101.0, 1.0];
+        let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
+        use std::convert::TryFrom;
+        let error = geo_types::Point::<f64>::try_from(geojson_line_string).unwrap_err();
+        assert_eq!(
+            "Expected type: `Point`, but found `LineString`",
+            format!("{}", error)
+        )
     }
 
     #[test]

@@ -83,10 +83,9 @@ pub enum Value {
     GeometryCollection(Vec<Geometry>),
 }
 
-impl<'a> From<&'a Value> for JsonObject {
-    fn from(value: &'a Value) -> JsonObject {
-        let mut map = JsonObject::new();
-        let ty = String::from(match value {
+impl Value {
+    pub fn type_name(&self) -> &'static str {
+        match self {
             Value::Point(..) => "Point",
             Value::MultiPoint(..) => "MultiPoint",
             Value::LineString(..) => "LineString",
@@ -94,10 +93,17 @@ impl<'a> From<&'a Value> for JsonObject {
             Value::Polygon(..) => "Polygon",
             Value::MultiPolygon(..) => "MultiPolygon",
             Value::GeometryCollection(..) => "GeometryCollection",
-        });
+        }
+    }
+}
 
-        map.insert(String::from("type"), ::serde_json::to_value(&ty).unwrap());
-
+impl<'a> From<&'a Value> for JsonObject {
+    fn from(value: &'a Value) -> JsonObject {
+        let mut map = JsonObject::new();
+        map.insert(
+            String::from("type"),
+            ::serde_json::to_value(value.type_name()).unwrap(),
+        );
         map.insert(
             String::from(match value {
                 Value::GeometryCollection(..) => "geometries",

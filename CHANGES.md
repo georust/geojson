@@ -10,6 +10,8 @@
   * <https://github.com/georust/geojson/pull/198>
 * Add `TryFrom<&geometry::Value>` for geo_type variants.
   * <https://github.com/georust/geojson/pull/202> 
+* Changed the format of the error produced when converting a geometry to an incompatible type - e.g. a LineString into a Point.
+  * <https://github.com/georust/geojson/pull/203>
 
 ## 0.23.0
 
