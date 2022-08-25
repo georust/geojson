@@ -5,16 +5,20 @@ use serde::de::DeserializeOwned;
 
 use std::io::Read;
 
+/// Enumerates individual Features from a GeoJSON FeatureCollection
 pub struct FeatureReader<R> {
     reader: R,
 }
 
 impl<R: Read> FeatureReader<R> {
+    /// Create a FeatureReader from the given `reader`.
     pub fn from_reader(reader: R) -> Self {
         Self { reader }
     }
 
-    /// Iterate over the individual [`Feature`s](Feature) of a FeatureCollection
+    /// Iterate over the individual [`Feature`s](Feature) of a FeatureCollection.
+    ///
+    /// If instead you'd like to deserialize directly to your own struct, see [`FeatureReader::deserialize`].
     ///
     /// # Examples
     ///
@@ -24,10 +28,7 @@ impl<R: Read> FeatureReader<R> {
     ///      "features": [
     ///          {
     ///            "type": "Feature",
-    ///            "geometry": {
-    ///              "type": "Point",
-    ///              "coordinates": [125.6, 10.1]
-    ///            },
+    ///            "geometry": { "type": "Point", "coordinates": [125.6, 10.1] },
     ///            "properties": {
     ///              "name": "Dinagat Islands",
     ///              "age": 123
@@ -35,10 +36,7 @@ impl<R: Read> FeatureReader<R> {
     ///          },
     ///          {
     ///            "type": "Feature",
-    ///            "geometry": {
-    ///              "type": "Point",
-    ///              "coordinates": [2.3, 4.5]
-    ///            },
+    ///            "geometry": { "type": "Point", "coordinates": [2.3, 4.5] },
     ///            "properties": {
     ///              "name": "Neverland",
     ///              "age": 456
@@ -75,62 +73,24 @@ impl<R: Read> FeatureReader<R> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// let feature_collection_string = r#"{
-    ///     "type": "FeatureCollection",
-    ///     "features": [
-    ///         {
-    ///            "type": "Feature",
-    ///            "geometry": {
-    ///              "type": "Point",
-    ///              "coordinates": [125.6, 10.1]
-    ///            },
-    ///            "properties": {
-    ///              "name": "Dinagat Islands",
-    ///              "age": 123
-    ///            }
-    ///         },
-    ///         {
-    ///            "type": "Feature",
-    ///            "geometry": {
-    ///              "type": "Point",
-    ///              "coordinates": [2.3, 4.5]
-    ///            },
-    ///            "properties": {
-    ///              "name": "Neverland",
-    ///              "age": 456
-    ///            }
-    ///          }
-    ///    ]
-    /// }"#
-    /// .as_bytes();
-    /// let io_reader = std::io::BufReader::new(feature_collection_string);
+    /// Your struct must implement or derive [`serde::Deserialize`].
     ///
-    /// use serde::Deserialize;
-    /// #[derive(Debug, Deserialize)]
+    /// If you have enabled the `geo-types` feature, which is enabled by default, you can
+    /// deserialize directly to a useful geometry type.
+    ///
+    /// ```rust,ignore
+    /// use geojson::{FeatureReader, de::deserialize_geometry};
+    ///
+    /// #[derive(serde::Deserialize)]
     /// struct MyStruct {
-    ///     geometry: geojson::Geometry,
+    ///     #[serde(deserialize_with = "deserialize_geometry")]
+    ///     geometry: geo_types::Point<f64>,
     ///     name: String,
     ///     age: u64,
     /// }
-    ///
-    /// use geojson::FeatureReader;
-    /// use geojson::GeoJson::Geometry;
-    /// let feature_reader = FeatureReader::from_reader(io_reader);
-    /// for feature in feature_reader.deserialize::<MyStruct>().unwrap() {
-    ///     let my_struct = feature.expect("valid geojson feature");
-    ///
-    ///     if my_struct.name == "Dinagat Islands" {
-    ///         assert_eq!(123, my_struct.age);
-    ///     } else if my_struct.name == "Neverland" {
-    ///         assert_eq!(456, my_struct.age);
-    ///     } else {
-    ///         panic!("unexpected name: {}", my_struct.name);
-    ///     }
-    /// }
     /// ```
     ///
-    /// ## With geo-types Geometry
+    /// Then you can deserialize the FeatureCollection directly to your type.
     #[cfg_attr(feature = "geo-types", doc = "```")]
     #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
     /// let feature_collection_string = r#"{
@@ -138,10 +98,7 @@ impl<R: Read> FeatureReader<R> {
     ///     "features": [
     ///         {
     ///            "type": "Feature",
-    ///            "geometry": {
-    ///              "type": "Point",
-    ///              "coordinates": [125.6, 10.1]
-    ///            },
+    ///            "geometry": { "type": "Point", "coordinates": [125.6, 10.1] },
     ///            "properties": {
     ///              "name": "Dinagat Islands",
     ///              "age": 123
@@ -149,32 +106,25 @@ impl<R: Read> FeatureReader<R> {
     ///         },
     ///         {
     ///            "type": "Feature",
-    ///            "geometry": {
-    ///              "type": "Point",
-    ///              "coordinates": [2.3, 4.5]
-    ///            },
+    ///            "geometry": { "type": "Point", "coordinates": [2.3, 4.5] },
     ///            "properties": {
     ///              "name": "Neverland",
     ///              "age": 456
     ///            }
     ///          }
     ///    ]
-    /// }"#
-    /// .as_bytes();
-    ///
+    /// }"#.as_bytes();
     /// let io_reader = std::io::BufReader::new(feature_collection_string);
-    ///
-    /// use geojson::de::deserialize_geometry;
-    /// use geojson::FeatureReader;
-    /// use serde::Deserialize;
-    ///
-    /// #[derive(Debug, Deserialize)]
-    /// struct MyStruct {
-    ///     #[serde(deserialize_with = "deserialize_geometry")]
-    ///     geometry: geo_types::Geometry<f64>,
-    ///     name: String,
-    ///     age: u64,
-    /// }
+    /// #
+    /// # use geojson::{FeatureReader, de::deserialize_geometry};
+    /// #
+    /// # #[derive(serde::Deserialize)]
+    /// # struct MyStruct {
+    /// #     #[serde(deserialize_with = "deserialize_geometry")]
+    /// #     geometry: geo_types::Point<f64>,
+    /// #     name: String,
+    /// #     age: u64,
+    /// # }
     ///
     /// let feature_reader = FeatureReader::from_reader(io_reader);
     /// for feature in feature_reader.deserialize::<MyStruct>().unwrap() {
@@ -187,6 +137,17 @@ impl<R: Read> FeatureReader<R> {
     ///     } else {
     ///         panic!("unexpected name: {}", my_struct.name);
     ///     }
+    /// }
+    /// ```
+    ///
+    /// If you're not using [`geo-types`](geo_types), you can deserialize to a `geojson::Geometry` instead.
+    /// ```rust,ignore
+    /// use serde::Deserialize;
+    /// #[derive(Deserialize)]
+    /// struct MyStruct {
+    ///     geometry: geojson::Geometry,
+    ///     name: String,
+    ///     age: u64,
     /// }
     /// ```
     pub fn deserialize<D: DeserializeOwned>(self) -> Result<impl Iterator<Item = Result<D>>> {
