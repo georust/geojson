@@ -583,7 +583,7 @@ pub(crate) mod tests {
 
             // This will fail if we update our error text, but I wanted to show that the error text
             // is reasonably discernible.
-            let expected_err_text = r#"Error while deserializing JSON: unable to convert from geojson Geometry: Encountered a mismatch when converting to a Geo type: `{"coordinates":[125.6,10.1],"type":"Point"}`"#;
+            let expected_err_text = r#"Error while deserializing JSON: unable to convert from geojson Geometry: Expected type: `LineString`, but found `Point`"#;
             assert_eq!(err.to_string(), expected_err_text);
         }
     }
