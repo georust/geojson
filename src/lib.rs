@@ -25,14 +25,29 @@
 //! geojson = "*"
 //! ```
 //!
+//! # Types and crate structure
+//!
+//! This crate is structured around the GeoJSON spec ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)),
+//! and users are encouraged to familiarise themselves with it. The elements specified in this spec
+//! have corresponding struct and type definitions in this crate, e.g. [`FeatureCollection`], [`Feature`],
+//! etc.
+//!
+//! There are two primary ways to use this crate.
+//!
+//! The first, most general, approach is to write your code to deal in terms of these structs from
+//! the GeoJSON spec. This allows you to access the full expressive power of GeoJSON with the speed
+//! and safety of Rust.
+//!
+//! Alternatively, and commonly, if you only need geometry and properties (and not, e.g.
+//! [foreign members]()), you can bring your own types, and use this crate's [`serde`] integration
+//! to serialize and deserialize your custom types directly to and from a GeoJSON Feature Collection.
+//! [See more on using your own types with serde](#using-your-own-types-with-serde).
+//!
 //! If you want to use GeoJSON as input to or output from a geometry processing crate like
 //! [`geo`](https://docs.rs/geo), see the section on [using geojson with
 //! geo-types](#use-geojson-with-other-crates-by-converting-to-geo-types).
 //!
-//! # Types and crate structure
-//!
-//! This crate is structured around the GeoJSON spec ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)),
-//! and users are encouraged to familiarise themselves with it.
+//! ## Using structs from the GeoJSON spec
 //!
 //! A GeoJSON object can be one of three top-level objects, reflected in this crate as the
 //! [`GeoJson`] enum members of the same name.
@@ -151,7 +166,7 @@
 //! ```rust
 //! use geojson::{GeoJson, Geometry, Value};
 //!
-//! /// Process top-level GeoJSON items
+//! /// Process top-level GeoJSON Object
 //! fn process_geojson(gj: &GeoJson) {
 //!     match *gj {
 //!         GeoJson::FeatureCollection(ref ctn) => {
@@ -376,7 +391,32 @@
 //! [`polylabel_cmd`](https://github.com/urschrei/polylabel_cmd/blob/master/src/main.rs) crates contain example
 //! implementations which may be useful if you wish to perform this kind of processing yourself and require
 //! more granular control over performance and / or memory allocation.
-
+//!
+//! ## Using your own types with serde
+//!
+//! If your use case is simple enough, you can read and write GeoJSON directly to and from your own
+//! types using serde.
+//!
+//! Specifically, the requirements are:
+//! 1. Your type has a `geometry` field.
+//!     1. If your `geometry` field is a [`geo-types` Geometry](geo_types::geometry), you must use
+//!         the provided `serialize_with`/`deserialize_with` helpers.
+//!     2. Otherwise, your `geometry` field must be a [`crate::Geometry`].
+//! 2. Other than `geometry`, you may only use a Feature's `properties` - all other fields, like
+//!    foreign members, will be lost.
+//!
+//! ```ignore
+//! #[derive(serde::Serialize, serde::Deserialize)]
+//! struct MyStruct {
+//!     // Serialize as geojson, rather than using the type's default serialization
+//!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
+//!     geometry: geo_types::Point<f64>,
+//!     name: String,
+//!     count: u64,
+//! }
+//! ```
+//!
+//! See more in the [serialization](ser) and [deserialization](de) modules.
 // only enables the `doc_cfg` feature when
 // the `docsrs` configuration attribute is defined
 #![cfg_attr(docsrs, feature(doc_cfg))]
