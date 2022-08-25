@@ -64,7 +64,7 @@ fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>> {
     }
 }
 
-fn expect_owned_object(value: JsonValue) -> Result<JsonObject> {
+pub(crate) fn expect_owned_object(value: JsonValue) -> Result<JsonObject> {
     match value {
         JsonValue::Object(o) => Ok(o),
         _ => Err(Error::ExpectedObjectValue(value)),

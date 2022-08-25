@@ -419,6 +419,16 @@ pub use crate::errors::{Error, Result};
 #[cfg(feature = "geo-types")]
 mod conversion;
 
+/// Build your struct from GeoJSON using [`serde`]
+pub mod de;
+
+/// Write your struct to GeoJSON using [`serde`]
+pub mod ser;
+
+mod feature_reader;
+
+pub use feature_reader::FeatureReader;
+
 #[cfg(feature = "geo-types")]
 pub use conversion::quick_collection;
 

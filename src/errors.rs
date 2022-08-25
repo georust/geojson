@@ -21,6 +21,8 @@ pub enum Error {
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
     #[error("Expected a Feature mapping, but got a `{0}`")]
     NotAFeature(String),
+    // TODO: Expect vs. Found (and maybe it doesn't need to be "geo-type" specific, but anything
+    // that can be converted)?
     #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
     InvalidGeometryConversion(GValue),
     #[error(
@@ -29,7 +31,7 @@ pub enum Error {
     FeatureHasNoGeometry(Feature),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
-    #[error("Encountered malformed JSON: {0}")]
+    #[error("Error while deserializing JSON: {0}")]
     MalformedJson(serde_json::Error),
     #[error("Encountered neither object type nor null type for 'properties' object: `{0}`")]
     PropertiesExpectedObjectOrNull(Value),
