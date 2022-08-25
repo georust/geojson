@@ -411,9 +411,6 @@ where
         }
 
         if has_feature_type {
-            // What do I actually do here? serde-transcode? or create a new MapAccess or Struct that
-            // has the fields needed by a child visitor - perhaps using serde::de::value::MapAccessDeserializer?
-            // use serde::de::value::MapAccessDeserializer;
             let d2 = hash_map.into_deserializer();
             let result =
                 Deserialize::deserialize(d2).map_err(|e| Error::custom(format!("{}", e)))?;

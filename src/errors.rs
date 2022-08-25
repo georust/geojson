@@ -21,8 +21,6 @@ pub enum Error {
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
     #[error("Expected a Feature mapping, but got a `{0}`")]
     NotAFeature(String),
-    // TODO: Expect vs. Found (and maybe it doesn't need to be "geo-type" specific, but anything
-    // that can be converted)?
     #[error("Encountered a mismatch when converting to a Geo type: `{0}`")]
     InvalidGeometryConversion(GValue),
     #[error(
