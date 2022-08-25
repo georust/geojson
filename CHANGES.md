@@ -15,18 +15,17 @@
         name: String,
         age: u64,
     }
-    
+
     // read your input
     let my_structs: Vec<MyStruct> = geojson::de::deserialize_feature_collection(geojson_reader).unwrap();
-    
+
     // do some processing
     process(&mut my_structs);
-   
-    // write back your results 
+
+    // write back your results
     geojson::ser::to_feature_collection_string(&my_structs).unwrap();
     ```
   * PR: <https://github.com/georust/geojson/pull/199>
-
 * Added IntoIter implementation for FeatureCollection.
   * <https://github.com/georust/geojson/pull/196>
 * Added `geojson::Result<T>`.
@@ -34,6 +33,7 @@
 * BREAKING: Change the Result type of FeatureIterator from io::Result to crate::Result
   * <https://github.com/georust/geojson/pull/199>
 * Add `TryFrom<&geometry::Value>` for geo_type variants.
+  * <https://github.com/georust/geojson/pull/202>
 
 ## 0.23.0
 
