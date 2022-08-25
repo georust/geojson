@@ -411,6 +411,8 @@ mod feature_collection;
 pub use crate::feature_collection::FeatureCollection;
 
 mod feature_iterator;
+#[allow(deprecated)]
+#[doc(hidden)]
 pub use crate::feature_iterator::FeatureIterator;
 
 pub mod errors;

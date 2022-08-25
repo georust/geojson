@@ -65,6 +65,7 @@ impl<R: Read> FeatureReader<R> {
     /// }
     /// ```
     pub fn features(self) -> impl Iterator<Item = Result<Feature>> {
+        #[allow(deprecated)]
         crate::FeatureIterator::new(self.reader)
     }
 

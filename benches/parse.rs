@@ -18,21 +18,6 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("FeatureIter (countries.geojson)", |b| {
-        b.iter(|| {
-            let feature_iter =
-                geojson::FeatureIterator::new(BufReader::new(geojson_str.as_bytes()));
-            let _ = black_box({
-                let mut count = 0;
-                for feature in feature_iter {
-                    let _ = feature.unwrap();
-                    count += 1;
-                }
-                assert_eq!(count, 180);
-            });
-        });
-    });
-
     c.bench_function("FeatureReader::features (countries.geojson)", |b| {
         b.iter(|| {
             let feature_reader =
@@ -50,6 +35,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
 
     c.bench_function("FeatureReader::deserialize (countries.geojson)", |b| {
         b.iter(|| {
+            #[allow(unused)]
             #[derive(serde::Deserialize)]
             struct Country {
                 geometry: geojson::Geometry,

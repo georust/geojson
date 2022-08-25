@@ -11,12 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#![allow(deprecated)]
 
 use crate::{Feature, Result};
 
 use std::io;
 use std::marker::PhantomData;
 
+// TODO: Eventually make this private - and expose only FeatureReader.
+#[deprecated(
+    since = "0.24.0",
+    note = "use FeatureReader::from_reader(io).features() instead"
+)]
 /// Iteratively deserialize individual features from a stream containing a
 /// GeoJSON [`FeatureCollection`](struct@crate::FeatureCollection)
 ///
