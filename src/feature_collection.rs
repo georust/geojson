@@ -52,11 +52,12 @@ use serde_json::json;
 ///
 /// ```rust
 /// use geojson::{Feature, FeatureCollection, Value};
+/// use tinyvec::tiny_vec;
 ///
 /// let fc: FeatureCollection = (0..10)
 ///     .map(|idx| -> Feature {
 ///         let c = idx as f64;
-///         Value::Point(vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
+///         Value::Point(tiny_vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
 ///     })
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
@@ -257,18 +258,19 @@ mod tests {
     use serde_json::json;
 
     use std::str::FromStr;
-
+    use tinyvec::tiny_vec;
     #[test]
     fn test_fc_from_iterator() {
         let features: Vec<Feature> = vec![
             {
-                let mut feat: Feature = Value::Point(vec![0., 0., 0.]).into();
+                let mut feat: Feature = Value::Point(tiny_vec![0., 0., 0.]).into();
                 feat.bbox = Some(vec![-1., -1., -1., 1., 1., 1.]);
                 feat
             },
             {
                 let mut feat: Feature =
-                    Value::MultiPoint(vec![vec![10., 10., 10.], vec![11., 11., 11.]]).into();
+                    Value::MultiPoint(vec![tiny_vec![10., 10., 10.], tiny_vec![11., 11., 11.]])
+                        .into();
                 feat.bbox = Some(vec![10., 10., 10., 11., 11., 11.]);
                 feat
             },

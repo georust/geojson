@@ -207,13 +207,13 @@ pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>> {
     }
     Ok(features)
 }
-
+use tinyvec::TinyVec;
 fn json_to_position(json: &JsonValue) -> Result<Position> {
     let coords_array = expect_array(json)?;
     if coords_array.len() < 2 {
         return Err(Error::PositionTooShort(coords_array.len()));
     }
-    let mut coords = Vec::with_capacity(coords_array.len());
+    let mut coords = TinyVec::with_capacity(coords_array.len());
     for position in coords_array {
         coords.push(expect_f64(position)?);
     }

@@ -76,6 +76,7 @@
 //!
 //! ```
 //! use geojson::{Feature, GeoJson, Geometry, Value};
+//! use tinyvec::tiny_vec;
 //! use std::convert::TryFrom;
 //!
 //! let geojson_str = r#"
@@ -98,7 +99,7 @@
 //! // read geometry data
 //! let geometry: Geometry = feature.geometry.unwrap();
 //! if let Value::Point(coords) = geometry.value {
-//!     assert_eq!(coords, vec![-118.2836, 34.0956]);
+//!     assert_eq!(coords, tiny_vec![-118.2836, 34.0956]);
 //! }
 //!
 //! # else {
@@ -121,8 +122,9 @@
 //! # properties
 //! # }
 //! # fn main() {
+//! use tinyvec::tiny_vec;
 //!
-//! let geometry = Geometry::new(Value::Point(vec![-120.66029, 35.2812]));
+//! let geometry = Geometry::new(Value::Point(tiny_vec![-120.66029, 35.2812]));
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
@@ -253,17 +255,18 @@
 //! ```
 //! # #[cfg(feature = "geo-types")]
 //! # {
+//! use tinyvec::tiny_vec;
 //! // requires enabling the `geo-types` feature
 //! let geo_point: geo_types::Point<f64> = geo_types::Point::new(2., 9.);
 //! let geo_geometry: geo_types::Geometry<f64> = geo_types::Geometry::from(geo_point);
 //!
 //! assert_eq!(
 //!     geojson::Value::from(&geo_point),
-//!     geojson::Value::Point(vec![2., 9.]),
+//!     geojson::Value::Point(tiny_vec![2., 9.]),
 //! );
 //! assert_eq!(
 //!     geojson::Value::from(&geo_geometry),
-//!     geojson::Value::Point(vec![2., 9.]),
+//!     geojson::Value::Point(tiny_vec![2., 9.]),
 //! );
 //! # }
 //! ```
@@ -424,7 +427,7 @@ pub type Bbox = Vec<f64>;
 /// Positions
 ///
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub type Position = Vec<f64>;
+pub type Position = tinyvec::TinyVec<[f64; 2]>;
 
 pub type PointType = Position;
 pub type LineStringType = Vec<Position>;
