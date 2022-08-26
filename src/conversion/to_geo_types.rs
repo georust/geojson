@@ -393,15 +393,15 @@ fn mismatch_geom_err(expected_type: &'static str, found: &geometry::Value) -> Er
 
 #[cfg(test)]
 mod tests {
-    use crate::{Geometry, Value};
+    use crate::{Geometry, Position, Value};
     use serde_json::json;
 
     use std::convert::TryInto;
 
     #[test]
     fn geojson_point_conversion_test() {
-        let coords = vec![100.0, 0.2];
-        let geojson_point = Value::Point(coords.clone());
+        let coords = [100.0, 0.2];
+        let geojson_point = Value::Point(Position(coords.clone().into()));
         let geo_point: geo_types::Point<f64> = geojson_point.try_into().unwrap();
 
         assert_almost_eq!(geo_point.x(), coords[0], 1e-6);
@@ -410,8 +410,8 @@ mod tests {
 
     #[test]
     fn geojson_multi_point_conversion_test() {
-        let coord1 = vec![100.0, 0.2];
-        let coord2 = vec![101.0, 1.0];
+        let coord1 = Position([100.0, 0.2].into());
+        let coord2 = Position([101.0, 1.0].into());
         let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
         let geo_multi_point: geo_types::MultiPoint<f64> = geojson_multi_point.try_into().unwrap();
 
@@ -423,8 +423,8 @@ mod tests {
 
     #[test]
     fn geojson_line_string_conversion_test() {
-        let coord1 = vec![100.0, 0.2];
-        let coord2 = vec![101.0, 1.0];
+        let coord1 = Position::from([100.0, 0.2]);
+        let coord2 = Position::from([101.0, 1.0]);
         let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
         let geo_line_string: geo_types::LineString<f64> = geojson_line_string.try_into().unwrap();
 
@@ -436,9 +436,9 @@ mod tests {
 
     #[test]
     fn geojson_multi_line_string_conversion_test() {
-        let coord1 = vec![100.0, 0.2];
-        let coord2 = vec![101.0, 1.0];
-        let coord3 = vec![102.0, 0.8];
+        let coord1 = Position::from([100.0, 0.2]);
+        let coord2 = Position::from([101.0, 1.0]);
+        let coord3 = Position::from([102.0, 0.8]);
         let geojson_multi_line_string = Value::MultiLineString(vec![
             vec![coord1.clone(), coord2.clone()],
             vec![coord2.clone(), coord3.clone()],
@@ -461,12 +461,12 @@ mod tests {
 
     #[test]
     fn geojson_polygon_conversion_test() {
-        let coord1 = vec![100.0, 0.0];
-        let coord2 = vec![101.0, 1.0];
-        let coord3 = vec![101.0, 1.0];
-        let coord4 = vec![104.0, 0.2];
-        let coord5 = vec![100.9, 0.2];
-        let coord6 = vec![100.9, 0.7];
+        let coord1 = Position::from([100.0, 0.0]);
+        let coord2 = Position::from([101.0, 1.0]);
+        let coord3 = Position::from([101.0, 1.0]);
+        let coord4 = Position::from([104.0, 0.2]);
+        let coord5 = Position::from([100.9, 0.2]);
+        let coord6 = Position::from([100.9, 0.7]);
 
         let geojson_multi_line_string_type1 = vec![
             vec![
@@ -516,9 +516,9 @@ mod tests {
 
     #[test]
     fn geojson_polygon_without_interiors_conversion_test() {
-        let coord1 = vec![100.0, 0.0];
-        let coord2 = vec![101.0, 1.0];
-        let coord3 = vec![101.0, 1.0];
+        let coord1 = Position::from([100.0, 0.0]);
+        let coord2 = Position::from([101.0, 1.0]);
+        let coord3 = Position::from([101.0, 1.0]);
 
         let geojson_multi_line_string_type1 = vec![vec![
             coord1.clone(),
@@ -544,12 +544,12 @@ mod tests {
 
     #[test]
     fn geojson_multi_polygon_conversion_test() {
-        let coord1 = vec![100.0, 0.0];
-        let coord2 = vec![101.0, 1.0];
-        let coord3 = vec![101.0, 1.0];
-        let coord4 = vec![104.0, 0.2];
-        let coord5 = vec![100.9, 0.2];
-        let coord6 = vec![100.9, 0.7];
+        let coord1 = Position::from([100.0, 0.0]);
+        let coord2 = Position::from([101.0, 1.0]);
+        let coord3 = Position::from([101.0, 1.0]);
+        let coord4 = Position::from([104.0, 0.2]);
+        let coord5 = Position::from([100.9, 0.2]);
+        let coord6 = Position::from([100.9, 0.7]);
 
         let geojson_line_string_type1 = vec![
             coord1.clone(),
@@ -594,11 +594,11 @@ mod tests {
 
     #[test]
     fn geojson_geometry_collection_conversion_test() {
-        let coord1 = vec![100.0, 0.0];
-        let coord2 = vec![100.0, 1.0];
-        let coord3 = vec![101.0, 1.0];
-        let coord4 = vec![102.0, 0.0];
-        let coord5 = vec![101.0, 0.0];
+        let coord1 = Position::from([100.0, 0.0]);
+        let coord2 = Position::from([100.0, 1.0]);
+        let coord3 = Position::from([101.0, 1.0]);
+        let coord4 = Position::from([102.0, 0.0]);
+        let coord5 = Position::from([101.0, 0.0]);
 
         let geojson_multi_point = Value::MultiPoint(vec![coord1.clone(), coord2.clone()]);
         let geojson_multi_line_string = Value::MultiLineString(vec![
@@ -634,7 +634,7 @@ mod tests {
 
     #[test]
     fn geojson_geometry_conversion() {
-        let coords = vec![100.0, 0.2];
+        let coords = Position::from([100.0, 0.2]);
         let geojson_geometry = Geometry::from(Value::Point(coords.clone()));
         let geo_geometry: geo_types::Geometry<f64> = geojson_geometry
             .try_into()
@@ -647,8 +647,8 @@ mod tests {
 
     #[test]
     fn geojson_mismatch_geometry_conversion_test() {
-        let coord1 = vec![100.0, 0.2];
-        let coord2 = vec![101.0, 1.0];
+        let coord1 = Position::from([100.0, 0.2]);
+        let coord2 = Position::from([101.0, 1.0]);
         let geojson_line_string = Value::LineString(vec![coord1.clone(), coord2.clone()]);
         use std::convert::TryFrom;
         let error = geo_types::Point::<f64>::try_from(geojson_line_string).unwrap_err();
@@ -710,10 +710,10 @@ mod tests {
 
     #[test]
     fn borrowed_value_conversions_test() -> crate::Result<()> {
-        let coord1 = vec![100.0, 0.2];
-        let coord2 = vec![101.0, 1.0];
-        let coord3 = vec![102.0, 0.8];
-        let coord4 = vec![104.0, 0.2];
+        let coord1 = Position::from([100.0, 0.2]);
+        let coord2 = Position::from([101.0, 1.0]);
+        let coord3 = Position::from([102.0, 0.8]);
+        let coord4 = Position::from([104.0, 0.2]);
 
         let geojson_point = Value::Point(coord1.clone());
         let _: geo_types::Point<f64> = (&geojson_point).try_into()?;
