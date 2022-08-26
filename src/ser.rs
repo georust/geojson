@@ -96,7 +96,7 @@
 //!     ...
 //! }
 //! ```
-use crate::{JsonObject, Result};
+use crate::{JsonObject, JsonValue, Result};
 
 use serde::{ser::Error, Serialize, Serializer};
 
@@ -316,12 +316,37 @@ where
         S: Serializer,
     {
         let mut json_object: JsonObject = {
-            // PERF: this is an extra round-trip just to juggle some fields around.
-            // How can we skip this?
-            let bytes = serde_json::to_vec(self.feature)
-                .map_err(|e| S::Error::custom(format!("unable to serialize to json: {}", e)))?;
-            serde_json::from_slice(&bytes)
-                .map_err(|e| S::Error::custom(format!("unable to roundtrip from json: {}", e)))?
+            let value = serde_json::to_value(self.feature).map_err(|e| {
+                S::Error::custom(format!("Feature was not serializable as JSON - {}", e))
+            })?;
+            match value {
+                JsonValue::Object(object) => object,
+                JsonValue::Null => {
+                    return Err(S::Error::custom(format!(
+                        "expected JSON object but found `null`"
+                    )))
+                }
+                JsonValue::Bool(_) => {
+                    return Err(S::Error::custom(format!(
+                        "expected JSON object but found `bool`"
+                    )))
+                }
+                JsonValue::Number(_) => {
+                    return Err(S::Error::custom(format!(
+                        "expected JSON object but found `number`"
+                    )))
+                }
+                JsonValue::String(_) => {
+                    return Err(S::Error::custom(format!(
+                        "expected JSON object but found `string`"
+                    )))
+                }
+                JsonValue::Array(_) => {
+                    return Err(S::Error::custom(format!(
+                        "expected JSON object but found `array`"
+                    )))
+                }
+            }
         };
 
         if !json_object.contains_key("geometry") {
