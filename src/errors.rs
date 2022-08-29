@@ -31,7 +31,7 @@ pub enum Error {
     FeatureHasNoGeometry(Feature),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
-    #[error("Encountered malformed JSON: {0}")]
+    #[error("Error while deserializing JSON: {0}")]
     MalformedJson(serde_json::Error),
     #[error("Encountered neither object type nor null type for 'properties' object: `{0}`")]
     PropertiesExpectedObjectOrNull(Value),
