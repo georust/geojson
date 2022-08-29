@@ -1,4 +1,4 @@
-use crate::geo_types::{self, CoordFloat};
+use geo_types::{self, CoordFloat};
 
 use crate::geometry;
 
@@ -17,8 +17,8 @@ where
 
     fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
-            geometry::Value::Point(point_type) => Ok(create_geo_point(&point_type)),
-            other => Err(mismatch_geom_err("Point", &other)),
+            geometry::Value::Point(point_type) => Ok(create_geo_point(point_type)),
+            other => Err(mismatch_geom_err("Point", other)),
         }
     }
 }
@@ -36,10 +36,10 @@ where
             geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
                 multi_point_type
                     .iter()
-                    .map(|point_type| create_geo_point(&point_type))
+                    .map(|point_type| create_geo_point(point_type))
                     .collect(),
             )),
-            other => Err(mismatch_geom_err("MultiPoint", &other)),
+            other => Err(mismatch_geom_err("MultiPoint", other)),
         }
     }
 }
@@ -55,9 +55,9 @@ where
     fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::LineString(multi_point_type) => {
-                Ok(create_geo_line_string(&multi_point_type))
+                Ok(create_geo_line_string(multi_point_type))
             }
-            other => Err(mismatch_geom_err("LineString", &other)),
+            other => Err(mismatch_geom_err("LineString", other)),
         }
     }
 }
@@ -73,9 +73,9 @@ where
     fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
             geometry::Value::MultiLineString(multi_line_string_type) => {
-                Ok(create_geo_multi_line_string(&multi_line_string_type))
+                Ok(create_geo_multi_line_string(multi_line_string_type))
             }
-            other => Err(mismatch_geom_err("MultiLineString", &other)),
+            other => Err(mismatch_geom_err("MultiLineString", other)),
         }
     }
 }
@@ -90,8 +90,8 @@ where
 
     fn try_from(value: &geometry::Value) -> Result<Self> {
         match value {
-            geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(&polygon_type)),
-            other => Err(mismatch_geom_err("Polygon", &other)),
+            geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(polygon_type)),
+            other => Err(mismatch_geom_err("Polygon", other)),
         }
     }
 }
@@ -107,7 +107,7 @@ where
     fn try_from(value: &geometry::Value) -> Result<geo_types::MultiPolygon<T>> {
         match value {
             geometry::Value::MultiPolygon(multi_polygon_type) => {
-                Ok(create_geo_multi_polygon(&multi_polygon_type))
+                Ok(create_geo_multi_polygon(multi_polygon_type))
             }
             other => Err(mismatch_geom_err("MultiPolygon", other)),
         }
@@ -154,7 +154,7 @@ where
                 Ok(geo_types::Geometry::MultiPoint(geo_types::MultiPoint(
                     multi_point_type
                         .iter()
-                        .map(|point_type| create_geo_point(&point_type))
+                        .map(|point_type| create_geo_point(point_type))
                         .collect(),
                 )))
             }
@@ -314,7 +314,7 @@ where
     geo_types::MultiLineString(
         multi_line_type
             .iter()
-            .map(|point_type| create_geo_line_string(&point_type))
+            .map(|point_type| create_geo_line_string(point_type))
             .collect(),
     )
 }
@@ -347,7 +347,7 @@ where
     geo_types::MultiPolygon(
         multi_polygon_type
             .iter()
-            .map(|polygon_type| create_geo_polygon(&polygon_type))
+            .map(|polygon_type| create_geo_polygon(polygon_type))
             .collect(),
     )
 }
@@ -362,7 +362,6 @@ fn mismatch_geom_err(expected_type: &'static str, found: &geometry::Value) -> Er
 #[cfg(test)]
 mod tests {
     use crate::{Geometry, Value};
-    use geo_types;
     use serde_json::json;
 
     use std::convert::TryInto;
@@ -415,13 +414,13 @@ mod tests {
         let geo_multi_line_string: geo_types::MultiLineString<f64> =
             geojson_multi_line_string.try_into().unwrap();
 
-        let ref geo_line_string1 = geo_multi_line_string.0[0];
+        let geo_line_string1 = &geo_multi_line_string.0[0];
         assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
         assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[1].y, coord2[1], 1e-6);
 
-        let ref geo_line_string2 = geo_multi_line_string.0[1];
+        let geo_line_string2 = &geo_multi_line_string.0[1];
         assert_almost_eq!(geo_line_string2.0[0].x, coord2[0], 1e-6);
         assert_almost_eq!(geo_line_string2.0[0].y, coord2[1], 1e-6);
         assert_almost_eq!(geo_line_string2.0[1].x, coord3[0], 1e-6);
@@ -454,7 +453,7 @@ mod tests {
         let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
-        let ref geo_line_string1 = geo_polygon.exterior();
+        let geo_line_string1 = geo_polygon.exterior();
         assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
         assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
@@ -464,7 +463,7 @@ mod tests {
         assert_almost_eq!(geo_line_string1.0[3].x, coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[3].y, coord1[1], 1e-6);
 
-        let ref geo_line_string2 = geo_polygon.interiors()[0];
+        let geo_line_string2 = &geo_polygon.interiors()[0];
         assert_almost_eq!(geo_line_string2.0[0].x, coord4[0], 1e-6);
         assert_almost_eq!(geo_line_string2.0[0].y, coord4[1], 1e-6);
         assert_almost_eq!(geo_line_string2.0[1].x, coord5[0], 1e-6);
@@ -498,7 +497,7 @@ mod tests {
         let geojson_polygon = Value::Polygon(geojson_multi_line_string_type1);
         let geo_polygon: geo_types::Polygon<f64> = geojson_polygon.try_into().unwrap();
 
-        let ref geo_line_string1 = geo_polygon.exterior();
+        let geo_line_string1 = geo_polygon.exterior();
         assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
         assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
@@ -540,7 +539,7 @@ mod tests {
         let geo_multi_polygon: geo_types::MultiPolygon<f64> =
             geojson_multi_polygon.try_into().unwrap();
 
-        let ref geo_line_string1 = geo_multi_polygon.0[0].exterior();
+        let geo_line_string1 = geo_multi_polygon.0[0].exterior();
         assert_almost_eq!(geo_line_string1.0[0].x, coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[0].y, coord1[1], 1e-6);
         assert_almost_eq!(geo_line_string1.0[1].x, coord2[0], 1e-6);
@@ -550,7 +549,7 @@ mod tests {
         assert_almost_eq!(geo_line_string1.0[3].x, coord1[0], 1e-6);
         assert_almost_eq!(geo_line_string1.0[3].y, coord1[1], 1e-6);
 
-        let ref geo_line_string2 = geo_multi_polygon.0[1].exterior();
+        let geo_line_string2 = geo_multi_polygon.0[1].exterior();
         assert_almost_eq!(geo_line_string2.0[0].x, coord4[0], 1e-6);
         assert_almost_eq!(geo_line_string2.0[0].y, coord4[1], 1e-6);
         assert_almost_eq!(geo_line_string2.0[1].x, coord5[0], 1e-6);

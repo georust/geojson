@@ -5,12 +5,12 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 
-#[cfg(not(feature="geo-types"))]
+#[cfg(not(feature = "geo-types"))]
 fn main() -> Result<(), Box<dyn Error>> {
     panic!("this example requires geo-types")
 }
 
-#[cfg(feature="geo-types")]
+#[cfg(feature = "geo-types")]
 fn main() -> Result<(), Box<dyn Error>> {
     #[derive(Serialize, Deserialize)]
     struct Country {
