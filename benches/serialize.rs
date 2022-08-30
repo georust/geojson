@@ -10,11 +10,10 @@ fn serialize_feature_collection_benchmark(c: &mut Criterion) {
             let geojson = geojson_str.parse::<geojson::GeoJson>().unwrap();
 
             b.iter(|| {
-                black_box({
-                    let geojson_string = serde_json::to_string(&geojson).unwrap();
-                    // Sanity check that we serialized a long string of some kind.
-                    assert_eq!(geojson_string.len(), 256890);
-                });
+                let geojson_string = serde_json::to_string(&geojson).unwrap();
+                // Sanity check that we serialized a long string of some kind.
+                assert_eq!(geojson_string.len(), 256890);
+                black_box(geojson_string);
             });
         },
     );
@@ -30,18 +29,17 @@ fn serialize_feature_collection_benchmark(c: &mut Criterion) {
         assert_eq!(features.len(), 180);
 
         b.iter(|| {
-            black_box({
-                let geojson_string = geojson::ser::to_feature_collection_string(&features).unwrap();
-                // Sanity check that we serialized a long string of some kind.
-                //
-                // Note this is slightly shorter than the GeoJson round-trip above because we drop
-                // some fields, like foreign members
-                assert_eq!(geojson_string.len(), 254908);
-            });
+            let geojson_string = geojson::ser::to_feature_collection_string(&features).unwrap();
+            // Sanity check that we serialized a long string of some kind.
+            //
+            // Note this is slightly shorter than the GeoJson round-trip above because we drop
+            // some fields, like foreign members
+            assert_eq!(geojson_string.len(), 254908);
+            black_box(geojson_string);
         });
     });
 
-    #[cfg(feature="geo-types")]
+    #[cfg(feature = "geo-types")]
     c.bench_function(
         "serialize custom struct to geo-types (countries.geojson)",
         |b| {
@@ -60,15 +58,13 @@ fn serialize_feature_collection_benchmark(c: &mut Criterion) {
             assert_eq!(features.len(), 180);
 
             b.iter(|| {
-                black_box({
-                    let geojson_string =
-                        geojson::ser::to_feature_collection_string(&features).unwrap();
-                    // Sanity check that we serialized a long string of some kind.
-                    //
-                    // Note this is slightly shorter than the GeoJson round-trip above because we drop
-                    // some fields, like foreign members
-                    assert_eq!(geojson_string.len(), 254908);
-                });
+                let geojson_string = geojson::ser::to_feature_collection_string(&features).unwrap();
+                // Sanity check that we serialized a long string of some kind.
+                //
+                // Note this is slightly shorter than the GeoJson round-trip above because we drop
+                // some fields, like foreign members
+                assert_eq!(geojson_string.len(), 254908);
+                black_box(geojson_string);
             });
         },
     );

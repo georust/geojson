@@ -1,4 +1,4 @@
-use crate::geo_types::{self, CoordFloat};
+use geo_types::{self, CoordFloat};
 
 use crate::{geometry, Feature, FeatureCollection};
 
@@ -250,7 +250,7 @@ where
         polygon
             .interiors()
             .iter()
-            .map(|line_string| create_line_string_type(&line_string)),
+            .map(|line_string| create_line_string_type(line_string)),
     );
 
     coords
@@ -263,14 +263,13 @@ where
     multi_polygon
         .0
         .iter()
-        .map(|polygon| create_polygon_type(&polygon))
+        .map(|polygon| create_polygon_type(polygon))
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{GeoJson, Geometry, Value};
-    use geo_types;
     use geo_types::{
         Coordinate, GeometryCollection, Line, LineString, MultiLineString, MultiPoint,
         MultiPolygon, Point, Polygon, Rect, Triangle,

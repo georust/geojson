@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod roundtrip_tests {
     use geojson::GeoJson;
-    use serde_json;
     use std::fs::File;
     use std::io::prelude::*;
 

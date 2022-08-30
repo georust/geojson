@@ -397,23 +397,19 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        let result = match feature_json_str.parse::<GeoJson>() {
-            Err(Error::FeatureInvalidIdentifierType(_)) => true,
-            Ok(_) => false,
-            _ => false,
-        };
-        assert_eq!(result, true,)
+        assert!(matches!(
+            feature_json_str.parse::<GeoJson>(),
+            Err(Error::FeatureInvalidIdentifierType(_))
+        ));
     }
 
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        let result = match feature_json_str.parse::<GeoJson>() {
-            Err(Error::FeatureInvalidIdentifierType(_)) => true,
-            Ok(_) => false,
-            _ => false,
-        };
-        assert_eq!(result, true,)
+        assert!(matches!(
+            feature_json_str.parse::<GeoJson>(),
+            Err(Error::FeatureInvalidIdentifierType(_))
+        ));
     }
 
     #[test]
@@ -457,13 +453,13 @@ mod tests {
 
         assert_eq!(feature.len_properties(), 0);
         assert_eq!(feature.property("foo"), None);
-        assert_eq!(feature.contains_property("foo"), false);
+        assert!(!feature.contains_property("foo"));
         assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
 
         feature.set_property("foo", 12);
         assert_eq!(feature.property("foo"), Some(&json!(12)));
         assert_eq!(feature.len_properties(), 1);
-        assert_eq!(feature.contains_property("foo"), true);
+        assert!(feature.contains_property("foo"));
         assert_eq!(
             feature.properties_iter().collect::<Vec<_>>(),
             vec![(&"foo".to_string(), &json!(12))]
@@ -472,7 +468,7 @@ mod tests {
         assert_eq!(Some(json!(12)), feature.remove_property("foo"));
         assert_eq!(feature.property("foo"), None);
         assert_eq!(feature.len_properties(), 0);
-        assert_eq!(feature.contains_property("foo"), false);
+        assert!(!feature.contains_property("foo"));
         assert_eq!(feature.properties_iter().collect::<Vec<_>>(), vec![]);
     }
 

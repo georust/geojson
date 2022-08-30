@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::geo_types::{self, CoordFloat, GeometryCollection};
+use geo_types::{self, CoordFloat, GeometryCollection};
 
 use crate::geojson::GeoJson;
 use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
@@ -84,7 +84,7 @@ fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
 where
     T: CoordFloat,
 {
-    match &*gj {
+    match gj {
         FeatureCollection(collection) => Ok(GeometryCollection(
             collection
                 .features
