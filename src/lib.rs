@@ -466,8 +466,10 @@ pub mod de;
 pub mod ser;
 
 mod feature_reader;
-
 pub use feature_reader::FeatureReader;
+
+mod feature_writer;
+pub use feature_writer::FeatureWriter;
 
 #[cfg(feature = "geo-types")]
 pub use conversion::quick_collection;

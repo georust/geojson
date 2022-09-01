@@ -15,6 +15,8 @@ pub enum Error {
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
     #[error("Expected a Feature, FeatureCollection, or Geometry, but got an empty type")]
     EmptyType,
+    #[error("invalid writer state: {0}")]
+    InvalidWriterState(&'static str),
     #[error("IO Error: {0}")]
     Io(std::io::Error),
     /// This was previously `GeoJsonUnknownType`, but has been split for clarity
