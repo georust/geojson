@@ -429,7 +429,6 @@ pub(crate) mod tests {
 
     use crate::JsonValue;
 
-    use serde::Deserialize;
     use serde_json::json;
 
     pub(crate) fn feature_collection() -> JsonValue {
@@ -490,6 +489,8 @@ pub(crate) mod tests {
     #[cfg(feature = "geo-types")]
     mod geo_types_tests {
         use super::*;
+
+        use serde::Deserialize;
 
         #[test]
         fn geometry_field() {
@@ -592,7 +593,7 @@ pub(crate) mod tests {
     #[test]
     fn roundtrip() {
         use crate::ser::serialize_geometry;
-        use serde::Serialize;
+        use serde::{Deserialize, Serialize};
 
         #[derive(Serialize, Deserialize)]
         struct MyStruct {
