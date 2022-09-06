@@ -150,21 +150,17 @@ pub fn deserialize_feature_collection<'de, T>(
 where
     T: Deserialize<'de>,
 {
-    let mut deserializer = serde_json::Deserializer::from_reader(feature_collection_reader);
+    #[allow(deprecated)]
+    let iter = crate::FeatureIterator::new(feature_collection_reader).map(
+        |feature_value: Result<JsonValue>| {
+            let deserializer = feature_value?.into_deserializer();
+            let visitor = FeatureVisitor::new();
+            let record: T = deserializer.deserialize_map(visitor)?;
 
-    // PERF: rather than deserializing the entirety of the `features:` array into memory here, it'd
-    // be nice to stream the features. However, I ran into difficulty while trying to return any
-    // borrowed reference from the visitor methods (e.g. MapAccess)
-    let visitor = FeatureCollectionVisitor::new();
-    let objects = deserializer.deserialize_map(visitor)?;
-
-    Ok(objects.into_iter().map(|feature_value| {
-        let deserializer = feature_value.into_deserializer();
-        let visitor = FeatureVisitor::new();
-        let record: T = deserializer.deserialize_map(visitor)?;
-
-        Ok(record)
-    }))
+            Ok(record)
+        },
+    );
+    Ok(iter)
 }
 
 /// Build a `Vec` of structs from a GeoJson `&str`.
@@ -293,62 +289,6 @@ where
     let deserializer = feature_value.into_deserializer();
     let visitor = FeatureVisitor::new();
     Ok(deserializer.deserialize_map(visitor)?)
-}
-
-struct FeatureCollectionVisitor;
-
-impl FeatureCollectionVisitor {
-    fn new() -> Self {
-        Self
-    }
-}
-
-impl<'de> serde::de::Visitor<'de> for FeatureCollectionVisitor {
-    type Value = Vec<JsonValue>;
-
-    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        write!(formatter, "a valid GeoJSON Feature object")
-    }
-
-    fn visit_map<A>(self, mut map_access: A) -> std::result::Result<Self::Value, A::Error>
-    where
-        A: serde::de::MapAccess<'de>,
-    {
-        let mut has_feature_collection_type = false;
-        let mut features = None;
-        while let Some((key, value)) = map_access.next_entry::<String, JsonValue>()? {
-            if key == "type" {
-                if value == JsonValue::String("FeatureCollection".to_string()) {
-                    has_feature_collection_type = true;
-                } else {
-                    return Err(Error::custom("invalid type for feature collection"));
-                }
-            } else if key == "features" {
-                if let JsonValue::Array(value) = value {
-                    if features.is_some() {
-                        return Err(Error::custom(
-                            "Encountered more than one list of `features`",
-                        ));
-                    }
-                    features = Some(value);
-                } else {
-                    return Err(Error::custom("`features` had unexpected value"));
-                }
-            } else {
-                log::warn!("foreign members are not handled by FeatureCollection deserializer")
-            }
-        }
-
-        if let Some(features) = features {
-            if has_feature_collection_type {
-                Ok(features)
-            } else {
-                Err(Error::custom("No `type` field was found"))
-            }
-        } else {
-            Err(Error::custom("No `features` field was found"))
-        }
-    }
 }
 
 struct FeatureVisitor<D> {

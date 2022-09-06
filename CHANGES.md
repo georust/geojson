@@ -26,9 +26,10 @@
     geojson::ser::to_feature_collection_string(&my_structs).unwrap();
     ```
   * PR: <https://github.com/georust/geojson/pull/199>
-* Added `geojson::{FeatureReader, FeatureWriter}` to stream the reading/writing of your custom struct to and from GeoJSON.
-  * PR: <https://github.com/georust/geojson/pull/199> 
+* Added `geojson::{FeatureReader, FeatureWriter}` to stream the reading/writing of your custom struct to and from GeoJSON, greatly reducing the memory required to process a FeatureCollection.
+  * PR: <https://github.com/georust/geojson/pull/199>
   * PR: <https://github.com/georust/geojson/pull/205>
+  * PR: <https://github.com/georust/geojson/pull/206>
 * Added IntoIter implementation for FeatureCollection.
   * <https://github.com/georust/geojson/pull/196>
 * Added `geojson::Result<T>`.

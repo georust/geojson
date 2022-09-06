@@ -15,6 +15,7 @@
 
 use crate::{Feature, Result};
 
+use serde::Deserialize;
 use std::io;
 use std::marker::PhantomData;
 
@@ -32,10 +33,11 @@ use std::marker::PhantomData;
 /// Based on example code found at <https://github.com/serde-rs/serde/issues/903#issuecomment-297488118>.
 ///
 /// [GeoJSON Format Specification § 3.3](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3)
-pub struct FeatureIterator<R> {
+pub struct FeatureIterator<'de, R, D = Feature> {
     reader: R,
     state: State,
-    marker: PhantomData<Feature>,
+    output: PhantomData<D>,
+    lifetime: PhantomData<&'de ()>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -45,17 +47,18 @@ enum State {
     AfterFeatures,
 }
 
-impl<R> FeatureIterator<R> {
+impl<'de, R, D> FeatureIterator<'de, R, D> {
     pub fn new(reader: R) -> Self {
         FeatureIterator {
             reader,
             state: State::BeforeFeatures,
-            marker: PhantomData,
+            output: PhantomData,
+            lifetime: PhantomData,
         }
     }
 }
 
-impl<R> FeatureIterator<R>
+impl<'de, R, D> FeatureIterator<'de, R, D>
 where
     R: io::Read,
 {
@@ -98,11 +101,12 @@ where
     }
 }
 
-impl<R> Iterator for FeatureIterator<R>
+impl<'de, R, D> Iterator for FeatureIterator<'de, R, D>
 where
     R: io::Read,
+    D: Deserialize<'de>,
 {
-    type Item = Result<Feature>;
+    type Item = Result<D>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.seek_to_next_feature() {
@@ -124,9 +128,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::FeatureIterator;
-    use crate::Geometry;
-    use crate::Value;
+    use super::*;
+    use crate::{Geometry, Value};
+
     use std::io::BufReader;
 
     fn fc() -> &'static str {
@@ -179,7 +183,7 @@ mod tests {
 
     #[test]
     fn stream_read_test() {
-        let mut fi = FeatureIterator::new(BufReader::new(fc().as_bytes()));
+        let mut fi = FeatureIterator::<_, Feature>::new(BufReader::new(fc().as_bytes()));
         assert_eq!(
             Geometry {
                 bbox: None,
