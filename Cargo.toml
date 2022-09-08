@@ -1,6 +1,6 @@
 [package]
 name = "geojson"
-description = "Library for serializing the GeoJSON vector GIS file format"
+description = "Read and write GeoJSON vector geographic data"
 version = "0.24.0"
 authors = ["The GeoRust Developers <mods@georust.org>"]
 license = "MIT/Apache-2.0"
