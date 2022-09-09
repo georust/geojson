@@ -2,8 +2,6 @@
 
 ## UNRELEASED
 
-* Fix: FeatureIterator errors when reading "features" field before "type" field.
-  * <https://github.com/georust/geojson/pull/200>
 * Added `geojson::{ser, de}` helpers to convert your custom struct to and from GeoJSON. 
   * For external geometry types like geo-types, use the `serialize_geometry`/`deserialize_geometry` helpers.
   * Example:
@@ -34,12 +32,14 @@
   * <https://github.com/georust/geojson/pull/196>
 * Added `geojson::Result<T>`.
   * <https://github.com/georust/geojson/pull/198>
+* Added `TryFrom<&geometry::Value>` for geo_type variants.
+  * <https://github.com/georust/geojson/pull/202>
+* Changed the Display string of the error produced when converting a geometry to an incompatible type - e.g. a LineString into a Point.
+  * <https://github.com/georust/geojson/pull/203>
+* Fix: FeatureIterator errors when reading "features" field before "type" field.
+  * <https://github.com/georust/geojson/pull/200>
 * BREAKING: Change the Result type of FeatureIterator from io::Result to crate::Result
   * <https://github.com/georust/geojson/pull/199>
-* Add `TryFrom<&geometry::Value>` for geo_type variants.
-  * <https://github.com/georust/geojson/pull/202>
-* Changed the format of the error produced when converting a geometry to an incompatible type - e.g. a LineString into a Point.
-  * <https://github.com/georust/geojson/pull/203>
 
 ## 0.23.0
 
