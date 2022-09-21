@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+## 0.24.0
+
 * Added `geojson::{ser, de}` helpers to convert your custom struct to and from GeoJSON. 
   * For external geometry types like geo-types, use the `serialize_geometry`/`deserialize_geometry` helpers.
   * Example:
