@@ -20,9 +20,8 @@
 //!
 //! To get started, add `geojson` to your `Cargo.toml`.
 //!
-//! ```text
-//! [dependencies]
-//! geojson = "*"
+//! ```sh
+//! cargo add geojson
 //! ```
 //!
 //! # Types and crate structure
