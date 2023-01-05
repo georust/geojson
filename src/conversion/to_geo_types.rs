@@ -243,6 +243,40 @@ impl_try_from_geom_value![
     GeometryCollection
 ];
 
+impl<T: CoordFloat> TryFrom<&GeoJson> for geo_types::GeometryCollection<T> {
+    type Error = Error;
+
+    // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
+    fn try_from(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
+    where
+        T: CoordFloat,
+    {
+        match gj {
+            GeoJson::FeatureCollection(collection) => Ok(geo_types::GeometryCollection(
+                collection
+                    .features
+                    .iter()
+                    // Only pass on non-empty geometries
+                    .filter_map(|feature| feature.geometry.as_ref())
+                    .map(|geometry| geometry.clone().try_into())
+                    .collect::<Result<_>>()?,
+            )),
+            GeoJson::Feature(feature) => {
+                if let Some(geometry) = &feature.geometry {
+                    Ok(geo_types::GeometryCollection(vec![geometry
+                        .clone()
+                        .try_into()?]))
+                } else {
+                    Ok(geo_types::GeometryCollection(vec![]))
+                }
+            }
+            GeoJson::Geometry(geometry) => Ok(geo_types::GeometryCollection(vec![geometry
+                .clone()
+                .try_into()?])),
+        }
+    }
+}
+
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<FeatureCollection> for geo_types::Geometry<T>
 where

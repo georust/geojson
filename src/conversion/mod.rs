@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use geo_types::{self, CoordFloat, GeometryCollection};
+use geo_types::CoordFloat;
 
 use crate::geojson::GeoJson;
-use crate::geojson::GeoJson::{Feature, FeatureCollection, Geometry};
 
 use crate::Result;
-use std::convert::TryInto;
+use std::convert::TryFrom;
 
 #[cfg(test)]
 macro_rules! assert_almost_eq {
@@ -79,32 +78,6 @@ macro_rules! try_from_owned_value {
 pub(crate) mod from_geo_types;
 pub(crate) mod to_geo_types;
 
-// Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
-fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
-where
-    T: CoordFloat,
-{
-    match gj {
-        FeatureCollection(collection) => Ok(GeometryCollection(
-            collection
-                .features
-                .iter()
-                // Only pass on non-empty geometries
-                .filter_map(|feature| feature.geometry.as_ref())
-                .map(|geometry| geometry.clone().try_into())
-                .collect::<Result<_>>()?,
-        )),
-        Feature(feature) => {
-            if let Some(geometry) = &feature.geometry {
-                Ok(GeometryCollection(vec![geometry.clone().try_into()?]))
-            } else {
-                Ok(GeometryCollection(vec![]))
-            }
-        }
-        Geometry(geometry) => Ok(GeometryCollection(vec![geometry.clone().try_into()?])),
-    }
-}
-
 /// A shortcut for producing `geo_types` [GeometryCollection](../geo_types/struct.GeometryCollection.html) objects
 /// from arbitrary valid GeoJSON input.
 ///
@@ -113,7 +86,7 @@ where
 /// # Example
 ///
 /// ```
-/// use geo_types::GeometryCollection;
+/// use geo_types::{Geometry, GeometryCollection, Point};
 /// use geojson::{quick_collection, GeoJson};
 ///
 /// let geojson_str = r#"
@@ -125,10 +98,7 @@ where
 ///       "properties": {},
 ///       "geometry": {
 ///         "type": "Point",
-///         "coordinates": [
-///           -0.13583511114120483,
-///           51.5218870403801
-///         ]
+///         "coordinates": [-1.0, 2.0]
 ///       }
 ///     }
 ///   ]
@@ -137,11 +107,16 @@ where
 /// let geojson = geojson_str.parse::<GeoJson>().unwrap();
 /// // Turn the GeoJSON string into a geo_types GeometryCollection
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
+/// assert_eq!(collection[0], Geometry::Point(Point::new(-1.0, 2.0)))
 /// ```
+#[deprecated(
+    since = "0.24.1",
+    note = "use `geo_types::GeometryCollection::try_from(&geojson)` instead"
+)]
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
 where
     T: CoordFloat,
 {
-    process_geojson(gj)
+    geo_types::GeometryCollection::try_from(gj)
 }
