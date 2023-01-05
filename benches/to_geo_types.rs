@@ -1,15 +1,13 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::convert::TryFrom;
 
 fn benchmark_group(c: &mut Criterion) {
     let geojson_str = include_str!("../tests/fixtures/countries.geojson");
     let geojson = geojson_str.parse::<geojson::GeoJson>().unwrap();
 
     #[cfg(feature = "geo-types")]
-    c.bench_function("quick_collection", move |b| {
-        b.iter(|| {
-            let _: Result<geo_types::GeometryCollection<f64>, _> =
-                black_box(geojson::quick_collection(&geojson));
-        });
+    c.bench_function("Convert to geo-types", move |b| {
+        b.iter(|| black_box(geo_types::GeometryCollection::<f64>::try_from(&geojson).unwrap()));
     });
 }
 
