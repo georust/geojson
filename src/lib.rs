@@ -244,13 +244,8 @@
 //! ## Use geojson with other crates by converting to geo-types
 //!
 //! [`geo-types`](../geo_types/index.html#structs) are a common geometry format used across many
-//! geospatial processing crates. To enable geo-types integration, enable the `geo-types` feature
-//! in your Cargo.toml.
+//! geospatial processing crates. The `geo-types` feature is enabled by default.
 //!
-//! ```text
-//! [dependencies]
-//! geojson = { version = "*", features = ["geo-types"] }
-//! ```
 //! ### From geo-types to geojson
 //!
 //! [`From`] is implemented on the [`Value`] enum variants to allow conversion _from_ [`geo-types`
