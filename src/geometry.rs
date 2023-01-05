@@ -19,6 +19,10 @@ use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+#[cfg(feature = "okapi_support")]
+use okapi::schemars;
+#[cfg(feature = "okapi_support")]
+use okapi::schemars::JsonSchema;
 
 /// The underlying value for a `Geometry`.
 ///
@@ -46,6 +50,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// # test()
 /// ```
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "okapi", derive(JsonSchema))]
 pub enum Value {
     /// Point
     ///
@@ -243,6 +248,7 @@ impl Serialize for Value {
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "okapi_support", derive(JsonSchema))]
 pub struct Geometry {
     /// Bounding Box
     ///

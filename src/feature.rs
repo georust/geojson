@@ -20,6 +20,10 @@ use crate::{util, Feature, Geometry, Value};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::json;
+#[cfg(feature = "okapi_support")]
+use okapi::schemars;
+#[cfg(feature = "okapi_support")]
+use okapi::schemars::JsonSchema;
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
@@ -203,6 +207,7 @@ impl<'de> Deserialize<'de> for Feature {
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "okapi_support", derive(JsonSchema))]
 pub enum Id {
     String(String),
     Number(serde_json::Number),

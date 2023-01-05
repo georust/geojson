@@ -474,10 +474,16 @@ pub use feature_writer::FeatureWriter;
 #[cfg(feature = "geo-types")]
 pub use conversion::quick_collection;
 
+#[cfg(feature = "okapi_support")]
+use okapi::schemars;
+#[cfg(feature = "okapi_support")]
+use okapi::schemars::JsonSchema;
+
 /// Feature Objects
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "okapi_support", derive(JsonSchema))]
 pub struct Feature {
     /// Bounding Box
     ///

@@ -21,6 +21,10 @@ use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::json;
+#[cfg(feature = "okapi_support")]
+use okapi::schemars;
+#[cfg(feature = "okapi_support")]
+use okapi::schemars::JsonSchema;
 
 /// Feature Collection Objects
 ///
@@ -61,7 +65,8 @@ use serde_json::json;
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "okapi_support", derive(JsonSchema))]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
