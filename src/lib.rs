@@ -20,9 +20,8 @@
 //!
 //! To get started, add `geojson` to your `Cargo.toml`.
 //!
-//! ```text
-//! [dependencies]
-//! geojson = "*"
+//! ```sh
+//! cargo add geojson
 //! ```
 //!
 //! # Types and crate structure
@@ -39,9 +38,10 @@
 //! and safety of Rust.
 //!
 //! Alternatively, and commonly, if you only need geometry and properties (and not, e.g.
-//! [foreign members]()), you can bring your own types, and use this crate's [`serde`] integration
-//! to serialize and deserialize your custom types directly to and from a GeoJSON Feature Collection.
-//! [See more on using your own types with serde](#using-your-own-types-with-serde).
+//! [foreign members](https://www.rfc-editor.org/rfc/rfc7946#section-6.1)), you can bring your own
+//! types, and use this crate's [`serde`] integration to serialize and deserialize your custom
+//! types directly to and from a GeoJSON Feature Collection. [See more on using your own types with
+//! serde](#using-your-own-types-with-serde).
 //!
 //! If you want to use GeoJSON as input to or output from a geometry processing crate like
 //! [`geo`](https://docs.rs/geo), see the section on [using geojson with
@@ -243,13 +243,8 @@
 //! ## Use geojson with other crates by converting to geo-types
 //!
 //! [`geo-types`](../geo_types/index.html#structs) are a common geometry format used across many
-//! geospatial processing crates. To enable geo-types integration, enable the `geo-types` feature
-//! in your Cargo.toml.
+//! geospatial processing crates. The `geo-types` feature is enabled by default.
 //!
-//! ```text
-//! [dependencies]
-//! geojson = { version = "*", features = ["geo-types"] }
-//! ```
 //! ### From geo-types to geojson
 //!
 //! [`From`] is implemented on the [`Value`] enum variants to allow conversion _from_ [`geo-types`

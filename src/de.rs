@@ -13,7 +13,7 @@
 //!  ```rust, ignore
 //! #[derive(serde::Deserialize)]
 //! struct MyStruct {
-//!     #[serde(serialize_with = "geojson::de::deserialize_geometry")]
+//!     #[serde(deserialize_with = "geojson::de::deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     ...
 //! }
