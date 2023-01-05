@@ -245,7 +245,7 @@
 //! [`geo-types`](../geo_types/index.html#structs) are a common geometry format used across many
 //! geospatial processing crates. The `geo-types` feature is enabled by default.
 //!
-//! ### From geo-types to geojson
+//! ### Convert `geo-types` to `geojson`
 //!
 //! [`From`] is implemented on the [`Value`] enum variants to allow conversion _from_ [`geo-types`
 //! Geometries](../geo_types/index.html#structs).
@@ -295,67 +295,21 @@
 //! # }
 //! ```
 //!
-//! ### From geojson to geo-types
+//! ### Convert `geojson` to `geo-types`
 //!
-//! The optional `geo-types` feature implements the [`TryFrom`](../std/convert/trait.TryFrom.html)
-//! trait, providing **fallible** conversions _to_ [geo-types Geometries](../geo_types/index.html#structs)
-//! from [GeoJSON `Value`](enum.Value.html) enums.
+//! The `geo-types` feature implements the [`TryFrom`](../std/convert/trait.TryFrom.html) trait,
+//! providing **fallible** conversions _to_ [geo-types Geometries](../geo_types/index.html#structs)
+//! from [`GeoJson`], [`Value`], or [`Geometry`] types.
 //!
-//! **In most cases it is assumed that you want to convert GeoJSON into `geo` primitive types in
-//! order to process, transform, or measure them:**
-//! - `match` on `geojson`, iterating over its `features` field, yielding `Option<Feature>`.
-//! - process each `Feature`, accessing its `Value` field, yielding `Option<Value>`.
-//!
-//! Each [`Value`](enum.Value.html) represents a primitive type, such as a coordinate, point,
-//! linestring, polygon, or its multi- equivalent, **and each of these has an equivalent `geo`
-//! primitive type**, which you can convert to using the `std::convert::TryFrom` trait.
-//!
-//! #### GeoJSON to geo_types::GeometryCollection
-//!
-//! Unifying these features, the [`quick_collection`](fn.quick_collection.html) function accepts a [`GeoJson`](enum.GeoJson.html) enum
-//! and processes it, producing a [`GeometryCollection`](../geo_types/struct.GeometryCollection.html)
-//! whose members can be transformed, measured, rotated, etc using the algorithms and functions in
-//! the [`geo`](https://docs.rs/geo) crate:
+//! #### Convert `geojson` to `geo_types::Geometry<f64>`
 //!
 //! ```
 //! # #[cfg(feature = "geo-types")]
 //! # {
-//! // requires enabling the `geo-types` feature
-//! use geo_types::GeometryCollection;
-//! use geojson::{quick_collection, GeoJson};
-//! let geojson_str = r#"
-//! {
-//!   "type": "FeatureCollection",
-//!   "features": [
-//!     {
-//!       "type": "Feature",
-//!       "properties": {},
-//!       "geometry": {
-//!         "type": "Point",
-//!         "coordinates": [
-//!           -0.13583511114120483,
-//!           51.5218870403801
-//!         ]
-//!       }
-//!     }
-//!   ]
-//! }
-//! "#;
-//! let geojson = geojson_str.parse::<GeoJson>().unwrap();
-//! // Turn the GeoJSON string into a geo_types GeometryCollection
-//! let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
-//! # }
-//! ```
-//!
-//! #### Convert `GeoJson` to `geo_types::Geometry<f64>`
-//!
-//! ```
-//! # #[cfg(feature = "geo-types")]
-//! # {
-//! // requires enabling the `geo-types` feature
+//! // This example requires the `geo-types` feature
 //! use geo_types::Geometry;
 //! use geojson::GeoJson;
-//! use std::convert::TryInto;
+//! use std::convert::TryFrom;
 //! use std::str::FromStr;
 //!
 //! let geojson_str = r#"
@@ -373,7 +327,7 @@
 //! "#;
 //! let geojson = GeoJson::from_str(geojson_str).unwrap();
 //! // Turn the GeoJSON string into a geo_types Geometry
-//! let geom: geo_types::Geometry<f64> = geojson.try_into().unwrap();
+//! let geom = geo_types::Geometry::<f64>::try_from(geojson).unwrap();
 //! # }
 //! ```
 //!
