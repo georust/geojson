@@ -22,7 +22,7 @@ impl<W: Write> FeatureWriter<W> {
     ///
     /// To append features from your custom structs, use [`FeatureWriter::serialize`].
     ///
-    /// To append features from [`geojson::Feature`] use [`FeatureWriter::write_feature`].
+    /// To append features from [`Feature`] use [`FeatureWriter::write_feature`].
     pub fn from_writer(writer: W) -> Self {
         Self {
             writer,
