@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+* Added `geojson::{to_string, to_string_pretty}` as convenience wrappers around the same `serde_json` methods.
+
 ## 0.24.0
 
 * Added `geojson::{ser, de}` helpers to convert your custom struct to and from GeoJSON. 
