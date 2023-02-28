@@ -364,6 +364,7 @@ mod tests {
     use crate::{Error, GeoJson, Geometry, JsonObject, Value};
     use serde_json::json;
     use std::str::FromStr;
+    use tinyvec::array_vec;
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()
@@ -376,7 +377,7 @@ mod tests {
     fn encode_decode_geometry() {
         let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"type\":\"Point\"}";
         let geometry = Geometry {
-            value: Value::Point(vec![1.1, 2.1]),
+            value: Value::Point(array_vec![1.1, 2.1]),
             bbox: None,
             foreign_members: None,
         };
@@ -410,7 +411,7 @@ mod tests {
         assert_eq!(
             geometry,
             Geometry {
-                value: Value::Point(vec![0.0, 0.1]),
+                value: Value::Point(array_vec![0.0, 0.1]),
                 bbox: None,
                 foreign_members: None,
             }
@@ -419,7 +420,7 @@ mod tests {
 
     #[test]
     fn test_geometry_display() {
-        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        let v = Value::LineString(vec![array_vec![0.0, 0.1], array_vec![0.1, 0.2], array_vec![0.2, 0.3]]);
         let geometry = Geometry::new(v);
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
@@ -429,7 +430,7 @@ mod tests {
 
     #[test]
     fn test_value_display() {
-        let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
+        let v = Value::LineString(vec![array_vec![0.0, 0.1], array_vec![0.1, 0.2], array_vec![0.2, 0.3]]);
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             v.to_string()
@@ -446,7 +447,7 @@ mod tests {
             serde_json::to_value(true).unwrap(),
         );
         let geometry = Geometry {
-            value: Value::Point(vec![1.1, 2.1]),
+            value: Value::Point(array_vec![1.1, 2.1]),
             bbox: None,
             foreign_members: Some(foreign_members),
         };
@@ -470,12 +471,12 @@ mod tests {
             value: Value::GeometryCollection(vec![
                 Geometry {
                     bbox: None,
-                    value: Value::Point(vec![100.0, 0.0]),
+                    value: Value::Point(array_vec![100.0, 0.0]),
                     foreign_members: None,
                 },
                 Geometry {
                     bbox: None,
-                    value: Value::LineString(vec![vec![101.0, 0.0], vec![102.0, 1.0]]),
+                    value: Value::LineString(vec![array_vec![101.0, 0.0], array_vec![102.0, 1.0]]),
                     foreign_members: None,
                 },
             ]),
