@@ -367,7 +367,7 @@ where
 pub(crate) mod tests {
     use super::*;
 
-    use crate::JsonValue;
+    use crate::{JsonObject, JsonValue};
 
     use serde_json::json;
 
@@ -552,6 +552,79 @@ pub(crate) mod tests {
         let mut elements = deserialize_feature_collection_to_vec::<MyStruct>(bytes_reader).unwrap();
         for element in &mut elements {
             element.age += 1;
+            element.geometry.set_x(element.geometry.x() + 1.0);
+        }
+        let actual_output = crate::ser::to_feature_collection_string(&elements).unwrap();
+
+        use std::str::FromStr;
+        let actual_output_json = JsonValue::from_str(&actual_output).unwrap();
+        let expected_output_json = json!({
+            "type": "FeatureCollection",
+            "features": [
+                {
+                  "type": "Feature",
+                  "geometry": {
+                    "type": "Point",
+                    "coordinates": [126.6, 10.1]
+                  },
+                  "properties": {
+                    "name": "Dinagat Islands",
+                    "age": 124
+                  }
+                },
+                {
+                  "type": "Feature",
+                  "geometry": {
+                    "type": "Point",
+                    "coordinates": [3.3, 4.5]
+                  },
+                  "properties": {
+                    "name": "Neverland",
+                    "age": 457
+                  }
+                }
+            ]
+        });
+
+        assert_eq!(actual_output_json, expected_output_json);
+    }
+
+    #[cfg(feature = "geo-types")]
+    #[test]
+    fn all_props() {
+        use crate::ser::serialize_geometry;
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Serialize, Deserialize)]
+        struct MyStruct {
+            #[serde(
+                serialize_with = "serialize_geometry",
+                deserialize_with = "deserialize_geometry"
+            )]
+            geometry: geo_types::Point<f64>,
+
+            #[serde(flatten)]
+            properties: JsonObject,
+        }
+
+        let feature_collection_string = feature_collection().to_string();
+        let bytes_reader = feature_collection_string.as_bytes();
+
+        let mut elements = deserialize_feature_collection_to_vec::<MyStruct>(bytes_reader).unwrap();
+        for element in &mut elements {
+            // dbg!(&element.properties);
+            // => [src/de.rs:615] &element.properties = {
+            //    "age": Number(123),
+            //    "name": String("Dinagat Islands"),
+            // }
+            let mut age = element
+                .properties
+                .get("age")
+                .expect("key to exist")
+                .as_u64()
+                .expect("numeric");
+            age += 1;
+            *element.properties.get_mut("age").expect("key to exist") = age.into();
             element.geometry.set_x(element.geometry.x() + 1.0);
         }
         let actual_output = crate::ser::to_feature_collection_string(&elements).unwrap();
