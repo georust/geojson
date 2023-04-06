@@ -222,12 +222,10 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::JsonObject;
-    use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, JsonObject, Position, Value};
     use serde_json::json;
 
     use std::str::FromStr;
-    use tinyvec::tiny_vec;
 
     fn feature_json_str() -> &'static str {
         "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
@@ -253,7 +251,7 @@ mod tests {
     }
 
     fn value() -> Value {
-        Value::Point(tiny_vec![1.1, 2.1])
+        Value::Point(Position::from([1.1, 2.1]))
     }
 
     fn geometry() -> Geometry {
@@ -348,7 +346,7 @@ mod tests {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(tiny_vec![1.1, 2.1]),
+                value: Value::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -374,7 +372,7 @@ mod tests {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":\"foo\",\"properties\":{},\"type\":\"Feature\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(tiny_vec![1.1, 2.1]),
+                value: Value::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -425,7 +423,7 @@ mod tests {
         );
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(tiny_vec![1.1, 2.1]),
+                value: Value::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),

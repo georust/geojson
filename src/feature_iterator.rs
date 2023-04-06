@@ -129,10 +129,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Geometry, Value};
+    use crate::{Geometry, Position, Value};
 
     use std::io::BufReader;
-    use tinyvec::tiny_vec;
 
     fn fc() -> &'static str {
         r#"
@@ -188,7 +187,7 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: Value::Point(tiny_vec![102.0, 0.5]),
+                value: Value::Point(Position::from([102.0, 0.5])),
                 foreign_members: None,
             },
             fi.next().unwrap().unwrap().geometry.unwrap()
@@ -197,10 +196,10 @@ mod tests {
             Geometry {
                 bbox: None,
                 value: Value::LineString(vec![
-                    tiny_vec![102.0, 0.0],
-                    tiny_vec![103.0, 1.0],
-                    tiny_vec![104.0, 0.0],
-                    tiny_vec![105.0, 1.0]
+                    Position::from([102.0, 0.0]),
+                    Position::from([103.0, 1.0]),
+                    Position::from([104.0, 0.0]),
+                    Position::from([105.0, 1.0])
                 ]),
                 foreign_members: None,
             },
@@ -210,11 +209,11 @@ mod tests {
             Geometry {
                 bbox: None,
                 value: Value::Polygon(vec![vec![
-                    tiny_vec![100.0, 0.0],
-                    tiny_vec![101.0, 0.0],
-                    tiny_vec![101.0, 1.0],
-                    tiny_vec![100.0, 1.0],
-                    tiny_vec![100.0, 0.0]
+                    Position::from([100.0, 0.0]),
+                    Position::from([101.0, 0.0]),
+                    Position::from([101.0, 1.0]),
+                    Position::from([100.0, 1.0]),
+                    Position::from([100.0, 0.0])
                 ]]),
                 foreign_members: None,
             },
