@@ -225,6 +225,7 @@ mod tests {
     use crate::JsonObject;
     use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
     use serde_json::json;
+    use tinyvec::array_vec;
 
     use std::str::FromStr;
 
@@ -252,7 +253,7 @@ mod tests {
     }
 
     fn value() -> Value {
-        Value::Point(vec![1.1, 2.1])
+        Value::Point(array_vec![1.1, 2.1])
     }
 
     fn geometry() -> Geometry {
@@ -347,7 +348,7 @@ mod tests {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: Value::Point(array_vec![1.1, 2.1]),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -373,7 +374,7 @@ mod tests {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":\"foo\",\"properties\":{},\"type\":\"Feature\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: Value::Point(array_vec![1.1, 2.1]),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -424,7 +425,7 @@ mod tests {
         );
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: Value::Point(array_vec![1.1, 2.1]),
                 bbox: None,
                 foreign_members: None,
             }),

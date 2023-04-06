@@ -1,4 +1,5 @@
 use geo_types::{self, CoordFloat};
+use tinyvec::array_vec;
 
 use crate::{geometry, Feature, FeatureCollection};
 
@@ -186,7 +187,7 @@ where
     let x: f64 = point.x().to_f64().unwrap();
     let y: f64 = point.y().to_f64().unwrap();
 
-    vec![x, y]
+    array_vec![x, y]
 }
 
 fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType

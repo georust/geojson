@@ -255,6 +255,7 @@ impl FromIterator<Feature> for FeatureCollection {
 mod tests {
     use crate::{Error, Feature, FeatureCollection, Value};
     use serde_json::json;
+    use tinyvec::array_vec;
 
     use std::str::FromStr;
 
@@ -262,13 +263,13 @@ mod tests {
     fn test_fc_from_iterator() {
         let features: Vec<Feature> = vec![
             {
-                let mut feat: Feature = Value::Point(vec![0., 0., 0.]).into();
+                let mut feat: Feature = Value::Point(array_vec![0., 0., 0.]).into();
                 feat.bbox = Some(vec![-1., -1., -1., 1., 1., 1.]);
                 feat
             },
             {
                 let mut feat: Feature =
-                    Value::MultiPoint(vec![vec![10., 10., 10.], vec![11., 11., 11.]]).into();
+                    Value::MultiPoint(vec![array_vec![10., 10., 10.], array_vec![11., 11., 11.]]).into();
                 feat.bbox = Some(vec![10., 10., 10., 11., 11., 11.]);
                 feat
             },
