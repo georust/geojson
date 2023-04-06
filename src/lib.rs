@@ -76,7 +76,6 @@
 //!
 //! ```
 //! use geojson::{Feature, GeoJson, Geometry, Value};
-//! use tinyvec::tiny_vec;
 //! use std::convert::TryFrom;
 //!
 //! let geojson_str = r#"
@@ -99,7 +98,7 @@
 //! // read geometry data
 //! let geometry: Geometry = feature.geometry.unwrap();
 //! if let Value::Point(coords) = geometry.value {
-//!     assert_eq!(coords, tiny_vec![-118.2836, 34.0956]);
+//!     assert_eq!(coords.as_slice(), &[-118.2836, 34.0956]);
 //! }
 //!
 //! # else {
@@ -112,7 +111,7 @@
 //! `GeoJson` can be serialized by calling [`to_string`](geojson/enum.GeoJson.html#impl-ToString):
 //!
 //! ```rust
-//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! use geojson::{Feature, GeoJson, Geometry, Position, Value};
 //! # fn get_properties() -> ::geojson::JsonObject {
 //! # let mut properties = ::geojson::JsonObject::new();
 //! # properties.insert(
@@ -122,9 +121,8 @@
 //! # properties
 //! # }
 //! # fn main() {
-//! use tinyvec::tiny_vec;
 //!
-//! let geometry = Geometry::new(Value::Point(tiny_vec![-120.66029, 35.2812]));
+//! let geometry = Geometry::new(Value::Point(Position::from([-120.66029, 35.2812])));
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
@@ -255,18 +253,17 @@
 //! ```
 //! # #[cfg(feature = "geo-types")]
 //! # {
-//! use tinyvec::tiny_vec;
 //! // requires enabling the `geo-types` feature
 //! let geo_point: geo_types::Point<f64> = geo_types::Point::new(2., 9.);
 //! let geo_geometry: geo_types::Geometry<f64> = geo_types::Geometry::from(geo_point);
 //!
 //! assert_eq!(
 //!     geojson::Value::from(&geo_point),
-//!     geojson::Value::Point(tiny_vec![2., 9.]),
+//!     geojson::Value::Point(geojson::Position::from([2., 9.])),
 //! );
 //! assert_eq!(
 //!     geojson::Value::from(&geo_geometry),
-//!     geojson::Value::Point(tiny_vec![2., 9.]),
+//!     geojson::Value::Point(geojson::Position::from([2., 9.])),
 //! );
 //! # }
 //! ```
@@ -424,10 +421,66 @@
 /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
 pub type Bbox = Vec<f64>;
 
+use tinyvec::TinyVec;
 /// Positions
 ///
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub type Position = tinyvec::TinyVec<[f64; 2]>;
+#[derive(Debug, Clone, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
+pub struct Position(TinyVec<[f64; 2]>);
+
+impl Position {
+    pub fn as_slice_mut(&mut self) -> &mut [f64] {
+        &mut self.0
+    }
+
+    pub fn as_slice(&self) -> &[f64] {
+        &self.0
+    }
+}
+
+impl From<TinyVec<[f64; 2]>> for Position {
+    fn from(value: TinyVec<[f64; 2]>) -> Self {
+        Self(value)
+    }
+}
+
+impl From<Vec<f64>> for Position {
+    fn from(value: Vec<f64>) -> Self {
+        Self(TinyVec::Heap(value))
+    }
+}
+
+impl From<[f64; 2]> for Position {
+    fn from(value: [f64; 2]) -> Self {
+        Self(TinyVec::Inline(value.into()))
+    }
+}
+
+impl From<(f64, f64)> for Position {
+    fn from(value: (f64, f64)) -> Self {
+        Self::from([value.0, value.1])
+    }
+}
+
+use std::ops::{Index, IndexMut};
+use std::slice::SliceIndex;
+
+impl<I: SliceIndex<[f64]>> Index<I> for Position {
+    type Output = <I as SliceIndex<[f64]>>::Output;
+    #[inline(always)]
+    #[must_use]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+impl<I: SliceIndex<[f64]>> IndexMut<I> for Position {
+    #[inline(always)]
+    #[must_use]
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        &mut self.0[index]
+    }
+}
 
 pub type PointType = Position;
 pub type LineStringType = Vec<Position>;

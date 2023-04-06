@@ -226,7 +226,7 @@ impl<W: Write> Drop for FeatureWriter<W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::JsonValue;
+    use crate::{JsonValue, Position};
 
     use serde_json::json;
     use tinyvec::tiny_vec;
@@ -285,9 +285,9 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(crate::Geometry::from(crate::Value::Point(tiny_vec![
-                        1.1, 1.2
-                    ]))),
+                    geometry: Some(crate::Geometry::from(crate::Value::Point(Position::from(
+                        [1.1, 1.2],
+                    )))),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,
@@ -301,9 +301,9 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(crate::Geometry::from(crate::Value::Point(tiny_vec![
-                        2.1, 2.2
-                    ]))),
+                    geometry: Some(crate::Geometry::from(crate::Value::Point(Position::from(
+                        [2.1, 2.2],
+                    )))),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,
@@ -345,12 +345,12 @@ mod tests {
         {
             let mut writer = FeatureWriter::from_writer(&mut buffer);
             let record_1 = MyRecord {
-                geometry: crate::Geometry::from(crate::Value::Point(tiny_vec![1.1, 1.2])),
+                geometry: crate::Geometry::from(crate::Value::Point(Position::from([1.1, 1.2]))),
                 name: "Mishka".to_string(),
                 age: 12,
             };
             let record_2 = MyRecord {
-                geometry: crate::Geometry::from(crate::Value::Point(tiny_vec![2.1, 2.2])),
+                geometry: crate::Geometry::from(crate::Value::Point(Position::from([2.1, 2.2]))),
                 name: "Jane".to_string(),
                 age: 22,
             };

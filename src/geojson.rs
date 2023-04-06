@@ -164,9 +164,8 @@ impl GeoJson {
     /// # Example
     /// ```
     /// use std::convert::TryInto;
-    /// use geojson::{Feature, GeoJson, Geometry, Value};
+    /// use geojson::{Feature, GeoJson, Geometry, Position, Value};
     /// use serde_json::json;
-    /// use tinyvec::tiny_vec;
     ///
     /// let json_value = json!({
     ///     "type": "Feature",
@@ -185,7 +184,7 @@ impl GeoJson {
     ///     geojson,
     ///     GeoJson::Feature(Feature {
     ///         bbox: None,
-    ///         geometry: Some(Geometry::new(Value::Point(tiny_vec![102.0, 0.5]))),
+    ///         geometry: Some(Geometry::new(Value::Point(Position::from([102.0, 0.5])))),
     ///         id: None,
     ///         properties: None,
     ///         foreign_members: None,
@@ -399,7 +398,7 @@ impl fmt::Display for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, Value};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, Position, Value};
     use serde_json::json;
     use std::convert::TryInto;
     use std::str::FromStr;
@@ -451,7 +450,7 @@ mod tests {
             geojson,
             GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(Value::Point(tiny_vec![102.0, 0.5]))),
+                geometry: Some(Geometry::new(Value::Point(Position::from([102.0, 0.5])))),
                 id: None,
                 properties: None,
                 foreign_members: None,
@@ -462,8 +461,8 @@ mod tests {
     #[test]
     fn test_geojson_from_features() {
         let features: Vec<Feature> = vec![
-            Value::Point(tiny_vec![0., 0., 0.]).into(),
-            Value::Point(tiny_vec![1., 1., 1.]).into(),
+            Value::Point(Position::from(vec![0., 0., 0.])).into(),
+            Value::Point(Position::from(vec![1., 1., 1.])).into(),
         ];
 
         let geojson: GeoJson = features.into();
@@ -473,14 +472,18 @@ mod tests {
                 features: vec![
                     Feature {
                         bbox: None,
-                        geometry: Some(Geometry::new(Value::Point(tiny_vec![0., 0., 0.]))),
+                        geometry: Some(Geometry::new(Value::Point(Position::from(vec![
+                            0., 0., 0.
+                        ])))),
                         id: None,
                         properties: None,
                         foreign_members: None,
                     },
                     Feature {
                         bbox: None,
-                        geometry: Some(Geometry::new(Value::Point(tiny_vec![1., 1., 1.]))),
+                        geometry: Some(Geometry::new(Value::Point(Position::from(vec![
+                            1., 1., 1.
+                        ])))),
                         id: None,
                         properties: None,
                         foreign_members: None,
@@ -509,7 +512,7 @@ mod tests {
             geojson,
             GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(Value::Point(tiny_vec![102.0, 0.5]))),
+                geometry: Some(Geometry::new(Value::Point(Position::from([102.0, 0.5])))),
                 id: None,
                 properties: None,
                 foreign_members: None,

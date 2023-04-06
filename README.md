@@ -37,7 +37,7 @@ let geojson = geojson_str.parse::<GeoJson>().unwrap();
 use geojson::{Feature, GeoJson, Geometry, Value, JsonObject, JsonValue};
 
 let geometry = Geometry::new(
-    Value::Point(tiny_vec![-120.66029,35.2812])
+    Value::Point(Position::from([-120.66029,35.2812]))
 );
 
 let mut properties = JsonObject::new();

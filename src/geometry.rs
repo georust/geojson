@@ -30,16 +30,15 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// ```rust
 /// # #[cfg(feature = "geo-types")]
 /// # fn test() {
-/// use tinyvec::tiny_vec;
 /// let point = geo_types::Point::new(2., 9.);
 /// let genum = geo_types::Geometry::from(point);
 /// assert_eq!(
 ///     geojson::Value::from(&point),
-///     geojson::Value::Point(tiny_vec![2., 9.]),
+///     geojson::Value::Point(geojson::Position::from([2., 9.])),
 /// );
 /// assert_eq!(
 ///     geojson::Value::from(&genum),
-///     geojson::Value::Point(tiny_vec![2., 9.]),
+///     geojson::Value::Point(geojson::Position::from([2., 9.])),
 /// );
 /// # }
 /// # #[cfg(not(feature = "geo-types"))]
@@ -187,27 +186,24 @@ impl Serialize for Value {
 /// Constructing a `Geometry`:
 ///
 /// ```
-/// use tinyvec::tiny_vec;
-/// use geojson::{Geometry, Value};
+/// use geojson::{Geometry, Position, Value};
 ///
-/// let geometry = Geometry::new(Value::Point(tiny_vec![7.428959, 1.513394]));
+/// let geometry = Geometry::new(Value::Point(Position::from([7.428959, 1.513394])));
 /// ```
 ///
 /// Geometries can be created from `Value`s.
 /// ```
-/// # use tinyvec::tiny_vec;
-/// # use geojson::{Geometry, Value};
-/// let geometry1: Geometry = Value::Point(tiny_vec![7.428959, 1.513394]).into();
+/// # use geojson::{Geometry, Position, Value};
+/// let geometry1: Geometry = Value::Point(Position::from([7.428959, 1.513394])).into();
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
 ///
 /// ```
-/// use tinyvec::tiny_vec;
-/// use geojson::{GeoJson, Geometry, Value};
+/// use geojson::{GeoJson, Geometry, Position, Value};
 /// use serde_json;
 ///
-/// let geometry = Geometry::new(Value::Point(tiny_vec![7.428959, 1.513394]));
+/// let geometry = Geometry::new(Value::Point(Position::from([7.428959, 1.513394])));
 ///
 /// let geojson_string = geometry.to_string();
 ///
@@ -220,8 +216,7 @@ impl Serialize for Value {
 /// Deserializing a GeoJSON string into a `Geometry`:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, Value};
-/// use tinyvec::tiny_vec;
+/// use geojson::{GeoJson, Geometry, Position, Value};
 ///
 /// let geojson_str = "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}";
 ///
@@ -231,7 +226,7 @@ impl Serialize for Value {
 /// };
 ///
 /// assert_eq!(
-///     Geometry::new(Value::Point(tiny_vec![7.428959, 1.513394]),),
+///     Geometry::new(Value::Point(Position::from([7.428959, 1.513394])),),
 ///     geometry,
 /// );
 /// ```
@@ -240,11 +235,10 @@ impl Serialize for Value {
 /// feature):
 ///
 /// ```
-/// use geojson::{Geometry, Value};
-/// use tinyvec::tiny_vec;
+/// use geojson::{Geometry, Position, Value};
 /// use std::convert::TryInto;
 ///
-/// let geometry = Geometry::new(Value::Point(tiny_vec![7.428959, 1.513394]));
+/// let geometry = Geometry::new(Value::Point(Position::from([7.428959, 1.513394])));
 /// # #[cfg(feature = "geo-types")]
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
@@ -367,10 +361,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, GeoJson, Geometry, JsonObject, Value};
+    use crate::{Error, GeoJson, Geometry, JsonObject, Position, Value};
     use serde_json::json;
     use std::str::FromStr;
-    use tinyvec::tiny_vec;
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()
@@ -383,7 +376,7 @@ mod tests {
     fn encode_decode_geometry() {
         let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"type\":\"Point\"}";
         let geometry = Geometry {
-            value: Value::Point(tiny_vec![1.1, 2.1]),
+            value: Value::Point(Position::from([1.1, 2.1])),
             bbox: None,
             foreign_members: None,
         };
@@ -417,7 +410,7 @@ mod tests {
         assert_eq!(
             geometry,
             Geometry {
-                value: Value::Point(tiny_vec![0.0, 0.1]),
+                value: Value::Point(Position::from([0.0, 0.1])),
                 bbox: None,
                 foreign_members: None,
             }
@@ -427,9 +420,9 @@ mod tests {
     #[test]
     fn test_geometry_display() {
         let v = Value::LineString(vec![
-            tiny_vec![0.0, 0.1],
-            tiny_vec![0.1, 0.2],
-            tiny_vec![0.2, 0.3],
+            Position::from([0.0, 0.1]),
+            Position::from([0.1, 0.2]),
+            Position::from([0.2, 0.3]),
         ]);
         let geometry = Geometry::new(v);
         assert_eq!(
@@ -441,9 +434,9 @@ mod tests {
     #[test]
     fn test_value_display() {
         let v = Value::LineString(vec![
-            tiny_vec![0.0, 0.1],
-            tiny_vec![0.1, 0.2],
-            tiny_vec![0.2, 0.3],
+            Position::from([0.0, 0.1]),
+            Position::from([0.1, 0.2]),
+            Position::from([0.2, 0.3]),
         ]);
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
@@ -461,7 +454,7 @@ mod tests {
             serde_json::to_value(true).unwrap(),
         );
         let geometry = Geometry {
-            value: Value::Point(tiny_vec![1.1, 2.1]),
+            value: Value::Point(Position::from([1.1, 2.1])),
             bbox: None,
             foreign_members: Some(foreign_members),
         };
@@ -485,12 +478,15 @@ mod tests {
             value: Value::GeometryCollection(vec![
                 Geometry {
                     bbox: None,
-                    value: Value::Point(tiny_vec![100.0, 0.0]),
+                    value: Value::Point(Position::from([100.0, 0.0])),
                     foreign_members: None,
                 },
                 Geometry {
                     bbox: None,
-                    value: Value::LineString(vec![tiny_vec![101.0, 0.0], tiny_vec![102.0, 1.0]]),
+                    value: Value::LineString(vec![
+                        Position::from([101.0, 0.0]),
+                        Position::from([102.0, 1.0]),
+                    ]),
                     foreign_members: None,
                 },
             ]),
