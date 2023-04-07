@@ -543,4 +543,18 @@ mod tests {
             Err(Error::MalformedJson(_))
         ))
     }
+
+    #[test]
+    fn countries() {
+        let geojson_str = include_str!("../tests/fixtures/countries.geojson");
+        match geojson_str.parse::<GeoJson>() {
+            Ok(GeoJson::FeatureCollection(fc)) => {
+                assert_eq!(fc.features.len(), 180);
+            }
+            Ok(other) => {
+                panic!("unexpectd result: {other:?}")
+            }
+            Err(err) => panic!("err: {:?}", err),
+        }
+    }
 }
