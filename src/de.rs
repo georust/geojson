@@ -89,7 +89,7 @@ use std::fmt::Formatter;
 use std::io::Read;
 use std::marker::PhantomData;
 
-use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error, IntoDeserializer};
+use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error};
 
 /// Deserialize a GeoJSON FeatureCollection into your custom structs.
 ///
@@ -332,6 +332,7 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
                 "geometry" => {
                     log::debug!("had geometry");
                     geometry = Some(map_access.next_value()?);
+                    log::debug!("got geometry");
                 }
                 "id" => {
                     log::debug!("had id");
