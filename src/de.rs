@@ -82,7 +82,7 @@
 //!     ...
 //! }
 //! ```
-use crate::{Feature, FeatureReader, JsonValue, Result};
+use crate::{Bbox, Feature, FeatureReader, Geometry, JsonObject, JsonValue, Result};
 
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Formatter;
@@ -157,9 +157,7 @@ where
 /// Build a `Vec` of structs from a GeoJson `&str`.
 ///
 /// See [`deserialize_feature_collection`] for more.
-pub fn deserialize_feature_collection_str_to_vec<T>(
-    feature_collection_str: &str,
-) -> Result<Vec<T>>
+pub fn deserialize_feature_collection_str_to_vec<T>(feature_collection_str: &str) -> Result<Vec<T>>
 where
     T: DeserializeOwned,
 {
@@ -273,15 +271,15 @@ pub fn deserialize_features_from_feature_collection(
 /// assert_eq!(my_struct.name, "Downtown");
 /// assert_eq!(my_struct.geometry.x(), 11.1);
 /// ```
-pub fn deserialize_single_feature<'de, T>(feature_reader: impl Read) -> Result<T>
-where
-    T: Deserialize<'de>,
-{
-    let feature_value: JsonValue = serde_json::from_reader(feature_reader)?;
-    let deserializer = feature_value.into_deserializer();
-    let visitor = FeatureVisitor::new();
-    Ok(deserializer.deserialize_map(visitor)?)
-}
+// pub fn deserialize_single_feature<'de, T>(feature_reader: impl Read) -> Result<T>
+// where
+//     T: Deserialize<'de>,
+// {
+//     let feature_value: JsonValue = serde_json::from_reader(feature_reader)?;
+//     let deserializer = feature_value.into_deserializer();
+//     let visitor = FeatureVisitor::new();
+//     Ok(deserializer.deserialize_map(visitor)?)
+// }
 
 pub(crate) struct FeatureVisitor<D> {
     _marker: PhantomData<D>,
@@ -295,11 +293,8 @@ impl<D> FeatureVisitor<D> {
     }
 }
 
-impl<'de, D> serde::de::Visitor<'de> for FeatureVisitor<D>
-where
-    D: Deserialize<'de>,
-{
-    type Value = D;
+impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
+    type Value = Feature;
 
     fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
         write!(formatter, "a valid GeoJSON Feature object")
@@ -310,43 +305,65 @@ where
         A: serde::de::MapAccess<'de>,
     {
         let mut has_feature_type = false;
-        use std::collections::HashMap;
-        let mut hash_map: HashMap<String, JsonValue> = HashMap::new();
+        let mut bbox: Option<Bbox> = None;
+        let mut geometry: Option<Geometry> = None;
+        let mut properties: Option<JsonObject> = None;
+        let mut foreign_members: Option<JsonObject> = None;
+        let mut id: Option<crate::feature::Id> = None;
 
-        while let Some((key, value)) = map_access.next_entry::<String, JsonValue>()? {
-            if key == "type" {
-                if value.as_str() == Some("Feature") {
-                    has_feature_type = true;
-                } else {
-                    return Err(Error::custom(
-                        "GeoJSON Feature had a `type` other than \"Feature\"",
-                    ));
-                }
-            } else if key == "geometry" {
-                if let JsonValue::Object(_) = value {
-                    hash_map.insert("geometry".to_string(), value);
-                } else {
-                    return Err(Error::custom("GeoJSON Feature had a unexpected geometry"));
-                }
-            } else if key == "properties" {
-                if let JsonValue::Object(properties) = value {
-                    // flatten properties onto struct
-                    for (prop_key, prop_value) in properties {
-                        hash_map.insert(prop_key, prop_value);
+        log::debug!("in visit map");
+        while let Some(key) = map_access.next_key::<String>()? {
+            match key.as_str() {
+                "type" => {
+                    let type_name = map_access.next_value::<String>()?;
+                    if type_name == "Feature" {
+                        log::debug!("type == Feature");
+                        has_feature_type = true;
+                    } else {
+                        return Err(Error::custom(
+                            "GeoJSON Feature had a `type` other than \"Feature\"",
+                        ));
                     }
-                } else {
-                    return Err(Error::custom("GeoJSON Feature had a unexpected geometry"));
                 }
-            } else {
-                log::debug!("foreign members are not handled by Feature deserializer")
+                "bbox" => {
+                    log::debug!("had bbox");
+                    bbox = Some(map_access.next_value()?);
+                }
+                "geometry" => {
+                    log::debug!("had geometry");
+                    geometry = Some(map_access.next_value()?);
+                }
+                "id" => {
+                    log::debug!("had id");
+                    id = Some(map_access.next_value()?)
+                }
+                "properties" => {
+                    log::debug!("had properties");
+                    properties = Some(map_access.next_value()?);
+                }
+                _ => {
+                    log::debug!("had foreign member \"{key}\"");
+                    let value: JsonValue = map_access.next_value::<JsonValue>()?;
+                    if let Some(ref mut foreign_members) = foreign_members {
+                        foreign_members.insert(key, value);
+                    } else {
+                        let mut fm = JsonObject::new();
+                        fm.insert(key, value);
+                        foreign_members = Some(fm);
+                    }
+                }
             }
         }
 
+        log::debug!("finishing up in visit_map");
         if has_feature_type {
-            let d2 = hash_map.into_deserializer();
-            let result =
-                Deserialize::deserialize(d2).map_err(|e| Error::custom(format!("{}", e)))?;
-            Ok(result)
+            Ok(Feature {
+                bbox,
+                properties,
+                geometry,
+                id,
+                foreign_members,
+            })
         } else {
             Err(Error::custom(
                 "A GeoJSON Feature must have a `type: \"Feature\"` field, but found none.",
@@ -396,6 +413,7 @@ pub(crate) mod tests {
     #[test]
     fn test_deserialize_feature_collection() {
         use crate::Feature;
+        pretty_env_logger::init();
 
         let feature_collection_string = feature_collection().to_string();
         let bytes_reader = feature_collection_string.as_bytes();
