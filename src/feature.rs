@@ -15,12 +15,12 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
+use crate::de::FeatureVisitor;
 use crate::errors::{Error, Result};
 use crate::{util, Feature, Geometry, Value};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::json;
-use crate::de::FeatureVisitor;
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
@@ -192,18 +192,20 @@ impl<'de> Deserialize<'de> for Feature {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_map( FeatureVisitor::new())
+        deserializer.deserialize_map(FeatureVisitor::new())
     }
 }
 
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 pub enum Id {
     String(String),
     Number(serde_json::Number),
 }
+
+// REVIEW: test deserializing both numeric and string based ids
 
 impl Serialize for Id {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>

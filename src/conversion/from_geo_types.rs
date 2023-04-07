@@ -270,8 +270,8 @@ where
 mod tests {
     use crate::{GeoJson, Geometry, Value};
     use geo_types::{
-        Coord, GeometryCollection, Line, LineString, MultiLineString, MultiPoint,
-        MultiPolygon, Point, Polygon, Rect, Triangle,
+        Coord, GeometryCollection, Line, LineString, MultiLineString, MultiPoint, MultiPolygon,
+        Point, Polygon, Rect, Triangle,
     };
 
     #[test]
