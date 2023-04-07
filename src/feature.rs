@@ -20,6 +20,7 @@ use crate::{util, Feature, Geometry, Value};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::json;
+use crate::de::FeatureVisitor;
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
@@ -191,11 +192,7 @@ impl<'de> Deserialize<'de> for Feature {
     where
         D: Deserializer<'de>,
     {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        deserializer.deserialize_map( FeatureVisitor::new())
     }
 }
 

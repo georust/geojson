@@ -89,7 +89,7 @@ use std::fmt::Formatter;
 use std::io::Read;
 use std::marker::PhantomData;
 
-use serde::de::{Deserialize, Deserializer, Error, IntoDeserializer};
+use serde::de::{Deserialize, DeserializeOwned, Deserializer, Error, IntoDeserializer};
 
 /// Deserialize a GeoJSON FeatureCollection into your custom structs.
 ///
@@ -144,33 +144,24 @@ use serde::de::{Deserialize, Deserializer, Error, IntoDeserializer};
 ///     }
 /// }
 /// ```
-pub fn deserialize_feature_collection<'de, T>(
+pub fn deserialize_feature_collection<T>(
     feature_collection_reader: impl Read,
 ) -> Result<impl Iterator<Item = Result<T>>>
 where
-    T: Deserialize<'de>,
+    T: DeserializeOwned,
 {
     #[allow(deprecated)]
-    let iter = crate::FeatureIterator::new(feature_collection_reader).map(
-        |feature_value: Result<JsonValue>| {
-            let deserializer = feature_value?.into_deserializer();
-            let visitor = FeatureVisitor::new();
-            let record: T = deserializer.deserialize_map(visitor)?;
-
-            Ok(record)
-        },
-    );
-    Ok(iter)
+    Ok(crate::FeatureIterator::new(feature_collection_reader))
 }
 
 /// Build a `Vec` of structs from a GeoJson `&str`.
 ///
 /// See [`deserialize_feature_collection`] for more.
-pub fn deserialize_feature_collection_str_to_vec<'de, T>(
+pub fn deserialize_feature_collection_str_to_vec<T>(
     feature_collection_str: &str,
 ) -> Result<Vec<T>>
 where
-    T: Deserialize<'de>,
+    T: DeserializeOwned,
 {
     let feature_collection_reader = feature_collection_str.as_bytes();
     deserialize_feature_collection(feature_collection_reader)?.collect()
@@ -179,11 +170,12 @@ where
 /// Build a `Vec` of structs from a GeoJson reader.
 ///
 /// See [`deserialize_feature_collection`] for more.
-pub fn deserialize_feature_collection_to_vec<'de, T>(
+pub fn deserialize_feature_collection_to_vec<T>(
     feature_collection_reader: impl Read,
 ) -> Result<Vec<T>>
 where
-    T: Deserialize<'de>,
+    // REVIEW: Can we restore the borrowed (Deserialize<'de>) flavor?
+    T: DeserializeOwned,
 {
     deserialize_feature_collection(feature_collection_reader)?.collect()
 }
@@ -291,12 +283,12 @@ where
     Ok(deserializer.deserialize_map(visitor)?)
 }
 
-struct FeatureVisitor<D> {
+pub(crate) struct FeatureVisitor<D> {
     _marker: PhantomData<D>,
 }
 
 impl<D> FeatureVisitor<D> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _marker: PhantomData,
         }
