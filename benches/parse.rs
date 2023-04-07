@@ -9,12 +9,10 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
     let geojson_str = include_str!("../tests/fixtures/countries.geojson");
 
     c.bench_function("parse (countries.geojson)", |b| {
-        b.iter(|| match geojson_str.parse::<geojson::GeoJson>() {
-            Ok(GeoJson::FeatureCollection(fc)) => {
-                assert_eq!(fc.features.len(), 180);
-                black_box(fc)
-            }
-            _ => panic!("unexpected result"),
+        b.iter(|| {
+            let fc = geojson_str.parse::<geojson::FeatureCollection>().unwrap();
+            assert_eq!(fc.features.len(), 180);
+            black_box(fc);
         })
     });
 

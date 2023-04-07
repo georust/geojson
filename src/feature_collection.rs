@@ -160,7 +160,7 @@ impl FromStr for FeatureCollection {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::try_from(crate::GeoJson::from_str(s)?)
+        Ok(serde_json::from_reader(s.as_bytes())?)
     }
 }
 
