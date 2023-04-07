@@ -273,11 +273,11 @@ where
     }
 }
 
-fn create_geo_coordinate<T>(point_type: &PointType) -> geo_types::Coordinate<T>
+fn create_geo_coordinate<T>(point_type: &PointType) -> geo_types::Coord<T>
 where
     T: CoordFloat,
 {
-    geo_types::Coordinate {
+    geo_types::Coord {
         x: T::from(point_type[0]).unwrap(),
         y: T::from(point_type[1]).unwrap(),
     }
