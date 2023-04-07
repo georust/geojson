@@ -61,7 +61,8 @@ use serde_json::json;
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(tag="type")]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
@@ -172,18 +173,18 @@ impl Serialize for FeatureCollection {
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
+// impl<'de> Deserialize<'de> for FeatureCollection {
+//     fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         use serde::de::Error as SerdeError;
+//
+//         let val = JsonObject::deserialize(deserializer)?;
+//
+//         FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+//     }
+// }
 
 /// Create a [`FeatureCollection`] using the [`collect`]
 /// method on an iterator of `Feature`s. If every item
