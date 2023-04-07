@@ -43,7 +43,8 @@ use std::str::FromStr;
 /// let feature2: Feature = geojson.try_into().unwrap();
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(tag="type")]
 pub enum GeoJson {
     Geometry(Geometry),
     Feature(Feature),
@@ -299,18 +300,18 @@ impl Serialize for GeoJson {
     }
 }
 
-impl<'de> Deserialize<'de> for GeoJson {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
+// impl<'de> Deserialize<'de> for GeoJson {
+//     fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         use serde::de::Error as SerdeError;
+//
+//         let val = JsonObject::deserialize(deserializer)?;
+//
+//         GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+//     }
+// }
 
 /// # Example
 ///```
@@ -345,9 +346,7 @@ impl FromStr for GeoJson {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let object = get_object(s)?;
-
-        GeoJson::from_json_object(object)
+        Ok(serde_json::from_reader(s.as_bytes())?)
     }
 }
 
