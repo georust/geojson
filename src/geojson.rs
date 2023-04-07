@@ -15,7 +15,7 @@
 use crate::errors::{Error, Result};
 use crate::{Feature, FeatureCollection, Geometry};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
@@ -44,7 +44,7 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(tag="type")]
+#[serde(tag = "type")]
 pub enum GeoJson {
     Geometry(Geometry),
     Feature(Feature),
@@ -356,13 +356,6 @@ impl FromStr for GeoJson {
     }
 }
 
-fn get_object(s: &str) -> Result<JsonObject> {
-    match ::serde_json::from_str(s)? {
-        JsonValue::Object(object) => Ok(object),
-        other => Err(Error::ExpectedObjectValue(other)),
-    }
-}
-
 impl fmt::Display for GeoJson {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
@@ -545,15 +538,9 @@ mod tests {
 
     #[test]
     fn countries() {
+        pretty_env_logger::init();
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
-        match geojson_str.parse::<GeoJson>() {
-            Ok(GeoJson::FeatureCollection(fc)) => {
-                assert_eq!(fc.features.len(), 180);
-            }
-            Ok(other) => {
-                panic!("unexpectd result: {other:?}")
-            }
-            Err(err) => panic!("err: {:?}", err),
-        }
+        let fc = geojson_str.parse::<FeatureCollection>().unwrap();
+        assert_eq!(fc.features.len(), 180);
     }
 }

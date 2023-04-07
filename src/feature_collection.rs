@@ -19,7 +19,7 @@ use std::str::FromStr;
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::json;
 
 /// Feature Collection Objects
@@ -62,7 +62,7 @@ use serde_json::json;
 /// assert_eq!(fc.features.len(), 10);
 /// ```
 #[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(tag="type")]
+#[serde(tag = "type")]
 pub struct FeatureCollection {
     /// Bounding Box
     ///

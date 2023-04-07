@@ -19,6 +19,7 @@ use std::{convert::TryFrom, fmt};
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
+use serde::de::{DeserializeSeed, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// The underlying value for a `Geometry`.
@@ -427,14 +428,168 @@ impl<'de> Deserialize<'de> for Geometry {
 
                 // Depending on the geometry type, the CoordinateField could have different dimensions
                 // This might not support mixed dimensionality
-                #[derive(Debug, Deserialize)]
-                #[serde(untagged)]
+                #[derive(Debug)]
                 enum CoordinateField {
-                    ZeroDimensional(Position),          // Point
-                    OneDimensional(Vec<Position>),      // LineString, MultiPoint
-                    TwoDimensional(Vec<Vec<Position>>), // Polygon, MultiLineString
                     ThreeDimensional(Vec<Vec<Vec<Position>>>), // MultiPolygon
-                                                        // ?????, // GeometryCollection
+                    TwoDimensional(Vec<Vec<Position>>),        // Polygon, MultiLineString
+                    OneDimensional(Vec<Position>),             // LineString, MultiPoint
+                    ZeroDimensional(Position),                 // Point
+                                                               // ?????, // GeometryCollection
+                }
+
+                #[derive(Debug)]
+                enum CoordinateFieldElement {
+                    ThreeDimensional(Vec<Vec<Vec<Position>>>),
+                    // MultiPolygon
+                    TwoDimensional(Vec<Vec<Position>>),
+                    // Polygon, MultiLineString
+                    OneDimensional(Vec<Position>),
+                    // LineString, MultiPoint
+                    ZeroDimensional(Position), // Point
+                    Scalar(f64),
+                }
+
+                // struct CoordinateFieldDeserializer { depth: usize }
+                // impl DeserializeSeed for CoordinateFieldDeserializer {
+                //     type Value = CoordinateField;
+
+                //     fn deserialize<D>(self, deserializer: D) -> std::result::Result<Self::Value, serde::de::Error> where D: Deserializer<'de> {
+                //         deserializer.deserialize_seq()
+                //     }
+                // }
+                impl<'de> Deserialize<'de> for CoordinateField {
+                    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+                    where
+                        D: Deserializer<'de>,
+                    {
+                        struct CoordinateFieldVisitor;
+                        impl<'v> Visitor<'v> for CoordinateFieldVisitor {
+                            type Value = CoordinateField;
+
+                            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                                write!(formatter, "a valid Geometry `coordinates` field")
+                            }
+
+                            fn visit_seq<A>(
+                                self,
+                                mut seq: A,
+                            ) -> std::result::Result<Self::Value, A::Error>
+                            where
+                                A: SeqAccess<'v>,
+                            {
+                                match seq.next_element::<CoordinateFieldElement>()? {
+                                    None => todo!("handle done"),
+                                    Some(next) => match next {
+                                        // CoordinateFieldElement::ThreeDimensional(_) => {}
+                                        // CoordinateFieldElement::TwoDimensional(_) => {}
+                                        // CoordinateFieldElement::OneDimensional(_) => {}
+                                        CoordinateFieldElement::OneDimensional(positions) => {
+                                            let mut positions_2d = vec![positions];
+                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            {
+                                                match next {
+                                                    CoordinateFieldElement::OneDimensional(positions) => positions_2d.push(positions),
+                                                    _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                                }
+                                            }
+                                            return Ok(CoordinateField::TwoDimensional(
+                                                positions_2d,
+                                            ));
+                                        }
+                                        // CoordinateFieldElement::ZeroDimensional(_) => {}
+                                        CoordinateFieldElement::Scalar(s) => todo!("handle this error - should have encountered an entire Position: {s}"),
+                                        _ => todo!("1. visited seq. next: {next:?}"),
+                                    }
+                                }
+                                // while let Some(next) =
+                                // {
+                                //     log::debug!("1 - visit_seq - next: {next:?}");
+                                // }
+                            }
+                        }
+
+                        impl<'de> Deserialize<'de> for CoordinateFieldElement {
+                            fn deserialize<D>(
+                                deserializer: D,
+                            ) -> std::result::Result<Self, D::Error>
+                            where
+                                D: Deserializer<'de>,
+                            {
+                                deserializer.deserialize_any(CoordinateFieldElementVisitor)
+                            }
+                        }
+
+                        struct CoordinateFieldElementVisitor;
+                        impl<'v> Visitor<'v> for CoordinateFieldElementVisitor {
+                            type Value = CoordinateFieldElement;
+
+                            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                                write!(formatter, "a valid Geometry `coordinates` field")
+                            }
+
+                            fn visit_seq<A>(
+                                self,
+                                mut seq: A,
+                            ) -> std::result::Result<Self::Value, A::Error>
+                            where
+                                A: SeqAccess<'v>,
+                            {
+                                let next = seq.next_element::<CoordinateFieldElement>()?;
+                                log::debug!("2 - visit_seq - next: {next:?}");
+                                match next {
+                                    None => todo!("2. handle none"),
+                                    Some(next) => match next {
+                                        // CoordinateFieldElement::ThreeDimensional(_) => {}
+                                        // CoordinateFieldElement::TwoDimensional(_) => {}
+                                        // CoordinateFieldElement::OneDimensional(_) => {}
+                                        CoordinateFieldElement::ZeroDimensional(pos) => {
+                                            let mut positions = vec![pos];
+                                            while let Some(next) =
+                                                seq.next_element::<CoordinateFieldElement>()?
+                                            {
+                                                match next {
+                                                    CoordinateFieldElement::ZeroDimensional(position) => positions.push(position),
+                                                    _ => todo!("handle error when encountering {next:?} expecting more ZeroDimensional elements")
+                                                }
+                                            }
+                                            return Ok(CoordinateFieldElement::OneDimensional(
+                                                positions,
+                                            ));
+                                        }
+                                        CoordinateFieldElement::Scalar(x) => {
+                                            let y = seq
+                                                .next_element::<f64>()?
+                                                .expect("TODO: handle missing");
+                                            // TODO: support 3D+
+                                            assert!(seq.next_element::<f64>()?.is_none());
+                                            let pos = Position::from([x, y]);
+                                            log::debug!("built position: {pos:?}");
+                                            return Ok(CoordinateFieldElement::ZeroDimensional(pos));
+                                        }
+                                        _ => todo!("2. visited seq. next: {next:?}"),
+                                    }
+                                }
+                            }
+
+                            fn visit_f64<E>(self, v: f64) -> std::result::Result<Self::Value, E>
+                            where
+                                E: SerdeError,
+                            {
+                                log::debug!("2- visited f64: {v}");
+                                return Ok(CoordinateFieldElement::Scalar(v));
+                            }
+                        }
+
+                        log::debug!("deserializing CoordinateField");
+                        deserializer.deserialize_any(CoordinateFieldVisitor)
+                        // Ok(match deserializer.deserialize_any(CoordinateFieldVisitor)? {
+                        //     CoordinateFieldElement::ThreeDimensional(x) => CoordinateField::ThreeDimensional(x),
+                        //     CoordinateFieldElement::TwoDimensional(x) => CoordinateField::TwoDimensional(x),
+                        //     CoordinateFieldElement::OneDimensional(x) =>CoordinateField::OneDimensional(x),
+                        //     CoordinateFieldElement::ZeroDimensional(x) => CoordinateField::ZeroDimensional(x),
+                        //     CoordinateFieldElement::Scalar(x) => panic!("shouldn't get scalar at this point: {}", x)
+                        // })
+                    }
                 }
 
                 // impl<'de> Deserialize<'de> for CoordinateField {
