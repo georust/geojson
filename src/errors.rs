@@ -1,6 +1,7 @@
 //! Module for all GeoJSON-related errors
 use crate::Feature;
 use serde_json::value::Value;
+use std::fmt::Display;
 use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
@@ -64,6 +65,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl From<serde_json::Error> for Error {
     fn from(error: serde_json::Error) -> Self {
         Self::MalformedJson(error)
+    }
+}
+
+impl serde::de::Error for Error {
+    fn custom<T>(msg: T) -> Self
+    where
+        T: Display,
+    {
+        Self::MalformedJson(serde_json::Error::custom(msg))
     }
 }
 
