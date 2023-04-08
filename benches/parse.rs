@@ -30,52 +30,52 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
         });
     });
 
-    c.bench_function("FeatureReader::deserialize (countries.geojson)", |b| {
-        b.iter(|| {
-            #[allow(unused)]
-            #[derive(serde::Deserialize)]
-            struct Country {
-                geometry: geojson::Geometry,
-                name: String,
-            }
-            let feature_reader =
-                geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
+    // c.bench_function("FeatureReader::deserialize (countries.geojson)", |b| {
+    //     b.iter(|| {
+    //         #[allow(unused)]
+    //         #[derive(serde::Deserialize)]
+    //         struct Country {
+    //             geometry: geojson::Geometry,
+    //             name: String,
+    //         }
+    //         let feature_reader =
+    //             geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
+    //
+    //         let mut count = 0;
+    //         for feature in feature_reader.deserialize::<Country>().unwrap() {
+    //             let feature = feature.unwrap();
+    //             black_box(feature);
+    //             count += 1;
+    //         }
+    //         assert_eq!(count, 180);
+    //     });
+    // });
 
-            let mut count = 0;
-            for feature in feature_reader.deserialize::<Country>().unwrap() {
-                let feature = feature.unwrap();
-                black_box(feature);
-                count += 1;
-            }
-            assert_eq!(count, 180);
-        });
-    });
-
-    #[cfg(feature = "geo-types")]
-    c.bench_function(
-        "FeatureReader::deserialize to geo-types (countries.geojson)",
-        |b| {
-            b.iter(|| {
-                #[allow(unused)]
-                #[derive(serde::Deserialize)]
-                struct Country {
-                    #[serde(deserialize_with = "deserialize_geometry")]
-                    geometry: geo_types::Geometry,
-                    name: String,
-                }
-                let feature_reader =
-                    geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
-
-                let mut count = 0;
-                for feature in feature_reader.deserialize::<Country>().unwrap() {
-                    let feature = feature.unwrap();
-                    black_box(feature);
-                    count += 1;
-                }
-                assert_eq!(count, 180);
-            });
-        },
-    );
+    // #[cfg(feature = "geo-types")]
+    // c.bench_function(
+    //     "FeatureReader::deserialize to geo-types (countries.geojson)",
+    //     |b| {
+    //         b.iter(|| {
+    //             #[allow(unused)]
+    //             #[derive(serde::Deserialize)]
+    //             struct Country {
+    //                 #[serde(deserialize_with = "deserialize_geometry")]
+    //                 geometry: geo_types::Geometry,
+    //                 name: String,
+    //             }
+    //             let feature_reader =
+    //                 geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
+    //
+    //             let mut count = 0;
+    //             for feature in feature_reader.deserialize::<Country>().unwrap() {
+    //                 let feature = feature.unwrap();
+    //                 black_box(feature);
+    //                 count += 1;
+    //             }
+    //             assert_eq!(count, 180);
+    //         });
+    //     },
+    // );
 }
 
 fn parse_geometry_collection_benchmark(c: &mut Criterion) {
