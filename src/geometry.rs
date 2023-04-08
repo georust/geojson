@@ -481,8 +481,19 @@ impl<'de> Deserialize<'de> for Geometry {
                                     None => todo!("handle done"),
                                     Some(next) => match next {
                                         // CoordinateFieldElement::ThreeDimensional(_) => {}
-                                        // CoordinateFieldElement::TwoDimensional(_) => {}
-                                        // CoordinateFieldElement::OneDimensional(_) => {}
+                                        CoordinateFieldElement::TwoDimensional(positions_2d) => {
+                                            let mut positions_3d = vec![positions_2d];
+                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            {
+                                                match next {
+                                                    CoordinateFieldElement::TwoDimensional(positions) => positions_3d.push(positions),
+                                                    _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                                }
+                                            }
+                                            return Ok(CoordinateField::ThreeDimensional(
+                                                positions_3d,
+                                            ));
+                                        }
                                         CoordinateFieldElement::OneDimensional(positions) => {
                                             let mut positions_2d = vec![positions];
                                             while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
@@ -541,7 +552,19 @@ impl<'de> Deserialize<'de> for Geometry {
                                     Some(next) => match next {
                                         // CoordinateFieldElement::ThreeDimensional(_) => {}
                                         // CoordinateFieldElement::TwoDimensional(_) => {}
-                                        // CoordinateFieldElement::OneDimensional(_) => {}
+                                        CoordinateFieldElement::OneDimensional(positions) => {
+                                            let mut positions_2d = vec![positions];
+                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            {
+                                                match next {
+                                                    CoordinateFieldElement::OneDimensional(positions) => positions_2d.push(positions),
+                                                    _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                                }
+                                            }
+                                            return Ok(CoordinateFieldElement::TwoDimensional(
+                                                positions_2d,
+                                            ));
+                                        }
                                         CoordinateFieldElement::ZeroDimensional(pos) => {
                                             let mut positions = vec![pos];
                                             while let Some(next) =
@@ -569,6 +592,16 @@ impl<'de> Deserialize<'de> for Geometry {
                                         _ => todo!("2. visited seq. next: {next:?}"),
                                     }
                                 }
+                            }
+
+                            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E> where E: SerdeError {
+                                log::debug!("2- visited u64: {v}");
+                                return Ok(CoordinateFieldElement::Scalar(v as f64));
+                            }
+
+                            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E> where E: SerdeError {
+                                log::debug!("2- visited i64: {v}");
+                                return Ok(CoordinateFieldElement::Scalar(v as f64));
                             }
 
                             fn visit_f64<E>(self, v: f64) -> std::result::Result<Self::Value, E>
