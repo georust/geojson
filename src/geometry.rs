@@ -19,7 +19,7 @@ use std::{convert::TryFrom, fmt};
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
-use serde::de::{DeserializeSeed, SeqAccess, Visitor};
+use serde::de::{SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// The underlying value for a `Geometry`.
@@ -399,27 +399,6 @@ impl<'de> Deserialize<'de> for Geometry {
                 write!(formatter, "a valid GeoJSON Geometry object")
             }
 
-            fn visit_string<E>(self, _v: String) -> std::result::Result<Self::Value, E>
-            where
-                E: SerdeError,
-            {
-                todo!("visit string")
-            }
-
-            fn visit_borrowed_str<E>(self, _v: &'de str) -> std::result::Result<Self::Value, E>
-            where
-                E: SerdeError,
-            {
-                todo!("visit borrowed str")
-            }
-
-            fn visit_str<E>(self, _v: &str) -> std::result::Result<Self::Value, E>
-            where
-                E: SerdeError,
-            {
-                todo!("visit str")
-            }
-
             fn visit_map<A>(self, mut map_access: A) -> std::result::Result<Self::Value, A::Error>
             where
                 A: serde::de::MapAccess<'de>,
@@ -449,14 +428,6 @@ impl<'de> Deserialize<'de> for Geometry {
                     Scalar(f64),
                 }
 
-                // struct CoordinateFieldDeserializer { depth: usize }
-                // impl DeserializeSeed for CoordinateFieldDeserializer {
-                //     type Value = CoordinateField;
-
-                //     fn deserialize<D>(self, deserializer: D) -> std::result::Result<Self::Value, serde::de::Error> where D: Deserializer<'de> {
-                //         deserializer.deserialize_seq()
-                //     }
-                // }
                 impl<'de> Deserialize<'de> for CoordinateField {
                     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
                     where
@@ -478,7 +449,7 @@ impl<'de> Deserialize<'de> for Geometry {
                                 A: SeqAccess<'v>,
                             {
                                 match seq.next_element::<CoordinateFieldElement>()? {
-                                    None => todo!("handle done"),
+                                    None => todo!("handle starting with empty sequence"),
                                     Some(next) => match next {
                                         // CoordinateFieldElement::ThreeDimensional(_) => {}
                                         CoordinateFieldElement::TwoDimensional(positions_2d) => {
@@ -538,6 +509,27 @@ impl<'de> Deserialize<'de> for Geometry {
                                 write!(formatter, "a valid Geometry `coordinates` field")
                             }
 
+                            #[inline]
+                            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E> where E: SerdeError {
+                                log::debug!("2- visited i64: {v}");
+                                return Ok(CoordinateFieldElement::Scalar(v as f64));
+                            }
+
+                            #[inline]
+                            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E> where E: SerdeError {
+                                log::debug!("2- visited u64: {v}");
+                                return Ok(CoordinateFieldElement::Scalar(v as f64));
+                            }
+
+                            #[inline]
+                            fn visit_f64<E>(self, v: f64) -> std::result::Result<Self::Value, E>
+                            where
+                                E: SerdeError,
+                            {
+                                log::debug!("2- visited f64: {v}");
+                                return Ok(CoordinateFieldElement::Scalar(v));
+                            }
+
                             fn visit_seq<A>(
                                 self,
                                 mut seq: A,
@@ -592,24 +584,6 @@ impl<'de> Deserialize<'de> for Geometry {
                                         _ => todo!("2. visited seq. next: {next:?}"),
                                     }
                                 }
-                            }
-
-                            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E> where E: SerdeError {
-                                log::debug!("2- visited u64: {v}");
-                                return Ok(CoordinateFieldElement::Scalar(v as f64));
-                            }
-
-                            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E> where E: SerdeError {
-                                log::debug!("2- visited i64: {v}");
-                                return Ok(CoordinateFieldElement::Scalar(v as f64));
-                            }
-
-                            fn visit_f64<E>(self, v: f64) -> std::result::Result<Self::Value, E>
-                            where
-                                E: SerdeError,
-                            {
-                                log::debug!("2- visited f64: {v}");
-                                return Ok(CoordinateFieldElement::Scalar(v));
                             }
                         }
 
