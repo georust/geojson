@@ -405,10 +405,10 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        assert!(matches!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType(_))
-        ));
+        match feature_json_str.parse::<GeoJson>().unwrap_err() {
+            Error::FeatureInvalidIdentifierType(_) => {} // pass,
+            other => panic!("unexpected err: {:?}", other),
+        }
     }
 
     #[test]
