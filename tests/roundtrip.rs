@@ -63,6 +63,12 @@ mod roundtrip_tests {
         let original_json: serde_json::Value = serde_json::from_str(&file_contents).unwrap();
         let roundtrip_json: serde_json::Value = serde_json::from_str(&geojson_string).unwrap();
 
-        assert_eq!(original_json, roundtrip_json)
+        assert_eq!(
+            original_json,
+            roundtrip_json,
+            "inconsistent round trip: {file_path}. \n\n original: {} \n\n roundtrip: {}",
+            serde_json::to_string_pretty(&original_json).unwrap(),
+            serde_json::to_string_pretty(&roundtrip_json).unwrap()
+        );
     }
 }
