@@ -62,7 +62,6 @@ use serde_json::json;
 /// assert_eq!(fc.features.len(), 10);
 /// ```
 #[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(tag = "type")]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
