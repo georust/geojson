@@ -336,8 +336,8 @@ mod tests {
     fn feature_json_invalid_geometry() {
         let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
         match geojson_str.parse::<GeoJson>().unwrap_err() {
-            Error::FeatureInvalidGeometryValue(_) => (),
-            _ => unreachable!(),
+            Error::MalformedJson(e) => assert!(e.to_string().contains("expected a valid GeoJSON Geometry object")),
+            other => panic!("expecting FeatureInvalidGeometryValue, but got: {:?}", other),
         }
     }
 
@@ -396,18 +396,18 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        assert!(matches!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType(_))
-        ));
+        match feature_json_str.parse::<GeoJson>().unwrap_err() {
+            Error::MalformedJson(e) => assert!(e.to_string().contains("Id")),
+            other => panic!("expected different error. Got: {:?}", other),
+        }
     }
 
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
         match feature_json_str.parse::<GeoJson>().unwrap_err() {
-            Error::FeatureInvalidIdentifierType(_) => {} // pass,
-            other => panic!("unexpected err: {:?}", other),
+            Error::MalformedJson(e) => assert!(e.to_string().contains("Id")),
+            other => panic!("expected different error. Got: {:?}", other),
         }
     }
 

@@ -342,11 +342,11 @@ mod tests {
 
         let actual_failure = FeatureCollection::from_str(&geometry_json).unwrap_err();
         match actual_failure {
-            Error::ExpectedType { actual, expected } => {
-                assert_eq!(actual, "Geometry");
-                assert_eq!(expected, "FeatureCollection");
+            Error::MalformedJson(e) => {
+                assert!(e.to_string().contains("missing field"));
+                assert!(e.to_string().contains("features"));
             }
-            e => panic!("unexpected error: {}", e),
-        };
+            other => panic!("expected other error. Got: {:?}", other)
+        }
     }
 }
