@@ -341,7 +341,7 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
                 }
                 "properties" => {
                     log::debug!("had properties");
-                    properties = Some(map_access.next_value()?);
+                    properties = map_access.next_value()?;
                 }
                 _ => {
                     log::debug!("had foreign member \"{key}\"");
