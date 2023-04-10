@@ -357,19 +357,20 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
         }
 
         log::debug!("finishing up in visit_map");
-        if has_feature_type {
-            Ok(Feature {
-                bbox,
-                properties,
-                geometry,
-                id,
-                foreign_members,
-            })
-        } else {
-            Err(Error::custom(
+        if !has_feature_type {
+            // THIS MIGHT NOT BE TRUE
+            // panic!("should have already consumed `type` field");
+            return Err(Error::custom(
                 "A GeoJSON Feature must have a `type: \"Feature\"` field, but found none.",
             ))
         }
+        Ok(Feature {
+            bbox,
+            properties,
+            geometry,
+            id,
+            foreign_members,
+        })
     }
 }
 
