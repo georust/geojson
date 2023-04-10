@@ -478,7 +478,19 @@ impl<'de> Deserialize<'de> for Geometry {
                                                 positions_2d,
                                             ));
                                         }
-                                        // CoordinateFieldElement::ZeroDimensional(_) => {}
+                                        CoordinateFieldElement::ZeroDimensional(position) => {
+                                            let mut positions = vec![position];
+                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            {
+                                                match next {
+                                                    CoordinateFieldElement::ZeroDimensional(position) => positions.push(position),
+                                                    _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                                }
+                                            }
+                                            return Ok(CoordinateField::OneDimensional(
+                                                positions,
+                                            ));
+                                        }
                                         CoordinateFieldElement::Scalar(s) => todo!("handle this error - should have encountered an entire Position: {s}"),
                                         _ => todo!("1. visited seq. next: {next:?}"),
                                     }
