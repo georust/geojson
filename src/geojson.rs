@@ -44,7 +44,12 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(untagged)]
+// Tagging is a pickle... we have a "type" field which works like a tag, and FeatureCollection.type and Feature.type are sane
+// but for a Geometry, type is not "Geometry" rather it's one of the variants. We can get pretty far using `untagged`, but
+// if the geojson is invalid, we get an obtuse error like "did not match any variant of untagged enum GeoJson" when we really
+// want something more specific like "`id` field had invalid value"
+// #[serde(untagged)] // <-- this is a pickle.
+#[serde(tag = "type")] // <-- this is a pickle.
 pub enum GeoJson {
     // this "tag" is probably wrong, because Geometry.type is not "Geometry", rather it's the value
     // of one of it's Value enum members.

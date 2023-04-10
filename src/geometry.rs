@@ -414,18 +414,17 @@ impl<'de> Deserialize<'de> for Geometry {
                     TwoDimensional(Vec<Vec<Position>>),        // Polygon, MultiLineString
                     OneDimensional(Vec<Position>),             // LineString, MultiPoint
                     ZeroDimensional(Position),                 // Point
-                                                               // ?????, // GeometryCollection
                 }
 
                 #[derive(Debug)]
                 enum CoordinateFieldElement {
-                    ThreeDimensional(Vec<Vec<Vec<Position>>>),
                     // MultiPolygon
                     TwoDimensional(Vec<Vec<Position>>),
                     // Polygon, MultiLineString
                     OneDimensional(Vec<Position>),
                     // LineString, MultiPoint
-                    ZeroDimensional(Position), // Point
+                    ZeroDimensional(Position),
+                    // Point
                     Scalar(f64),
                 }
 
@@ -452,7 +451,6 @@ impl<'de> Deserialize<'de> for Geometry {
                                 match seq.next_element::<CoordinateFieldElement>()? {
                                     None => todo!("handle starting with empty sequence"),
                                     Some(next) => match next {
-                                        // CoordinateFieldElement::ThreeDimensional(_) => {}
                                         CoordinateFieldElement::TwoDimensional(positions_2d) => {
                                             let mut positions_3d = vec![positions_2d];
                                             while let Some(next) =
@@ -509,7 +507,6 @@ impl<'de> Deserialize<'de> for Geometry {
                                                 Position::from(scalars),
                                             ));
                                         }
-                                        _ => todo!("1. visited seq. next: {next:?}"),
                                     },
                                 }
                                 // while let Some(next) =
