@@ -63,7 +63,7 @@ enum TaggedGeoJson {
     #[serde(deserialize_with = "crate::geometry::deserialize_point")]
     Point(Geometry),
     #[serde(deserialize_with = "crate::geometry::deserialize_line_string")]
-    Linestring(Geometry),
+    LineString(Geometry),
     #[serde(deserialize_with = "crate::geometry::deserialize_polygon")]
     Polygon(Geometry),
     #[serde(deserialize_with = "crate::geometry::deserialize_multi_point")]
@@ -84,7 +84,7 @@ impl From<TaggedGeoJson> for GeoJson {
         use TaggedGeoJson::*;
         match value {
             Point(g)
-            | Linestring(g)
+            | LineString(g)
             | Polygon(g)
             | MultiPoint(g)
             | MultiLineString(g)
