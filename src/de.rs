@@ -331,7 +331,7 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
                 }
                 "geometry" => {
                     log::debug!("had geometry");
-                    geometry = Some(map_access.next_value()?);
+                    geometry = map_access.next_value()?;
                     log::debug!("got geometry");
                 }
                 "id" => {
