@@ -19,7 +19,7 @@ use std::str::FromStr;
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::json;
 
 /// Feature Collection Objects
@@ -61,7 +61,7 @@ use serde_json::json;
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
@@ -71,6 +71,7 @@ pub struct FeatureCollection {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    #[serde(flatten)]
     pub foreign_members: Option<JsonObject>,
 }
 
@@ -159,7 +160,7 @@ impl FromStr for FeatureCollection {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::try_from(crate::GeoJson::from_str(s)?)
+        Ok(serde_json::from_reader(s.as_bytes())?)
     }
 }
 
@@ -172,18 +173,18 @@ impl Serialize for FeatureCollection {
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
+// impl<'de> Deserialize<'de> for FeatureCollection {
+//     fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         use serde::de::Error as SerdeError;
+//
+//         let val = JsonObject::deserialize(deserializer)?;
+//
+//         FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+//     }
+// }
 
 /// Create a [`FeatureCollection`] using the [`collect`]
 /// method on an iterator of `Feature`s. If every item
@@ -341,11 +342,11 @@ mod tests {
 
         let actual_failure = FeatureCollection::from_str(&geometry_json).unwrap_err();
         match actual_failure {
-            Error::ExpectedType { actual, expected } => {
-                assert_eq!(actual, "Geometry");
-                assert_eq!(expected, "FeatureCollection");
+            Error::MalformedJson(e) => {
+                assert!(e.to_string().contains("missing field"));
+                assert!(e.to_string().contains("features"));
             }
-            e => panic!("unexpected error: {}", e),
-        };
+            other => panic!("expected other error. Got: {:?}", other)
+        }
     }
 }

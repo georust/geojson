@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::Formatter;
 use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
+use serde::de::{SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use tinyvec::TinyVec;
 
 /// The underlying value for a `Geometry`.
 ///
@@ -255,6 +258,48 @@ pub struct Geometry {
     pub foreign_members: Option<JsonObject>,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum GeometryType {
+    Point,
+    MultiPoint,
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    GeometryCollection,
+}
+
+impl FromStr for GeometryType {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Ok(match s {
+            "Point" => Self::Point,
+            "MultiPoint" => Self::MultiPoint,
+            "LineString" => Self::LineString,
+            "MultiLineString" => Self::MultiLineString,
+            "Polygon" => Self::Polygon,
+            "MultiPolygon" => Self::MultiPolygon,
+            "GeometryCollection" => Self::GeometryCollection,
+            other => return Err(Error::GeometryUnknownType(other.to_string())),
+        })
+    }
+}
+
+// impl GeometryType {
+//     fn as_str(&self) -> &str {
+//         match self {
+//             GeometryType::Point => "Point",
+//             GeometryType::MultiPoint => "MultiPoint",
+//             GeometryType::LineString => "LineString",
+//             GeometryType::MultiLineString => "MultiLineString",
+//             GeometryType::Polygon => "Polygon",
+//             GeometryType::MultiPolygon => "MultiPolygon",
+//             GeometryType::GeometryCollection => "GeometryCollection",
+//         }
+//     }
+// }
+
 impl Geometry {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
     /// set to `None`.
@@ -324,7 +369,8 @@ impl FromStr for Geometry {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::try_from(crate::GeoJson::from_str(s)?)
+        let mut de = serde_json::Deserializer::new(serde_json::de::StrRead::new(s));
+        Geometry::deserialize(&mut de).map_err(Into::into)
     }
 }
 
@@ -342,11 +388,440 @@ impl<'de> Deserialize<'de> for Geometry {
     where
         D: Deserializer<'de>,
     {
-        use serde::de::Error as SerdeError;
+        deserializer.deserialize_map(GeometryVisitor::default())
+    }
+}
 
-        let val = JsonObject::deserialize(deserializer)?;
+pub(crate) fn deserialize_point<'de, D>(deserializer: D) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(GeometryType::Point))
+}
 
-        Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+pub(crate) fn deserialize_line_string<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(GeometryType::LineString))
+}
+
+pub(crate) fn deserialize_polygon<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(GeometryType::Polygon))
+}
+
+pub(crate) fn deserialize_multi_point<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(GeometryType::MultiPoint))
+}
+
+pub(crate) fn deserialize_multi_line_string<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(GeometryType::MultiLineString))
+}
+
+pub(crate) fn deserialize_multi_polygon<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(GeometryType::MultiPolygon))
+}
+
+pub(crate) fn deserialize_geometry_collection<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Geometry, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserializer.deserialize_map(GeometryVisitor::known_type(
+        GeometryType::GeometryCollection,
+    ))
+}
+
+#[derive(Debug, Default)]
+struct GeometryVisitor {
+    known_geometry_type: Option<GeometryType>,
+}
+impl GeometryVisitor {
+    fn known_type(geometry_type: GeometryType) -> Self {
+        Self {
+            known_geometry_type: Some(geometry_type),
+        }
+    }
+}
+
+use serde::de::Error as SerdeError;
+impl<'de> serde::de::Visitor<'de> for GeometryVisitor {
+    type Value = Geometry;
+
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        write!(formatter, "a valid GeoJSON Geometry object")
+    }
+
+    fn visit_map<A>(self, mut map_access: A) -> std::result::Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        use crate::Position;
+
+        // Depending on the geometry type, the CoordinateField could have different dimensions
+        // This might not support mixed dimensionality
+        #[derive(Debug)]
+        enum CoordinateField {
+            ThreeDimensional(Vec<Vec<Vec<Position>>>), // MultiPolygon
+            TwoDimensional(Vec<Vec<Position>>),        // Polygon, MultiLineString
+            OneDimensional(Vec<Position>),             // LineString, MultiPoint
+            ZeroDimensional(Position),                 // Point
+        }
+
+        #[derive(Debug)]
+        enum CoordinateFieldElement {
+            // MultiPolygon
+            TwoDimensional(Vec<Vec<Position>>),
+            // Polygon, MultiLineString
+            OneDimensional(Vec<Position>),
+            // LineString, MultiPoint
+            ZeroDimensional(Position),
+            // Point
+            Scalar(f64),
+        }
+
+        impl<'de> Deserialize<'de> for CoordinateField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                struct CoordinateFieldVisitor;
+                impl<'v> Visitor<'v> for CoordinateFieldVisitor {
+                    type Value = CoordinateField;
+
+                    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                        write!(formatter, "a valid Geometry `coordinates` field")
+                    }
+
+                    fn visit_seq<A>(self, mut seq: A) -> std::result::Result<Self::Value, A::Error>
+                    where
+                        A: SeqAccess<'v>,
+                    {
+                        match seq.next_element::<CoordinateFieldElement>()? {
+                            None => todo!("handle starting with empty sequence"),
+                            Some(next) => match next {
+                                CoordinateFieldElement::TwoDimensional(positions_2d) => {
+                                    let mut positions_3d = vec![positions_2d];
+                                    while let Some(next) =
+                                        seq.next_element::<CoordinateFieldElement>()?
+                                    {
+                                        match next {
+                                            CoordinateFieldElement::TwoDimensional(positions) => positions_3d.push(positions),
+                                            _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                        }
+                                    }
+                                    return Ok(CoordinateField::ThreeDimensional(positions_3d));
+                                }
+                                CoordinateFieldElement::OneDimensional(positions) => {
+                                    let mut positions_2d = vec![positions];
+                                    while let Some(next) =
+                                        seq.next_element::<CoordinateFieldElement>()?
+                                    {
+                                        match next {
+                                            CoordinateFieldElement::OneDimensional(positions) => positions_2d.push(positions),
+                                            _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                        }
+                                    }
+                                    return Ok(CoordinateField::TwoDimensional(positions_2d));
+                                }
+                                CoordinateFieldElement::ZeroDimensional(position) => {
+                                    let mut positions = vec![position];
+                                    while let Some(next) =
+                                        seq.next_element::<CoordinateFieldElement>()?
+                                    {
+                                        match next {
+                                            CoordinateFieldElement::ZeroDimensional(position) => positions.push(position),
+                                            _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                        }
+                                    }
+                                    return Ok(CoordinateField::OneDimensional(positions));
+                                }
+                                CoordinateFieldElement::Scalar(x) => {
+                                    // Will this allocate on the stack?
+                                    let mut scalars = TinyVec::default();
+                                    scalars.push(x);
+                                    while let Some(next) =
+                                        seq.next_element::<CoordinateFieldElement>()?
+                                    {
+                                        match next {
+                                            CoordinateFieldElement::Scalar(s) => scalars.push(s),
+                                            _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                        }
+                                    }
+                                    return Ok(CoordinateField::ZeroDimensional(Position::from(
+                                        scalars,
+                                    )));
+                                }
+                            },
+                        }
+                        // while let Some(next) =
+                        // {
+                        //     log::debug!("1 - visit_seq - next: {next:?}");
+                        // }
+                    }
+                }
+
+                impl<'de> Deserialize<'de> for CoordinateFieldElement {
+                    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+                    where
+                        D: Deserializer<'de>,
+                    {
+                        deserializer.deserialize_any(CoordinateFieldElementVisitor)
+                    }
+                }
+
+                struct CoordinateFieldElementVisitor;
+                impl<'v> Visitor<'v> for CoordinateFieldElementVisitor {
+                    type Value = CoordinateFieldElement;
+
+                    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                        write!(formatter, "a valid Geometry `coordinates` field")
+                    }
+
+                    #[inline]
+                    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+                    where
+                        E: SerdeError,
+                    {
+                        log::debug!("2- visited i64: {v}");
+                        return Ok(CoordinateFieldElement::Scalar(v as f64));
+                    }
+
+                    #[inline]
+                    fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+                    where
+                        E: SerdeError,
+                    {
+                        log::debug!("2- visited u64: {v}");
+                        return Ok(CoordinateFieldElement::Scalar(v as f64));
+                    }
+
+                    #[inline]
+                    fn visit_f64<E>(self, v: f64) -> std::result::Result<Self::Value, E>
+                    where
+                        E: SerdeError,
+                    {
+                        log::debug!("2- visited f64: {v}");
+                        return Ok(CoordinateFieldElement::Scalar(v));
+                    }
+
+                    fn visit_seq<A>(self, mut seq: A) -> std::result::Result<Self::Value, A::Error>
+                    where
+                        A: SeqAccess<'v>,
+                    {
+                        let next = seq.next_element::<CoordinateFieldElement>()?;
+                        log::debug!("2 - visit_seq - next: {next:?}");
+                        match next {
+                            None => todo!("2. handle none"),
+                            Some(next) => match next {
+                                // CoordinateFieldElement::ThreeDimensional(_) => {}
+                                // CoordinateFieldElement::TwoDimensional(_) => {}
+                                CoordinateFieldElement::OneDimensional(positions) => {
+                                    let mut positions_2d = vec![positions];
+                                    while let Some(next) =
+                                        seq.next_element::<CoordinateFieldElement>()?
+                                    {
+                                        match next {
+                                            CoordinateFieldElement::OneDimensional(positions) => positions_2d.push(positions),
+                                            _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                        }
+                                    }
+                                    return Ok(CoordinateFieldElement::TwoDimensional(
+                                        positions_2d,
+                                    ));
+                                }
+                                CoordinateFieldElement::ZeroDimensional(pos) => {
+                                    let mut positions = vec![pos];
+                                    while let Some(next) =
+                                        seq.next_element::<CoordinateFieldElement>()?
+                                    {
+                                        match next {
+                                            CoordinateFieldElement::ZeroDimensional(position) => positions.push(position),
+                                            _ => todo!("handle error when encountering {next:?} expecting more ZeroDimensional elements")
+                                        }
+                                    }
+                                    return Ok(CoordinateFieldElement::OneDimensional(positions));
+                                }
+                                CoordinateFieldElement::Scalar(x) => {
+                                    let y =
+                                        seq.next_element::<f64>()?.expect("TODO: handle missing");
+                                    // TODO: support 3D+
+                                    assert!(seq.next_element::<f64>()?.is_none());
+                                    let pos = Position::from([x, y]);
+                                    log::debug!("built position: {pos:?}");
+                                    return Ok(CoordinateFieldElement::ZeroDimensional(pos));
+                                }
+                                _ => todo!("2. visited seq. next: {next:?}"),
+                            },
+                        }
+                    }
+                }
+
+                log::debug!("deserializing CoordinateField");
+                deserializer.deserialize_any(CoordinateFieldVisitor)
+                // Ok(match deserializer.deserialize_any(CoordinateFieldVisitor)? {
+                //     CoordinateFieldElement::ThreeDimensional(x) => CoordinateField::ThreeDimensional(x),
+                //     CoordinateFieldElement::TwoDimensional(x) => CoordinateField::TwoDimensional(x),
+                //     CoordinateFieldElement::OneDimensional(x) =>CoordinateField::OneDimensional(x),
+                //     CoordinateFieldElement::ZeroDimensional(x) => CoordinateField::ZeroDimensional(x),
+                //     CoordinateFieldElement::Scalar(x) => panic!("shouldn't get scalar at this point: {}", x)
+                // })
+            }
+        }
+
+        // impl<'de> Deserialize<'de> for CoordinateField {
+        //     fn deserialize<D>(de: D) -> std::result::Result<Self, D::Error> where D: Deserializer<'de> {
+        //         let dimensions = 0;
+        //         match Position::deserialize(de) {
+        //             Ok(p) => Ok(CoordinateField::ZeroDimensional(p)),
+        //             Err(e) => {
+        //                 match Vec::<Position>::deserialize(de) {
+        //                     Ok(p) => Ok(CoordinateField::OneDimensional(p)),
+        //                     Err(e) => {
+        //                         dbg!(e);
+        //                         todo!("impl deserialize for higher dimension coordinate field")
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        fn build_geometry_value(
+            geometry_type: GeometryType,
+            coordinates: CoordinateField,
+        ) -> Result<Value> {
+            match geometry_type {
+                GeometryType::Point => {
+                    if let CoordinateField::ZeroDimensional(position) = coordinates {
+                        return Ok(Value::Point(position));
+                    }
+                }
+                GeometryType::MultiPoint => {
+                    if let CoordinateField::OneDimensional(position) = coordinates {
+                        return Ok(Value::MultiPoint(position));
+                    }
+                }
+                GeometryType::LineString => {
+                    if let CoordinateField::OneDimensional(position) = coordinates {
+                        return Ok(Value::LineString(position));
+                    }
+                }
+                GeometryType::MultiLineString => {
+                    if let CoordinateField::TwoDimensional(position) = coordinates {
+                        return Ok(Value::MultiLineString(position));
+                    }
+                }
+                GeometryType::Polygon => {
+                    if let CoordinateField::TwoDimensional(position) = coordinates {
+                        return Ok(Value::Polygon(position));
+                    }
+                }
+                GeometryType::MultiPolygon => {
+                    if let CoordinateField::ThreeDimensional(position) = coordinates {
+                        return Ok(Value::MultiPolygon(position));
+                    }
+                }
+                GeometryType::GeometryCollection => {
+                    unreachable!("should not be called for GeometryCollection")
+                }
+            }
+            todo!("handle dimensional mismatch")
+        }
+
+        let mut child_geometries: Option<Vec<Geometry>> = None;
+        let mut coordinate_field: Option<CoordinateField> = None;
+        let mut geometry_type: Option<GeometryType> = self.known_geometry_type;
+        let mut foreign_members: Option<JsonObject> = None;
+        let mut bbox: Option<Bbox> = None;
+
+        while let Some(next_key) = map_access.next_key::<String>()? {
+            match next_key.as_str() {
+                "coordinates" => {
+                    if coordinate_field.is_some() {
+                        todo!("handle existing coordinate field error");
+                    }
+                    if child_geometries.is_some() {
+                        todo!("encountered coordinates field for geoemtry with child geometries - is this a GeometryCollection or not?");
+                    }
+                    coordinate_field = Some(map_access.next_value()?);
+                }
+                "geometries" => {
+                    if coordinate_field.is_some() {
+                        todo!("encountered coordinates field for geoemtry with child geometries - is this a GeometryCollection or not?");
+                    }
+                    if child_geometries.is_some() {
+                        todo!("handle existing child_geometries error");
+                    }
+                    child_geometries = Some(map_access.next_value()?);
+                }
+                "type" => {
+                    if geometry_type.is_some() {
+                        todo!("handle existing geometry field error");
+                    }
+                    let geometry_type_string: String = map_access.next_value()?;
+                    let gt = GeometryType::from_str(geometry_type_string.as_str())
+                        .map_err(A::Error::custom)?;
+                    geometry_type = Some(gt);
+                }
+                "bbox" => {
+                    // REVIEW: still need to test this.
+                    bbox = Some(map_access.next_value()?);
+                }
+                _ => {
+                    if let Some(ref mut foreign_members) = foreign_members {
+                        foreign_members.insert(next_key, map_access.next_value()?);
+                    } else {
+                        let mut fm = JsonObject::new();
+                        fm.insert(next_key, map_access.next_value()?);
+                        foreign_members = Some(fm);
+                    }
+                }
+            }
+        }
+
+        let Some(geometry_type) = geometry_type else {
+            todo!("missing geometry type");
+        };
+
+        let value = match (geometry_type, coordinate_field, child_geometries) {
+            (GeometryType::GeometryCollection, None, Some(geometries)) => {
+                Value::GeometryCollection(geometries)
+            }
+            (geometry_type, Some(coordinate_field), None) => {
+                build_geometry_value(geometry_type, coordinate_field).map_err(A::Error::custom)?
+            }
+            _ => todo!("handle missing/extra fields"),
+        };
+
+        Ok(Geometry {
+            value,
+            bbox,
+            foreign_members,
+        })
     }
 }
 
@@ -361,7 +836,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, GeoJson, Geometry, JsonObject, Position, Value};
+    use super::*;
+    use crate::{GeoJson, Position};
     use serde_json::json;
     use std::str::FromStr;
 
@@ -534,11 +1010,43 @@ mod tests {
 
         let actual_failure = Geometry::from_str(&feature_json).unwrap_err();
         match actual_failure {
-            Error::ExpectedType { actual, expected } => {
-                assert_eq!(actual, "Feature");
-                assert_eq!(expected, "Geometry");
+            Error::MalformedJson(e) => {
+                e.to_string().contains("Feature");
             }
             e => panic!("unexpected error: {}", e),
         };
+    }
+
+    mod deserialize {
+        use super::*;
+        use crate::Geometry;
+        use crate::Value;
+
+        #[test]
+        fn point() {
+            let json = json!({
+                "type": "Point",
+                "coordinates": [1.0, 2.0]
+            })
+            .to_string();
+
+            let geom = Geometry::from_str(&json).unwrap();
+            let expected = Value::Point(Position::from([1.0, 2.0]));
+            assert_eq!(geom.value, expected);
+        }
+
+        #[test]
+        fn linestring() {
+            let json = json!({
+                "type": "LineString",
+                "coordinates": [[1.0, 2.0], [3.0, 4.0]]
+            })
+            .to_string();
+
+            let geom = Geometry::from_str(&json).unwrap();
+            let expected =
+                Value::LineString(vec![Position::from([1.0, 2.0]), Position::from([3.0, 4.0])]);
+            assert_eq!(geom.value, expected);
+        }
     }
 }

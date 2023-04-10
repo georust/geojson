@@ -15,6 +15,7 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
+use crate::de::FeatureVisitor;
 use crate::errors::{Error, Result};
 use crate::{util, Feature, Geometry, Value};
 use crate::{JsonObject, JsonValue};
@@ -191,22 +192,21 @@ impl<'de> Deserialize<'de> for Feature {
     where
         D: Deserializer<'de>,
     {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+        deserializer.deserialize_map(FeatureVisitor::new())
     }
 }
 
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(untagged)]
 pub enum Id {
     String(String),
     Number(serde_json::Number),
 }
+
+// REVIEW: test deserializing both numeric and string based ids
 
 impl Serialize for Id {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -336,8 +336,8 @@ mod tests {
     fn feature_json_invalid_geometry() {
         let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
         match geojson_str.parse::<GeoJson>().unwrap_err() {
-            Error::FeatureInvalidGeometryValue(_) => (),
-            _ => unreachable!(),
+            Error::MalformedJson(e) => assert!(e.to_string().contains("expected a valid GeoJSON Geometry object")),
+            other => panic!("expecting FeatureInvalidGeometryValue, but got: {:?}", other),
         }
     }
 
@@ -396,19 +396,19 @@ mod tests {
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        assert!(matches!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType(_))
-        ));
+        match feature_json_str.parse::<GeoJson>().unwrap_err() {
+            Error::MalformedJson(e) => assert!(e.to_string().contains("Id")),
+            other => panic!("expected different error. Got: {:?}", other),
+        }
     }
 
     #[test]
     fn decode_feature_with_invalid_id_type_null() {
         let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        assert!(matches!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType(_))
-        ));
+        match feature_json_str.parse::<GeoJson>().unwrap_err() {
+            Error::MalformedJson(e) => assert!(e.to_string().contains("Id")),
+            other => panic!("expected different error. Got: {:?}", other),
+        }
     }
 
     #[test]

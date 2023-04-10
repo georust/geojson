@@ -15,7 +15,7 @@
 use crate::errors::{Error, Result};
 use crate::{Feature, FeatureCollection, Geometry};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
@@ -43,11 +43,57 @@ use std::str::FromStr;
 /// let feature2: Feature = geojson.try_into().unwrap();
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+// Tagging is a pickle... we have a "type" field which works like a tag, and FeatureCollection.type and Feature.type are fine,
+// but for a Geometry, the type is not "Geometry" rather it's one of the inner variants.
+// We could use serdes `untagged` attribute, but if the geojson is invalid, we get an obtuse error like
+// "did not match any variant of untagged enum GeoJson" when we really want something more specific like "`id` field had invalid value"
+#[serde(from = "TaggedGeoJson")]
 pub enum GeoJson {
+    // this "tag" is probably wrong, because Geometry.type is not "Geometry", rather it's the value
+    // of one of it's Value enum members.
     Geometry(Geometry),
     Feature(Feature),
     FeatureCollection(FeatureCollection),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+enum TaggedGeoJson {
+    #[serde(deserialize_with = "crate::geometry::deserialize_point")]
+    Point(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_line_string")]
+    LineString(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_polygon")]
+    Polygon(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_multi_point")]
+    MultiPoint(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_multi_line_string")]
+    MultiLineString(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_multi_polygon")]
+    MultiPolygon(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_geometry_collection")]
+    GeometryCollection(Geometry),
+
+    Feature(Feature),
+    FeatureCollection(FeatureCollection),
+}
+
+impl From<TaggedGeoJson> for GeoJson {
+    fn from(value: TaggedGeoJson) -> Self {
+        use TaggedGeoJson::*;
+        match value {
+            Point(g)
+            | LineString(g)
+            | Polygon(g)
+            | MultiPoint(g)
+            | MultiLineString(g)
+            | MultiPolygon(g)
+            | GeometryCollection(g) => GeoJson::Geometry(g),
+            Feature(f) => GeoJson::Feature(f),
+            FeatureCollection(fc) => GeoJson::FeatureCollection(fc),
+        }
+    }
 }
 
 impl<'a> From<&'a GeoJson> for JsonObject {
@@ -299,18 +345,18 @@ impl Serialize for GeoJson {
     }
 }
 
-impl<'de> Deserialize<'de> for GeoJson {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
+// impl<'de> Deserialize<'de> for GeoJson {
+//     fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         use serde::de::Error as SerdeError;
+//
+//         let val = JsonObject::deserialize(deserializer)?;
+//
+//         GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
+//     }
+// }
 
 /// # Example
 ///```
@@ -345,16 +391,7 @@ impl FromStr for GeoJson {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let object = get_object(s)?;
-
-        GeoJson::from_json_object(object)
-    }
-}
-
-fn get_object(s: &str) -> Result<JsonObject> {
-    match ::serde_json::from_str(s)? {
-        JsonValue::Object(object) => Ok(object),
-        other => Err(Error::ExpectedObjectValue(other)),
+        Ok(serde_json::from_reader(s.as_bytes())?)
     }
 }
 
@@ -392,7 +429,7 @@ impl fmt::Display for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, GeoJson, Geometry, Position, Value};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, Position, Value};
     use serde_json::json;
     use std::convert::TryInto;
     use std::str::FromStr;
@@ -498,5 +535,12 @@ mod tests {
             GeoJson::from_str(geojson_str),
             Err(Error::MalformedJson(_))
         ))
+    }
+
+    #[test]
+    fn countries() {
+        let geojson_str = include_str!("../tests/fixtures/countries.geojson");
+        let fc = geojson_str.parse::<FeatureCollection>().unwrap();
+        assert_eq!(fc.features.len(), 180);
     }
 }
