@@ -583,7 +583,6 @@ mod tests {
 
     #[test]
     fn countries() {
-        pretty_env_logger::init();
         let geojson_str = include_str!("../tests/fixtures/countries.geojson");
         let fc = geojson_str.parse::<FeatureCollection>().unwrap();
         assert_eq!(fc.features.len(), 180);
