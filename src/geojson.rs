@@ -44,18 +44,56 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Deserialize)]
-// Tagging is a pickle... we have a "type" field which works like a tag, and FeatureCollection.type and Feature.type are sane
-// but for a Geometry, type is not "Geometry" rather it's one of the variants. We can get pretty far using `untagged`, but
-// if the geojson is invalid, we get an obtuse error like "did not match any variant of untagged enum GeoJson" when we really
-// want something more specific like "`id` field had invalid value"
-// #[serde(untagged)] // <-- this is a pickle.
-#[serde(tag = "type")] // <-- this is a pickle.
+// Tagging is a pickle... we have a "type" field which works like a tag, and FeatureCollection.type and Feature.type are fine,
+// but for a Geometry, the type is not "Geometry" rather it's one of the inner variants.
+// We could use serdes `untagged` attribute, but if the geojson is invalid, we get an obtuse error like
+// "did not match any variant of untagged enum GeoJson" when we really want something more specific like "`id` field had invalid value"
+#[serde(from = "TaggedGeoJson")]
 pub enum GeoJson {
     // this "tag" is probably wrong, because Geometry.type is not "Geometry", rather it's the value
     // of one of it's Value enum members.
     Geometry(Geometry),
     Feature(Feature),
     FeatureCollection(FeatureCollection),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+enum TaggedGeoJson {
+    #[serde(deserialize_with = "crate::geometry::deserialize_point")]
+    Point(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_line_string")]
+    LineString(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_polygon")]
+    Polygon(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_multi_point")]
+    MultiPoint(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_multi_line_string")]
+    MultiLineString(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_multi_polygon")]
+    MultiPolygon(Geometry),
+    #[serde(deserialize_with = "crate::geometry::deserialize_geometry_collection")]
+    GeometryCollection(Geometry),
+
+    Feature(Feature),
+    FeatureCollection(FeatureCollection),
+}
+
+impl From<TaggedGeoJson> for GeoJson {
+    fn from(value: TaggedGeoJson) -> Self {
+        use TaggedGeoJson::*;
+        match value {
+            Point(g)
+            | LineString(g)
+            | Polygon(g)
+            | MultiPoint(g)
+            | MultiLineString(g)
+            | MultiPolygon(g)
+            | GeometryCollection(g) => GeoJson::Geometry(g),
+            Feature(f) => GeoJson::Feature(f),
+            FeatureCollection(fc) => GeoJson::FeatureCollection(fc),
+        }
+    }
 }
 
 impl<'a> From<&'a GeoJson> for JsonObject {
