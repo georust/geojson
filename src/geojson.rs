@@ -46,6 +46,8 @@ use std::str::FromStr;
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(tag = "type")]
 pub enum GeoJson {
+    // this "tag" is probably wrong, because Geometry.type is not "Geometry", rather it's the value
+    // of one of it's Value enum members.
     Geometry(Geometry),
     Feature(Feature),
     FeatureCollection(FeatureCollection),
