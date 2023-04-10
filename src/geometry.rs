@@ -664,15 +664,12 @@ impl<'de> Deserialize<'de> for Geometry {
                                 return Ok(Value::MultiPolygon(position));
                             }
                         }
-                        GeometryType::GeometryCollection => {
-                            if let CoordinateField::ThreeDimensional(position) = coordinates {
-                                todo!("build GeometryCollection from {position:?}")
-                            }
-                        }
+                        GeometryType::GeometryCollection => unreachable!("should not be called for GeometryCollection")
                     }
                     todo!("handle dimensional mismatch")
                 }
 
+                let mut child_geometries: Option<Vec<Geometry>> = None;
                 let mut coordinate_field: Option<CoordinateField> = None;
                 let mut geometry_type: Option<GeometryType> = None;
                 let mut foreign_members: Option<JsonObject> = None;
@@ -684,7 +681,19 @@ impl<'de> Deserialize<'de> for Geometry {
                             if coordinate_field.is_some() {
                                 todo!("handle existing coordinate field error");
                             }
+                            if child_geometries.is_some() {
+                                todo!("encountered coordinates field for geoemtry with child geometries - is this a GeometryCollection or not?");
+                            }
                             coordinate_field = Some(map_access.next_value()?);
+                        }
+                        "geometries" => {
+                            if coordinate_field.is_some() {
+                                todo!("encountered coordinates field for geoemtry with child geometries - is this a GeometryCollection or not?");
+                            }
+                            if child_geometries.is_some() {
+                                todo!("handle existing child_geometries error");
+                            }
+                            child_geometries = Some(map_access.next_value()?);
                         }
                         "type" => {
                             if geometry_type.is_some() {
@@ -711,11 +720,19 @@ impl<'de> Deserialize<'de> for Geometry {
                     }
                 }
 
-                let (Some(geometry_type),Some(coordinate_field)) = (geometry_type, coordinate_field) else {
-                    todo!("missing geometry type or coordinate field");
+                let Some(geometry_type) = geometry_type else {
+                    todo!("missing geometry type");
                 };
-                let value: Value = build_geometry_value(geometry_type, coordinate_field)
-                    .map_err(A::Error::custom)?;
+
+                let value = match (geometry_type, coordinate_field, child_geometries) {
+                    (GeometryType::GeometryCollection, None, Some(geometries)) => {
+                        Value::GeometryCollection(geometries)
+                    }
+                    (geometry_type, Some(coordinate_field), None) => {
+                        build_geometry_value(geometry_type, coordinate_field).map_err(A::Error::custom)?
+                    }
+                    _ => todo!("handle missing/extra fields")
+                };
 
                 Ok(Geometry {
                     value,
