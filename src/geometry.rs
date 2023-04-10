@@ -21,6 +21,7 @@ use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
 use serde::de::{SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use tinyvec::TinyVec;
 
 /// The underlying value for a `Geometry`.
 ///
@@ -454,7 +455,8 @@ impl<'de> Deserialize<'de> for Geometry {
                                         // CoordinateFieldElement::ThreeDimensional(_) => {}
                                         CoordinateFieldElement::TwoDimensional(positions_2d) => {
                                             let mut positions_3d = vec![positions_2d];
-                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            while let Some(next) =
+                                                seq.next_element::<CoordinateFieldElement>()?
                                             {
                                                 match next {
                                                     CoordinateFieldElement::TwoDimensional(positions) => positions_3d.push(positions),
@@ -467,7 +469,8 @@ impl<'de> Deserialize<'de> for Geometry {
                                         }
                                         CoordinateFieldElement::OneDimensional(positions) => {
                                             let mut positions_2d = vec![positions];
-                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            while let Some(next) =
+                                                seq.next_element::<CoordinateFieldElement>()?
                                             {
                                                 match next {
                                                     CoordinateFieldElement::OneDimensional(positions) => positions_2d.push(positions),
@@ -480,20 +483,34 @@ impl<'de> Deserialize<'de> for Geometry {
                                         }
                                         CoordinateFieldElement::ZeroDimensional(position) => {
                                             let mut positions = vec![position];
-                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            while let Some(next) =
+                                                seq.next_element::<CoordinateFieldElement>()?
                                             {
                                                 match next {
                                                     CoordinateFieldElement::ZeroDimensional(position) => positions.push(position),
                                                     _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
                                                 }
                                             }
-                                            return Ok(CoordinateField::OneDimensional(
-                                                positions,
+                                            return Ok(CoordinateField::OneDimensional(positions));
+                                        }
+                                        CoordinateFieldElement::Scalar(x) => {
+                                            // Will this allocate on the stack?
+                                            let mut scalars = TinyVec::default();
+                                            scalars.push(x);
+                                            while let Some(next) =
+                                                seq.next_element::<CoordinateFieldElement>()?
+                                            {
+                                                match next {
+                                                    CoordinateFieldElement::Scalar(s) => scalars.push(s),
+                                                    _ => todo!("handle error when encountering {next:?} expecting homogenous element dimensions")
+                                                }
+                                            }
+                                            return Ok(CoordinateField::ZeroDimensional(
+                                                Position::from(scalars),
                                             ));
                                         }
-                                        CoordinateFieldElement::Scalar(s) => todo!("handle this error - should have encountered an entire Position: {s}"),
                                         _ => todo!("1. visited seq. next: {next:?}"),
-                                    }
+                                    },
                                 }
                                 // while let Some(next) =
                                 // {
@@ -522,13 +539,19 @@ impl<'de> Deserialize<'de> for Geometry {
                             }
 
                             #[inline]
-                            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E> where E: SerdeError {
+                            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+                            where
+                                E: SerdeError,
+                            {
                                 log::debug!("2- visited i64: {v}");
                                 return Ok(CoordinateFieldElement::Scalar(v as f64));
                             }
 
                             #[inline]
-                            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E> where E: SerdeError {
+                            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+                            where
+                                E: SerdeError,
+                            {
                                 log::debug!("2- visited u64: {v}");
                                 return Ok(CoordinateFieldElement::Scalar(v as f64));
                             }
@@ -558,7 +581,8 @@ impl<'de> Deserialize<'de> for Geometry {
                                         // CoordinateFieldElement::TwoDimensional(_) => {}
                                         CoordinateFieldElement::OneDimensional(positions) => {
                                             let mut positions_2d = vec![positions];
-                                            while let Some(next) = seq.next_element::<CoordinateFieldElement>()?
+                                            while let Some(next) =
+                                                seq.next_element::<CoordinateFieldElement>()?
                                             {
                                                 match next {
                                                     CoordinateFieldElement::OneDimensional(positions) => positions_2d.push(positions),
@@ -591,10 +615,12 @@ impl<'de> Deserialize<'de> for Geometry {
                                             assert!(seq.next_element::<f64>()?.is_none());
                                             let pos = Position::from([x, y]);
                                             log::debug!("built position: {pos:?}");
-                                            return Ok(CoordinateFieldElement::ZeroDimensional(pos));
+                                            return Ok(CoordinateFieldElement::ZeroDimensional(
+                                                pos,
+                                            ));
                                         }
                                         _ => todo!("2. visited seq. next: {next:?}"),
-                                    }
+                                    },
                                 }
                             }
                         }
@@ -664,7 +690,9 @@ impl<'de> Deserialize<'de> for Geometry {
                                 return Ok(Value::MultiPolygon(position));
                             }
                         }
-                        GeometryType::GeometryCollection => unreachable!("should not be called for GeometryCollection")
+                        GeometryType::GeometryCollection => {
+                            unreachable!("should not be called for GeometryCollection")
+                        }
                     }
                     todo!("handle dimensional mismatch")
                 }
@@ -729,9 +757,10 @@ impl<'de> Deserialize<'de> for Geometry {
                         Value::GeometryCollection(geometries)
                     }
                     (geometry_type, Some(coordinate_field), None) => {
-                        build_geometry_value(geometry_type, coordinate_field).map_err(A::Error::custom)?
+                        build_geometry_value(geometry_type, coordinate_field)
+                            .map_err(A::Error::custom)?
                     }
-                    _ => todo!("handle missing/extra fields")
+                    _ => todo!("handle missing/extra fields"),
                 };
 
                 Ok(Geometry {
