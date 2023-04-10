@@ -52,7 +52,9 @@ mod roundtrip_tests {
         let _ = file.read_to_string(&mut file_contents);
 
         // Read and parse the geojson from the file's contents
-        let geojson = file_contents.parse::<GeoJson>().expect("unable to parse");
+        let geojson = file_contents
+            .parse::<GeoJson>()
+            .expect(&format!("unable to parse: {file_path}"));
 
         // Now that we've successfully decoded the geojson, re-encode it and compare to the
         // original to make sure nothing was lost.
