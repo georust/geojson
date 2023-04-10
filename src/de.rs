@@ -304,7 +304,6 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
     where
         A: serde::de::MapAccess<'de>,
     {
-        let mut has_feature_type = false;
         let mut bbox: Option<Bbox> = None;
         let mut geometry: Option<Geometry> = None;
         let mut properties: Option<JsonObject> = None;
@@ -314,11 +313,13 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
         log::debug!("in visit map");
         while let Some(key) = map_access.next_key::<String>()? {
             match key.as_str() {
+                // Note: if we are deserializing a top-level Feature (as opposed to a FeatureCollection)
+                // we won't encounter the `type` field, as it will already have been consumed in
+                // determining if this is the proper deserializer.
                 "type" => {
                     let type_name = map_access.next_value::<String>()?;
                     if type_name == "Feature" {
                         log::debug!("type == Feature");
-                        has_feature_type = true;
                     } else {
                         return Err(Error::custom(
                             "GeoJSON Feature had a `type` other than \"Feature\"",
@@ -357,13 +358,6 @@ impl<'de> serde::de::Visitor<'de> for FeatureVisitor<Feature> {
         }
 
         log::debug!("finishing up in visit_map");
-        if !has_feature_type {
-            // THIS MIGHT NOT BE TRUE
-            // panic!("should have already consumed `type` field");
-            return Err(Error::custom(
-                "A GeoJSON Feature must have a `type: \"Feature\"` field, but found none.",
-            ))
-        }
         Ok(Feature {
             bbox,
             properties,
