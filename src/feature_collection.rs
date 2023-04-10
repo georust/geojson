@@ -71,6 +71,7 @@ pub struct FeatureCollection {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    #[serde(flatten)]
     pub foreign_members: Option<JsonObject>,
 }
 
