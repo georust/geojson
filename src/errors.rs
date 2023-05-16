@@ -55,6 +55,8 @@ pub enum Error {
     ExpectedArrayValue(String),
     #[error("Expected an owned Object, but got `{0}`")]
     ExpectedObjectValue(Value),
+    #[error("A position must contain two or more elements, but got `{0}`")]
+    PositionTooShort(usize),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

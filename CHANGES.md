@@ -2,6 +2,9 @@
 
 ## UNRELEASED
 
+* Modified conversion from JSON to reject zero- and one-dimensional positions.
+  * PR: <https://github.com/georust/geojson/pull/225>
+
 ## 0.24.0
 
 * Added `geojson::{ser, de}` helpers to convert your custom struct to and from GeoJSON. 
