@@ -1,6 +1,6 @@
 # Changes
 
-## UNRELEASED
+## 0.24.1
 
 * Modified conversion from JSON to reject zero- and one-dimensional positions.
   * PR: <https://github.com/georust/geojson/pull/225>
