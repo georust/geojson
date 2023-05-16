@@ -109,7 +109,7 @@ impl<'a> From<&'a Value> for JsonObject {
                 Value::GeometryCollection(..) => "geometries",
                 _ => "coordinates",
             }),
-            ::serde_json::to_value(&value).unwrap(),
+            ::serde_json::to_value(value).unwrap(),
         );
         map
     }
@@ -529,5 +529,20 @@ mod tests {
             }
             e => panic!("unexpected error: {}", e),
         };
+    }
+
+    #[test]
+    fn test_reject_too_few_coordinates() {
+        let err = Geometry::from_str(r#"{"type": "Point", "coordinates": []}"#).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "A position must contain two or more elements, but got `0`"
+        );
+
+        let err = Geometry::from_str(r#"{"type": "Point", "coordinates": [23.42]}"#).unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "A position must contain two or more elements, but got `1`"
+        );
     }
 }
