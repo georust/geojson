@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Added conversion from `Vec<Feature>` to `GeoJson`.
+* Added `GeoJson::to_string_pretty` as convenience wrappers around the same `serde_json` methods.
 
 ## 0.24.1
 
