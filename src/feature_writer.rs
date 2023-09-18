@@ -1,5 +1,5 @@
 use crate::ser::to_feature_writer;
-use crate::{Error, Feature, Result};
+use crate::{Error, Feature, JsonObject, Result};
 
 use serde::Serialize;
 use std::io::Write;
@@ -8,6 +8,7 @@ use std::io::Write;
 enum State {
     New,
     Started,
+    StartedWithForeignMembers,
     Finished,
 }
 
@@ -23,6 +24,9 @@ impl<W: Write> FeatureWriter<W> {
     /// To append features from your custom structs, use [`FeatureWriter::serialize`].
     ///
     /// To append features from [`Feature`] use [`FeatureWriter::write_feature`].
+    ///
+    /// To set foreign members, use [`FeatureWriter::write_foreign_members`] before appending any
+    /// features.
     pub fn from_writer(writer: W) -> Self {
         Self {
             writer,
@@ -45,6 +49,9 @@ impl<W: Write> FeatureWriter<W> {
             }
             State::Started => {
                 self.write_str(",")?;
+            }
+            State::StartedWithForeignMembers => {
+                self.state = State::Started;
             }
         }
         serde_json::to_writer(&mut self.writer, feature)?;
@@ -163,8 +170,46 @@ impl<W: Write> FeatureWriter<W> {
             State::Started => {
                 self.write_str(",")?;
             }
+            State::StartedWithForeignMembers => {
+                self.state = State::Started;
+            }
         }
         to_feature_writer(&mut self.writer, value)
+    }
+
+    /// Write [foreign members](https://datatracker.ietf.org/doc/html/rfc7946#section-6) to the
+    /// output stream. This must be done before appending any features.
+    pub fn write_foreign_members(&mut self, foreign_members: &JsonObject) -> Result<()> {
+        match self.state {
+            State::Finished => {
+                return Err(Error::InvalidWriterState(
+                    "cannot write foreign members when writer has already finished",
+                ))
+            }
+            State::New => {
+                self.write_str(r#"{ "type": "FeatureCollection", "#)?;
+
+                for (key, value) in foreign_members {
+                    write!(self.writer, "\"{key}\": ")?;
+                    serde_json::to_writer(&mut self.writer, &value)?;
+                    self.write_str(",")?;
+                }
+
+                self.write_str(r#" "features": ["#)?;
+                self.state = State::StartedWithForeignMembers;
+                Ok(())
+            }
+            State::Started => {
+                return Err(Error::InvalidWriterState(
+                    "must write foreign members before any features",
+                ))
+            }
+            State::StartedWithForeignMembers => {
+                return Err(Error::InvalidWriterState(
+                    "can only write foreign members once",
+                ))
+            }
+        }
     }
 
     /// Writes the closing syntax for the FeatureCollection.
@@ -183,7 +228,7 @@ impl<W: Write> FeatureWriter<W> {
                 self.write_prefix()?;
                 self.write_suffix()?;
             }
-            State::Started => {
+            State::Started | State::StartedWithForeignMembers => {
                 self.state = State::Finished;
                 self.write_suffix()?;
             }
@@ -374,6 +419,66 @@ mod tests {
             ]
         });
 
+        let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");
+        assert_eq!(actual_json, expected)
+    }
+
+    #[test]
+    fn write_foreign_members() {
+        let mut buffer: Vec<u8> = vec![];
+        {
+            let mut writer = FeatureWriter::from_writer(&mut buffer);
+
+            writer
+                .write_foreign_members(
+                    json!({
+                        "extra": "string",
+                        "list": [1, 2, 3],
+                        "nested": {
+                            "foo": "bar",
+                        },
+                    })
+                    .as_object()
+                    .unwrap(),
+                )
+                .unwrap();
+
+            let record_1 = {
+                let mut props = serde_json::Map::new();
+                props.insert("name".to_string(), "Mishka".into());
+                props.insert("age".to_string(), 12.into());
+
+                Feature {
+                    bbox: None,
+                    geometry: Some(crate::Geometry::from(crate::Value::Point(vec![1.1, 1.2]))),
+                    id: None,
+                    properties: Some(props),
+                    foreign_members: None,
+                }
+            };
+
+            writer.write_feature(&record_1).unwrap();
+            writer.flush().unwrap();
+        }
+
+        let expected = json!({
+            "type": "FeatureCollection",
+            "extra": "string",
+            "list": [1, 2, 3],
+            "nested": {
+                "foo": "bar",
+            },
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [1.1, 1.2] },
+                    "properties": { "name": "Mishka", "age": 12
+                    }
+                },
+            ]
+        });
+
+        println!("{}", String::from_utf8(buffer.clone()).unwrap());
         let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");
         assert_eq!(actual_json, expected)
     }

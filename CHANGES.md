@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Add support for foreign members to `FeatureWriter`.
 * Added conversion from `Vec<Feature>` to `GeoJson`.
 
 ## 0.24.1
