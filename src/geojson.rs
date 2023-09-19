@@ -301,7 +301,11 @@ impl Serialize for GeoJson {
     where
         S: Serializer,
     {
-        JsonObject::from(self).serialize(serializer)
+        match self {
+            GeoJson::Geometry(ref geometry) => geometry.serialize(serializer),
+            GeoJson::Feature(ref feature) => feature.serialize(serializer),
+            GeoJson::FeatureCollection(ref fc) => fc.serialize(serializer),
+        }
     }
 }
 
