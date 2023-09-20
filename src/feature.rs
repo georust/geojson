@@ -162,11 +162,7 @@ impl Serialize for Feature {
         let mut map = serializer.serialize_map(None)?;
         map.serialize_entry("type", "Feature")?;
         map.serialize_entry("geometry", &self.geometry)?;
-        if let Some(ref properties) = self.properties {
-            map.serialize_entry("properties", properties)?;
-        } else {
-            map.serialize_entry("properties", &JsonObject::new())?;
-        }
+        map.serialize_entry("properties", &self.properties)?;
         if let Some(ref bbox) = self.bbox {
             map.serialize_entry("bbox", bbox)?;
         }
@@ -427,6 +423,29 @@ mod tests {
             bbox: None,
             id: None,
             foreign_members: Some(foreign_members),
+        };
+        // Test encode
+        let json_string = encode(&feature);
+        assert_eq!(json_string, feature_json_str);
+
+        // Test decode
+        let decoded_feature = match decode(feature_json_str.into()) {
+            GeoJson::Feature(f) => f,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn encode_decode_feature_with_null_properties() {
+        let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"properties":null}"#;
+
+        let feature = crate::Feature {
+            geometry: Some(Value::Point(vec![1.1, 2.1]).into()),
+            properties: None,
+            bbox: None,
+            id: None,
+            foreign_members: None,
         };
         // Test encode
         let json_string = encode(&feature);
