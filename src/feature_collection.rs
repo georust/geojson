@@ -94,12 +94,14 @@ impl<'a> IntoIterator for &'a FeatureCollection {
 
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
+        // The unwrap() should never panic, because FeatureCollection contains only JSON-serializable types
         match serde_json::to_value(fc).unwrap() {
             serde_json::Value::Object(obj) => obj,
-            value => panic!(
-                "serializing FeatureCollection should result in an Object, but got something {:?}",
-                value
-            ),
+            value => {
+                // Panic should never happen, because `impl Serialize for FeatureCollection` always produces an
+                // Object
+                panic!("serializing FeatureCollection should result in an Object, but got something {:?}", value)
+            }
         }
     }
 }

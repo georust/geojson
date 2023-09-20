@@ -54,12 +54,17 @@ impl FromStr for Feature {
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
+        // The unwrap() should never panic, because Feature contains only JSON-serializable types
         match serde_json::to_value(feature).unwrap() {
             serde_json::Value::Object(obj) => obj,
-            value => panic!(
-                "serializing Feature should result in an Object, but got something {:?}",
-                value
-            ),
+            value => {
+                // Panic should never happen, because `impl Serialize for Feature` always produces an
+                // Object
+                panic!(
+                    "serializing Feature should result in an Object, but got something {:?}",
+                    value
+                )
+            }
         }
     }
 }

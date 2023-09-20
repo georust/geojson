@@ -102,6 +102,7 @@ impl<'a> From<&'a Value> for JsonObject {
         let mut map = JsonObject::new();
         map.insert(
             String::from("type"),
+            // The unwrap() should never panic, because &str always serializes to JSON
             ::serde_json::to_value(value.type_name()).unwrap(),
         );
         map.insert(
@@ -109,6 +110,7 @@ impl<'a> From<&'a Value> for JsonObject {
                 Value::GeometryCollection(..) => "geometries",
                 _ => "coordinates",
             }),
+            // The unwrap() should never panic, because Value contains only JSON-serializable types
             ::serde_json::to_value(value).unwrap(),
         );
         map
