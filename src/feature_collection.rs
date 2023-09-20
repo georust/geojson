@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use serde::ser::SerializeMap;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::str::FromStr;
@@ -20,7 +21,6 @@ use crate::errors::{Error, Result};
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::json;
 
 /// Feature Collection Objects
 ///
@@ -44,7 +44,7 @@ use serde_json::json;
 ///
 /// assert_eq!(
 ///     serialized,
-///     "{\"features\":[],\"type\":\"FeatureCollection\"}"
+///     "{\"type\":\"FeatureCollection\",\"features\":[]}"
 /// );
 /// ```
 ///
@@ -94,24 +94,15 @@ impl<'a> IntoIterator for &'a FeatureCollection {
 
 impl<'a> From<&'a FeatureCollection> for JsonObject {
     fn from(fc: &'a FeatureCollection) -> JsonObject {
-        let mut map = JsonObject::new();
-        map.insert(String::from("type"), json!("FeatureCollection"));
-        map.insert(
-            String::from("features"),
-            serde_json::to_value(&fc.features).unwrap(),
-        );
-
-        if let Some(ref bbox) = fc.bbox {
-            map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
-        }
-
-        if let Some(ref foreign_members) = fc.foreign_members {
-            for (key, value) in foreign_members {
-                map.insert(key.to_owned(), value.to_owned());
+        // The unwrap() should never panic, because FeatureCollection contains only JSON-serializable types
+        match serde_json::to_value(fc).unwrap() {
+            serde_json::Value::Object(obj) => obj,
+            value => {
+                // Panic should never happen, because `impl Serialize for FeatureCollection` always produces an
+                // Object
+                panic!("serializing FeatureCollection should result in an Object, but got something {:?}", value)
             }
         }
-
-        map
     }
 }
 
@@ -168,7 +159,21 @@ impl Serialize for FeatureCollection {
     where
         S: Serializer,
     {
-        JsonObject::from(self).serialize(serializer)
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("type", "FeatureCollection")?;
+        map.serialize_entry("features", &self.features)?;
+
+        if let Some(ref bbox) = self.bbox {
+            map.serialize_entry("bbox", bbox)?;
+        }
+
+        if let Some(ref foreign_members) = self.foreign_members {
+            for (key, value) in foreign_members {
+                map.serialize_entry(key, value)?;
+            }
+        }
+
+        map.end()
     }
 }
 

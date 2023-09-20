@@ -18,7 +18,7 @@ use std::{convert::TryFrom, fmt};
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 
 /// The underlying value for a `Geometry`.
 ///
@@ -102,6 +102,7 @@ impl<'a> From<&'a Value> for JsonObject {
         let mut map = JsonObject::new();
         map.insert(
             String::from("type"),
+            // The unwrap() should never panic, because &str always serializes to JSON
             ::serde_json::to_value(value.type_name()).unwrap(),
         );
         map.insert(
@@ -109,6 +110,7 @@ impl<'a> From<&'a Value> for JsonObject {
                 Value::GeometryCollection(..) => "geometries",
                 _ => "coordinates",
             }),
+            // The unwrap() should never panic, because Value contains only JSON-serializable types
             ::serde_json::to_value(value).unwrap(),
         );
         map
@@ -122,6 +124,21 @@ impl Value {
 
     pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
+    }
+
+    fn serialize_to_map<SM: SerializeMap>(
+        &self,
+        map: &mut SM,
+    ) -> std::result::Result<(), SM::Error> {
+        map.serialize_entry("type", self.type_name())?;
+        map.serialize_entry(
+            match self {
+                Value::GeometryCollection(..) => "geometries",
+                _ => "coordinates",
+            },
+            self,
+        )?;
+        Ok(())
     }
 }
 
@@ -155,16 +172,7 @@ impl fmt::Display for Value {
 
 impl<'a> From<&'a Value> for JsonValue {
     fn from(value: &'a Value) -> JsonValue {
-        match *value {
-            Value::Point(ref x) => ::serde_json::to_value(x),
-            Value::MultiPoint(ref x) => ::serde_json::to_value(x),
-            Value::LineString(ref x) => ::serde_json::to_value(x),
-            Value::MultiLineString(ref x) => ::serde_json::to_value(x),
-            Value::Polygon(ref x) => ::serde_json::to_value(x),
-            Value::MultiPolygon(ref x) => ::serde_json::to_value(x),
-            Value::GeometryCollection(ref x) => ::serde_json::to_value(x),
-        }
-        .unwrap()
+        ::serde_json::to_value(value).unwrap()
     }
 }
 
@@ -173,7 +181,15 @@ impl Serialize for Value {
     where
         S: Serializer,
     {
-        JsonValue::from(self).serialize(serializer)
+        match self {
+            Value::Point(x) => x.serialize(serializer),
+            Value::MultiPoint(x) => x.serialize(serializer),
+            Value::LineString(x) => x.serialize(serializer),
+            Value::MultiLineString(x) => x.serialize(serializer),
+            Value::Polygon(x) => x.serialize(serializer),
+            Value::MultiPolygon(x) => x.serialize(serializer),
+            Value::GeometryCollection(x) => x.serialize(serializer),
+        }
     }
 }
 
@@ -208,7 +224,7 @@ impl Serialize for Value {
 /// let geojson_string = geometry.to_string();
 ///
 /// assert_eq!(
-///     "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}",
+///     "{\"type\":\"Point\",\"coordinates\":[7.428959,1.513394]}",
 ///     geojson_string,
 /// );
 /// ```
@@ -291,6 +307,23 @@ impl Geometry {
     pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
+
+    fn serialize_to_map<SM: SerializeMap>(
+        &self,
+        map: &mut SM,
+    ) -> std::result::Result<(), SM::Error> {
+        self.value.serialize_to_map(map)?;
+        if let Some(ref bbox) = self.bbox {
+            map.serialize_entry("bbox", bbox)?;
+        }
+
+        if let Some(ref foreign_members) = self.foreign_members {
+            for (key, value) in foreign_members {
+                map.serialize_entry(key, value)?
+            }
+        }
+        Ok(())
+    }
 }
 
 impl TryFrom<JsonObject> for Geometry {
@@ -333,7 +366,9 @@ impl Serialize for Geometry {
     where
         S: Serializer,
     {
-        JsonObject::from(self).serialize(serializer)
+        let mut map = serializer.serialize_map(None)?;
+        self.serialize_to_map(&mut map)?;
+        map.end()
     }
 }
 
@@ -374,7 +409,7 @@ mod tests {
 
     #[test]
     fn encode_decode_geometry() {
-        let geometry_json_str = "{\"coordinates\":[1.1,2.1],\"type\":\"Point\"}";
+        let geometry_json_str = "{\"type\":\"Point\",\"coordinates\":[1.1,2.1]}";
         let geometry = Geometry {
             value: Value::Point(vec![1.1, 2.1]),
             bbox: None,
@@ -422,8 +457,8 @@ mod tests {
         let v = Value::LineString(vec![vec![0.0, 0.1], vec![0.1, 0.2], vec![0.2, 0.3]]);
         let geometry = Geometry::new(v);
         assert_eq!(
-            "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
-            geometry.to_string()
+            geometry.to_string(),
+            "{\"type\":\"LineString\",\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]]}"
         );
     }
 
@@ -439,7 +474,7 @@ mod tests {
     #[test]
     fn encode_decode_geometry_with_foreign_member() {
         let geometry_json_str =
-            "{\"coordinates\":[1.1,2.1],\"other_member\":true,\"type\":\"Point\"}";
+            "{\"type\":\"Point\",\"coordinates\":[1.1,2.1],\"other_member\":true}";
         let mut foreign_members = JsonObject::new();
         foreign_members.insert(
             String::from("other_member"),
@@ -482,7 +517,7 @@ mod tests {
             foreign_members: None,
         };
 
-        let geometry_collection_string = "{\"geometries\":[{\"coordinates\":[100.0,0.0],\"type\":\"Point\"},{\"coordinates\":[[101.0,0.0],[102.0,1.0]],\"type\":\"LineString\"}],\"type\":\"GeometryCollection\"}";
+        let geometry_collection_string = "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Point\",\"coordinates\":[100.0,0.0]},{\"type\":\"LineString\",\"coordinates\":[[101.0,0.0],[102.0,1.0]]}]}";
         // Test encode
         let json_string = encode(&geometry_collection);
         assert_eq!(json_string, geometry_collection_string);
