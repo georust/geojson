@@ -7,8 +7,8 @@ use std::io::Write;
 #[derive(PartialEq)]
 enum State {
     New,
-    Started,
-    StartedWithForeignMembers,
+    WritingFeatures,
+    WritingForeignMembers,
     Finished,
 }
 
@@ -45,13 +45,13 @@ impl<W: Write> FeatureWriter<W> {
             }
             State::New => {
                 self.write_prefix()?;
-                self.state = State::Started;
+                self.state = State::WritingFeatures;
             }
-            State::Started => {
+            State::WritingFeatures => {
                 self.write_str(",")?;
             }
-            State::StartedWithForeignMembers => {
-                self.state = State::Started;
+            State::WritingForeignMembers => {
+                self.state = State::WritingFeatures;
             }
         }
         serde_json::to_writer(&mut self.writer, feature)?;
@@ -165,13 +165,13 @@ impl<W: Write> FeatureWriter<W> {
             }
             State::New => {
                 self.write_prefix()?;
-                self.state = State::Started;
+                self.state = State::WritingFeatures;
             }
-            State::Started => {
+            State::WritingFeatures => {
                 self.write_str(",")?;
             }
-            State::StartedWithForeignMembers => {
-                self.state = State::Started;
+            State::WritingForeignMembers => {
+                self.state = State::WritingFeatures;
             }
         }
         to_feature_writer(&mut self.writer, value)
@@ -196,15 +196,15 @@ impl<W: Write> FeatureWriter<W> {
                 }
 
                 self.write_str(r#" "features": ["#)?;
-                self.state = State::StartedWithForeignMembers;
+                self.state = State::WritingForeignMembers;
                 Ok(())
             }
-            State::Started => {
+            State::WritingFeatures => {
                 return Err(Error::InvalidWriterState(
                     "must write foreign members before any features",
                 ))
             }
-            State::StartedWithForeignMembers => {
+            State::WritingForeignMembers => {
                 return Err(Error::InvalidWriterState(
                     "can only write foreign members once",
                 ))
@@ -228,7 +228,7 @@ impl<W: Write> FeatureWriter<W> {
                 self.write_prefix()?;
                 self.write_suffix()?;
             }
-            State::Started | State::StartedWithForeignMembers => {
+            State::WritingFeatures | State::WritingForeignMembers => {
                 self.state = State::Finished;
                 self.write_suffix()?;
             }
