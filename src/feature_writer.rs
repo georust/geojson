@@ -1,5 +1,5 @@
 use crate::ser::to_feature_writer;
-use crate::{Error, Feature, JsonObject, Result};
+use crate::{Error, Feature, JsonObject, JsonValue, Result};
 
 use serde::Serialize;
 use std::io::Write;
@@ -25,7 +25,7 @@ impl<W: Write> FeatureWriter<W> {
     ///
     /// To append features from [`Feature`] use [`FeatureWriter::write_feature`].
     ///
-    /// To set foreign members, use [`FeatureWriter::write_foreign_members`] before appending any
+    /// To write a foreign member, use [`FeatureWriter::write_foreign_member`] before appending any
     /// features.
     pub fn from_writer(writer: W) -> Self {
         Self {
@@ -51,6 +51,7 @@ impl<W: Write> FeatureWriter<W> {
                 self.write_str(",")?;
             }
             State::WritingForeignMembers => {
+                self.write_str(r#" "features": ["#)?;
                 self.state = State::WritingFeatures;
             }
         }
@@ -171,31 +172,28 @@ impl<W: Write> FeatureWriter<W> {
                 self.write_str(",")?;
             }
             State::WritingForeignMembers => {
+                self.write_str(r#" "features": ["#)?;
                 self.state = State::WritingFeatures;
             }
         }
         to_feature_writer(&mut self.writer, value)
     }
 
-    /// Write [foreign members](https://datatracker.ietf.org/doc/html/rfc7946#section-6) to the
+    /// Write a [foreign member](https://datatracker.ietf.org/doc/html/rfc7946#section-6) to the
     /// output stream. This must be done before appending any features.
-    pub fn write_foreign_members(&mut self, foreign_members: &JsonObject) -> Result<()> {
+    pub fn write_foreign_member(&mut self, key: &str, value: &JsonValue) -> Result<()> {
         match self.state {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
-                    "cannot write foreign members when writer has already finished",
+                    "cannot write foreign member when writer has already finished",
                 ))
             }
             State::New => {
                 self.write_str(r#"{ "type": "FeatureCollection", "#)?;
+                write!(self.writer, "\"{key}\": ")?;
+                serde_json::to_writer(&mut self.writer, value)?;
+                self.write_str(",")?;
 
-                for (key, value) in foreign_members {
-                    write!(self.writer, "\"{key}\": ")?;
-                    serde_json::to_writer(&mut self.writer, &value)?;
-                    self.write_str(",")?;
-                }
-
-                self.write_str(r#" "features": ["#)?;
                 self.state = State::WritingForeignMembers;
                 Ok(())
             }
@@ -205,9 +203,10 @@ impl<W: Write> FeatureWriter<W> {
                 ))
             }
             State::WritingForeignMembers => {
-                return Err(Error::InvalidWriterState(
-                    "can only write foreign members once",
-                ))
+                write!(self.writer, "\"{key}\": ")?;
+                serde_json::to_writer(&mut self.writer, value)?;
+                self.write_str(",")?;
+                Ok(())
             }
         }
     }
@@ -430,17 +429,13 @@ mod tests {
             let mut writer = FeatureWriter::from_writer(&mut buffer);
 
             writer
-                .write_foreign_members(
-                    json!({
-                        "extra": "string",
-                        "list": [1, 2, 3],
-                        "nested": {
-                            "foo": "bar",
-                        },
-                    })
-                    .as_object()
-                    .unwrap(),
-                )
+                .write_foreign_member("extra", &json!("string"))
+                .unwrap();
+            writer
+                .write_foreign_member("list", &json!([1, 2, 3]))
+                .unwrap();
+            writer
+                .write_foreign_member("nested", &json!({"foo": "bar"}))
                 .unwrap();
 
             let record_1 = {
