@@ -429,7 +429,7 @@ mod tests {
             let mut writer = FeatureWriter::from_writer(&mut buffer);
 
             writer
-                .write_foreign_member("extra", &json!("string"))
+                .write_foreign_member("extra", "string")
                 .unwrap();
             writer
                 .write_foreign_member("list", &json!([1, 2, 3]))
