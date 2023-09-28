@@ -432,7 +432,7 @@ mod tests {
                 .write_foreign_member("extra", "string")
                 .unwrap();
             writer
-                .write_foreign_member("list", &json!([1, 2, 3]))
+                .write_foreign_member("list", &[1, 2, 3])
                 .unwrap();
             writer
                 .write_foreign_member("nested", &json!({"foo": "bar"}))
