@@ -181,7 +181,11 @@ impl<W: Write> FeatureWriter<W> {
 
     /// Write a [foreign member](https://datatracker.ietf.org/doc/html/rfc7946#section-6) to the
     /// output stream. This must be done before appending any features.
-    pub fn write_foreign_member<T: ?Sized + Serialize>(&mut self, key: &str, value: &T) -> Result<()> {
+    pub fn write_foreign_member<T: ?Sized + Serialize>(
+        &mut self,
+        key: &str,
+        value: &T,
+    ) -> Result<()> {
         match self.state {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
@@ -428,12 +432,8 @@ mod tests {
         {
             let mut writer = FeatureWriter::from_writer(&mut buffer);
 
-            writer
-                .write_foreign_member("extra", "string")
-                .unwrap();
-            writer
-                .write_foreign_member("list", &[1, 2, 3])
-                .unwrap();
+            writer.write_foreign_member("extra", "string").unwrap();
+            writer.write_foreign_member("list", &[1, 2, 3]).unwrap();
             writer
                 .write_foreign_member("nested", &json!({"foo": "bar"}))
                 .unwrap();
