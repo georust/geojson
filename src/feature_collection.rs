@@ -152,10 +152,10 @@ where
     }
 }
 
-impl <T>TryFrom<JsonValue> for FeatureCollection<T>
+impl<T> TryFrom<JsonValue> for FeatureCollection<T>
 where
     T: geo_types::CoordFloat + serde::Serialize,
- {
+{
     type Error = Error<T>;
 
     fn try_from(value: JsonValue) -> Result<Self, T> {
@@ -167,10 +167,10 @@ where
     }
 }
 
-impl<T>FromStr for FeatureCollection<T>
+impl<T> FromStr for FeatureCollection<T>
 where
     T: geo_types::CoordFloat + serde::Serialize,
- {
+{
     type Err = Error<T>;
 
     fn from_str(s: &str) -> Result<Self, T> {
@@ -204,8 +204,11 @@ where
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
+impl<'de, T> Deserialize<'de> for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection<T>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -224,10 +227,10 @@ impl<'de> Deserialize<'de> for FeatureCollection {
 /// Otherwise, the output will not have a bounding-box.
 ///
 /// [`collect`]: std::iter::Iterator::collect
-impl <T>FromIterator<Feature<T>> for FeatureCollection<T>
+impl<T> FromIterator<Feature<T>> for FeatureCollection<T>
 where
     T: geo_types::CoordFloat + serde::Serialize,
- {
+{
     fn from_iter<U: IntoIterator<Item = Feature<T>>>(iter: U) -> Self {
         let mut bbox = Some(vec![]);
 
@@ -342,13 +345,15 @@ mod tests {
 
     #[test]
     fn test_from_str_ok() {
-        let feature_collection = FeatureCollection::<f64>::from_str(&feature_collection_json()).unwrap();
+        let feature_collection =
+            FeatureCollection::<f64>::from_str(&feature_collection_json()).unwrap();
         assert_eq!(2, feature_collection.features.len());
     }
 
     #[test]
     fn iter_features() {
-        let feature_collection = FeatureCollection::<f64>::from_str(&feature_collection_json()).unwrap();
+        let feature_collection =
+            FeatureCollection::<f64>::from_str(&feature_collection_json()).unwrap();
 
         let mut names: Vec<String> = vec![];
         for feature in &feature_collection {
