@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Write the structs back to GeoJSON
     let file_writer = BufWriter::new(File::create("example-output-countries.geojson")?);
-    geojson::ser::to_feature_collection_writer(file_writer, &countries)?;
+    geojson::ser::to_feature_collection_writer::<_, _, f64>(file_writer, &countries)?;
 
     Ok(())
 }

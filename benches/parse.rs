@@ -21,7 +21,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
     c.bench_function("FeatureReader::features (countries.geojson)", |b| {
         b.iter(|| {
             let feature_reader =
-                geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
+                geojson::FeatureReader::<_, f64>::from_reader(BufReader::new(geojson_str.as_bytes()));
             let mut count = 0;
             for feature in feature_reader.features() {
                 let feature = feature.unwrap();
@@ -41,7 +41,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
                 name: String,
             }
             let feature_reader =
-                geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
+                geojson::FeatureReader::<_, f64>::from_reader(BufReader::new(geojson_str.as_bytes()));
 
             let mut count = 0;
             for feature in feature_reader.deserialize::<Country>().unwrap() {
@@ -66,7 +66,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
                     name: String,
                 }
                 let feature_reader =
-                    geojson::FeatureReader::from_reader(BufReader::new(geojson_str.as_bytes()));
+                    geojson::FeatureReader::<_, f64>::from_reader(BufReader::new(geojson_str.as_bytes()));
 
                 let mut count = 0;
                 for feature in feature_reader.deserialize::<Country>().unwrap() {

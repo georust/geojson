@@ -206,10 +206,11 @@ where
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// fail, or if `T` contains a map with non-string keys.
-pub fn to_feature_collection_writer<W, T>(writer: W, features: &[T]) -> Result<()>
+pub fn to_feature_collection_writer<W, T, U >(writer: W, features: &[T]) -> Result<(), U>
 where
     W: io::Write,
     T: Serialize,
+    U: geo_types::CoordFloat + Serialize,
 {
     use serde::ser::SerializeMap;
 
@@ -253,10 +254,11 @@ where
 ///
 /// assert!(geojson_string.contains(r#""geometry":{"coordinates":[11.1,22.2],"type":"Point"}"#));
 /// ```
-pub fn serialize_geometry<IG, S>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
+pub fn serialize_geometry<IG, S, T>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
 where
-    IG: std::convert::TryInto<crate::Geometry>,
-    S: serde::Serializer,
+    T: geo_types::CoordFloat + Serialize,
+    IG: std::convert::TryInto<crate::Geometry<T>>,
+    S: Serializer,
 {
     geometry
         .try_into()
@@ -280,7 +282,7 @@ where
     }
 }
 
-impl<'a, T> serde::Serialize for Features<'a, T>
+impl<'a, T> Serialize for Features<'a, T>
 where
     T: Serialize,
 {

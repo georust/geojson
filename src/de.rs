@@ -3,7 +3,7 @@
 //! implement or derive [`serde::Deserialize`]:
 //!
 //! ```rust, ignore
-//! #[derive(serde::Deserialize)]
+//! #[derive(serde::Deserialize, serde::Serialize)]
 //! struct MyStruct {
 //!     ...
 //! }
@@ -11,7 +11,7 @@
 //!
 //! Your type *must* have a field called `geometry` and it must be `deserialized_with` [`deserialize_geometry`](crate::de::deserialize_geometry):
 //!  ```rust, ignore
-//! #[derive(serde::Deserialize)]
+//! #[derive(serde::Deserialize, serde::Serialize)]
 //! struct MyStruct {
 //!     #[serde(deserialize_with = "geojson::de::deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
@@ -25,10 +25,10 @@
 //! # Examples
 #![cfg_attr(feature = "geo-types", doc = "```")]
 #![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
-//! use serde::Deserialize;
+//! use serde::{Deserialize, Serialize};
 //! use geojson::de::deserialize_geometry;
 //!
-//! #[derive(Deserialize)]
+//! #[derive(Deserialize, Serialize)]
 //! struct MyStruct {
 //!     // Deserialize from geojson, rather than expecting the type's default serialization
 //!     #[serde(deserialize_with = "deserialize_geometry")]
@@ -240,9 +240,12 @@ where
 /// Deserialize a GeoJSON FeatureCollection into [`Feature`] structs.
 ///
 /// If instead you'd like to deserialize your own structs from GeoJSON, see [`deserialize_feature_collection`].
-pub fn deserialize_features_from_feature_collection(
+pub fn deserialize_features_from_feature_collection<T>(
     feature_collection_reader: impl Read,
-) -> impl Iterator<Item = Result<Feature>> {
+) -> impl Iterator<Item = Result<Feature<T>, T>>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     FeatureReader::from_reader(feature_collection_reader).features()
 }
 
@@ -276,14 +279,15 @@ pub fn deserialize_features_from_feature_collection(
 /// let reader = feature_str.as_bytes();
 ///
 /// // build your struct from GeoJSON
-/// let my_struct = geojson::de::deserialize_single_feature::<MyStruct>(reader).expect("valid geojson for MyStruct");
+/// let my_struct = geojson::de::deserialize_single_feature::<MyStruct, f64>(reader).expect("valid geojson for MyStruct");
 ///
 /// assert_eq!(my_struct.name, "Downtown");
 /// assert_eq!(my_struct.geometry.x(), 11.1);
 /// ```
-pub fn deserialize_single_feature<'de, T>(feature_reader: impl Read) -> Result<T>
+pub fn deserialize_single_feature<'de, T, U>(feature_reader: impl Read) -> Result<T, U>
 where
     T: Deserialize<'de>,
+    U: geo_types::CoordFloat + serde::Serialize,
 {
     let feature_value: JsonValue = serde_json::from_reader(feature_reader)?;
     let deserializer = feature_value.into_deserializer();

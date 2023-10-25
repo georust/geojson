@@ -33,11 +33,12 @@ use std::marker::PhantomData;
 /// Based on example code found at <https://github.com/serde-rs/serde/issues/903#issuecomment-297488118>.
 ///
 /// [GeoJSON Format Specification § 3.3](https://datatracker.ietf.org/doc/html/rfc7946#section-3.3)
-pub struct FeatureIterator<'de, R, D = Feature> {
+pub struct FeatureIterator<'de, R, T: geo_types::CoordFloat + serde::Serialize = f64, D = Feature<T>> {
     reader: R,
     state: State,
     output: PhantomData<D>,
     lifetime: PhantomData<&'de ()>,
+    precision: PhantomData<T>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -47,22 +48,27 @@ enum State {
     AfterFeatures,
 }
 
-impl<'de, R, D> FeatureIterator<'de, R, D> {
+impl<'de, R, T, D> FeatureIterator<'de, R, T, D>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     pub fn new(reader: R) -> Self {
         FeatureIterator {
             reader,
             state: State::BeforeFeatures,
             output: PhantomData,
             lifetime: PhantomData,
+            precision: PhantomData,
         }
     }
 }
 
-impl<'de, R, D> FeatureIterator<'de, R, D>
+impl<'de, R, T, D> FeatureIterator<'de, R, T, D>
 where
     R: io::Read,
+    T: geo_types::CoordFloat + serde::Serialize,
 {
-    fn seek_to_next_feature(&mut self) -> Result<bool> {
+    fn seek_to_next_feature(&mut self) -> Result<bool, T> {
         let mut next_bytes = [0];
         loop {
             self.reader.read_exact(&mut next_bytes)?;
@@ -101,12 +107,13 @@ where
     }
 }
 
-impl<'de, R, D> Iterator for FeatureIterator<'de, R, D>
+impl<'de, R, T, D> Iterator for FeatureIterator<'de, R, T, D>
 where
     R: io::Read,
+    T: geo_types::CoordFloat + serde::Serialize,
     D: Deserialize<'de>,
 {
-    type Item = Result<D>;
+    type Item = Result<D, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.seek_to_next_feature() {
@@ -183,7 +190,7 @@ mod tests {
 
     #[test]
     fn stream_read_test() {
-        let mut fi = FeatureIterator::<_, Feature>::new(BufReader::new(fc().as_bytes()));
+        let mut fi = FeatureIterator::<_, f64, Feature>::new(BufReader::new(fc().as_bytes()));
         assert_eq!(
             Geometry {
                 bbox: None,
@@ -252,7 +259,7 @@ mod tests {
               }
             "#;
             let features: Vec<Feature> =
-                FeatureIterator::new(BufReader::new(type_first.as_bytes()))
+                FeatureIterator::<_, f64>::new(BufReader::new(type_first.as_bytes()))
                     .map(Result::unwrap)
                     .collect();
             assert_eq!(features.len(), 2);
@@ -284,7 +291,7 @@ mod tests {
               }
             "#;
             let features: Vec<Feature> =
-                FeatureIterator::new(BufReader::new(type_first.as_bytes()))
+                FeatureIterator::<_, f64>::new(BufReader::new(type_first.as_bytes()))
                     .map(Result::unwrap)
                     .collect();
             assert_eq!(features.len(), 2);
