@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let reader = {
         let file_reader = BufReader::new(File::open("tests/fixtures/countries.geojson")?);
-        FeatureReader::from_reader(file_reader)
+        FeatureReader::<_, f64>::from_reader(file_reader)
     };
 
     let mut writer = {

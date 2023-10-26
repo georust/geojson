@@ -1,5 +1,5 @@
 use crate::ser::to_feature_writer;
-use crate::{Error, Feature, JsonObject, JsonValue, Result};
+use crate::{Error, Feature, Result};
 
 use serde::Serialize;
 use std::io::Write;
@@ -36,7 +36,10 @@ impl<W: Write> FeatureWriter<W> {
 
     /// Write a [`crate::Feature`] struct to the output stream. If you'd like to
     /// serialize your own custom structs, see [`FeatureWriter::serialize`] instead.
-    pub fn write_feature(&mut self, feature: &Feature) -> Result<()> {
+    pub fn write_feature<T>(&mut self, feature: &Feature<T>) -> Result<(), T>
+    where
+        T: geo_types::CoordFloat + serde::Serialize,
+    {
         match self.state {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
@@ -247,15 +250,24 @@ impl<W: Write> FeatureWriter<W> {
         Ok(self.writer.flush()?)
     }
 
-    fn write_prefix(&mut self) -> Result<()> {
+    fn write_prefix<T>(&mut self) -> Result<(), T>
+    where
+        T: geo_types::CoordFloat + serde::Serialize,
+    {
         self.write_str(r#"{ "type": "FeatureCollection", "features": ["#)
     }
 
-    fn write_suffix(&mut self) -> Result<()> {
+    fn write_suffix<T>(&mut self) -> Result<(), T>
+    where
+        T: geo_types::CoordFloat + serde::Serialize,
+    {
         self.write_str("]}")
     }
 
-    fn write_str(&mut self, text: &str) -> Result<()> {
+    fn write_str<T>(&mut self, text: &str) -> Result<(), T>
+    where
+        T: geo_types::CoordFloat + serde::Serialize,
+    {
         self.writer.write_all(text.as_bytes())?;
         Ok(())
     }

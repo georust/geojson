@@ -9,13 +9,13 @@ use crate::{Error, Result};
 use std::convert::{TryFrom, TryInto};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::Point<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::Point<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::Point(point_type) => Ok(create_geo_point(point_type)),
             other => Err(mismatch_geom_err("Point", other)),
@@ -25,13 +25,13 @@ where
 try_from_owned_value!(geo_types::Point<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::MultiPoint<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::MultiPoint<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
                 multi_point_type
@@ -46,13 +46,13 @@ where
 try_from_owned_value!(geo_types::MultiPoint<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::LineString<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::LineString<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::LineString(multi_point_type) => {
                 Ok(create_geo_line_string(multi_point_type))
@@ -64,13 +64,13 @@ where
 try_from_owned_value!(geo_types::LineString<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::MultiLineString<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::MultiLineString<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::MultiLineString(multi_line_string_type) => {
                 Ok(create_geo_multi_line_string(multi_line_string_type))
@@ -82,13 +82,13 @@ where
 try_from_owned_value!(geo_types::MultiLineString<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::Polygon<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::Polygon<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::Polygon(polygon_type) => Ok(create_geo_polygon(polygon_type)),
             other => Err(mismatch_geom_err("Polygon", other)),
@@ -98,13 +98,13 @@ where
 try_from_owned_value!(geo_types::Polygon<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::MultiPolygon<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::MultiPolygon<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<geo_types::MultiPolygon<T>> {
+    fn try_from(value: &geometry::Value<T>) -> Result<geo_types::MultiPolygon<T>, T> {
         match value {
             geometry::Value::MultiPolygon(multi_polygon_type) => {
                 Ok(create_geo_multi_polygon(multi_polygon_type))
@@ -116,13 +116,13 @@ where
 try_from_owned_value!(geo_types::MultiPolygon<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::GeometryCollection<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::GeometryCollection<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::GeometryCollection(geometries) => {
                 let geojson_geometries = geometries
@@ -139,13 +139,13 @@ where
 try_from_owned_value!(geo_types::GeometryCollection<T>);
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<&geometry::Value> for geo_types::Geometry<T>
+impl<T> TryFrom<&geometry::Value<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(value: &geometry::Value) -> Result<Self> {
+    fn try_from(value: &geometry::Value<T>) -> Result<Self, T> {
         match value {
             geometry::Value::Point(ref point_type) => {
                 Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
@@ -178,7 +178,7 @@ where
                         .iter()
                         .cloned()
                         .map(|geom| geom.try_into())
-                        .collect::<Result<Vec<geo_types::Geometry<T>>>>()?,
+                        .collect::<Result<Vec<geo_types::Geometry<T>>, T>>()?,
                 ));
                 Ok(gc)
             }
@@ -191,37 +191,37 @@ macro_rules! impl_try_from_geom_value {
     ($($kind:ident),*) => {
         $(
             #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-            impl<T> TryFrom<&$crate::Geometry> for geo_types::$kind<T>
+            impl<T> TryFrom<&$crate::Geometry<T>> for geo_types::$kind<T>
             where
-                T: CoordFloat,
+                T: CoordFloat + serde::Serialize,
             {
-                type Error = Error;
+                type Error = Error<T>;
 
-                fn try_from(geometry: &crate::Geometry) -> Result<Self> {
+                fn try_from(geometry: &crate::Geometry<T>) -> Result<Self, T> {
                     Self::try_from(&geometry.value)
                 }
             }
 
             #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-            impl<T> TryFrom<$crate::Geometry> for geo_types::$kind<T>
+            impl<T> TryFrom<$crate::Geometry<T>> for geo_types::$kind<T>
             where
-                T: CoordFloat,
+                T: CoordFloat + serde::Serialize,
             {
-                type Error = Error;
+                type Error = Error<T>;
 
-                fn try_from(geometry: crate::Geometry) -> Result<Self> {
+                fn try_from(geometry: crate::Geometry<T>) -> Result<Self, T> {
                     Self::try_from(geometry.value)
                 }
             }
 
             #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-            impl<T> TryFrom<$crate::Feature> for geo_types::$kind<T>
+            impl<T> TryFrom<$crate::Feature<T>> for geo_types::$kind<T>
             where
-                T: CoordFloat,
+                T: CoordFloat + serde::Serialize,
             {
-                type Error = Error;
+                type Error = Error<T>;
 
-                fn try_from(val: Feature) -> Result<Self> {
+                fn try_from(val: Feature<T>) -> Result<Self, T> {
                     match val.geometry {
                         None => Err(Error::FeatureHasNoGeometry(val)),
                         Some(geom) => geom.try_into(),
@@ -244,27 +244,27 @@ impl_try_from_geom_value![
 ];
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<FeatureCollection> for geo_types::Geometry<T>
+impl<T> TryFrom<FeatureCollection<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(val: FeatureCollection) -> Result<geo_types::Geometry<T>> {
+    fn try_from(val: FeatureCollection<T>) -> Result<geo_types::Geometry<T>, T> {
         Ok(geo_types::Geometry::GeometryCollection(quick_collection(
-            &GeoJson::FeatureCollection(val),
+            &GeoJson::<T>::FeatureCollection(val),
         )?))
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> TryFrom<GeoJson> for geo_types::Geometry<T>
+impl<T> TryFrom<GeoJson<T>> for geo_types::Geometry<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
-    type Error = Error;
+    type Error = Error<T>;
 
-    fn try_from(val: GeoJson) -> Result<geo_types::Geometry<T>> {
+    fn try_from(val: GeoJson<T>) -> Result<geo_types::Geometry<T>, T> {
         match val {
             GeoJson::Geometry(geom) => geom.try_into(),
             GeoJson::Feature(feat) => feat.try_into(),
@@ -273,9 +273,9 @@ where
     }
 }
 
-fn create_geo_coordinate<T>(point_type: &PointType) -> geo_types::Coordinate<T>
+fn create_geo_coordinate<T>(point_type: &PointType<T>) -> geo_types::Coordinate<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     geo_types::Coordinate {
         x: T::from(point_type[0]).unwrap(),
@@ -283,9 +283,9 @@ where
     }
 }
 
-fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
+fn create_geo_point<T>(point_type: &PointType<T>) -> geo_types::Point<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     geo_types::Point::new(
         T::from(point_type[0]).unwrap(),
@@ -293,9 +293,9 @@ where
     )
 }
 
-fn create_geo_line_string<T>(line_type: &LineStringType) -> geo_types::LineString<T>
+fn create_geo_line_string<T>(line_type: &LineStringType<T>) -> geo_types::LineString<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     geo_types::LineString(
         line_type
@@ -306,10 +306,10 @@ where
 }
 
 fn create_geo_multi_line_string<T>(
-    multi_line_type: &[LineStringType],
+    multi_line_type: &[LineStringType<T>],
 ) -> geo_types::MultiLineString<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     geo_types::MultiLineString(
         multi_line_type
@@ -319,9 +319,9 @@ where
     )
 }
 
-fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
+fn create_geo_polygon<T>(polygon_type: &PolygonType<T>) -> geo_types::Polygon<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     let exterior = polygon_type
         .get(0)
@@ -340,9 +340,9 @@ where
     geo_types::Polygon::new(exterior, interiors)
 }
 
-fn create_geo_multi_polygon<T>(multi_polygon_type: &[PolygonType]) -> geo_types::MultiPolygon<T>
+fn create_geo_multi_polygon<T>(multi_polygon_type: &[PolygonType<T>]) -> geo_types::MultiPolygon<T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     geo_types::MultiPolygon(
         multi_polygon_type
@@ -352,7 +352,10 @@ where
     )
 }
 
-fn mismatch_geom_err(expected_type: &'static str, found: &geometry::Value) -> Error {
+fn mismatch_geom_err<T>(expected_type: &'static str, found: &geometry::Value<T>) -> Error<T>
+where
+    T: CoordFloat + serde::Serialize,
+{
     Error::InvalidGeometryConversion {
         expected_type,
         found_type: found.type_name(),
@@ -677,7 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn borrowed_value_conversions_test() -> crate::Result<()> {
+    fn borrowed_value_conversions_test() -> crate::Result<(), f64> {
         let coord1 = vec![100.0, 0.2];
         let coord2 = vec![101.0, 1.0];
         let coord3 = vec![102.0, 0.8];

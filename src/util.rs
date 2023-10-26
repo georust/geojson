@@ -16,40 +16,58 @@ use crate::errors::{Error, Result};
 use crate::{feature, Bbox, Feature, Geometry, Position, Value};
 use crate::{JsonObject, JsonValue};
 
-pub fn expect_type(value: &mut JsonObject) -> Result<String> {
+pub fn expect_type<T>(value: &mut JsonObject) -> Result<String, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let prop = expect_property(value, "type")?;
     expect_string(prop)
 }
 
-pub fn expect_string(value: JsonValue) -> Result<String> {
+pub fn expect_string<T>(value: JsonValue) -> Result<String, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match value {
         JsonValue::String(s) => Ok(s),
         _ => Err(Error::ExpectedStringValue(value)),
     }
 }
 
-pub fn expect_f64(value: &JsonValue) -> Result<f64> {
+pub fn expect_float<T>(value: &JsonValue) -> Result<T, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match value.as_f64() {
-        Some(v) => Ok(v),
-        None => Err(Error::ExpectedF64Value),
+        Some(v) => Ok(T::from(v).unwrap()),
+        None => Err(Error::ExpectedFloatValue),
     }
 }
 
-pub fn expect_array(value: &JsonValue) -> Result<&Vec<JsonValue>> {
+pub fn expect_array<T>(value: &JsonValue) -> Result<&Vec<JsonValue>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match value.as_array() {
         Some(v) => Ok(v),
         None => Err(Error::ExpectedArrayValue("None".to_string())),
     }
 }
 
-fn expect_property(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue> {
+fn expect_property<T>(obj: &mut JsonObject, name: &'static str) -> Result<JsonValue, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match obj.remove(name) {
         Some(v) => Ok(v),
         None => Err(Error::ExpectedProperty(name.to_string())),
     }
 }
 
-fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>> {
+fn expect_owned_array<T>(value: JsonValue) -> Result<Vec<JsonValue>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match value {
         JsonValue::Array(v) => Ok(v),
         _ => match value {
@@ -64,19 +82,28 @@ fn expect_owned_array(value: JsonValue) -> Result<Vec<JsonValue>> {
     }
 }
 
-pub(crate) fn expect_owned_object(value: JsonValue) -> Result<JsonObject> {
+pub(crate) fn expect_owned_object<T>(value: JsonValue) -> Result<JsonObject, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match value {
         JsonValue::Object(o) => Ok(o),
         _ => Err(Error::ExpectedObjectValue(value)),
     }
 }
 
-pub fn get_coords_value(object: &mut JsonObject) -> Result<JsonValue> {
+pub fn get_coords_value<T>(object: &mut JsonObject) -> Result<JsonValue, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     expect_property(object, "coordinates")
 }
 
 /// Used by FeatureCollection, Feature, Geometry
-pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>> {
+pub fn get_bbox<T>(object: &mut JsonObject) -> Result<Option<Bbox<T>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let bbox_json = match object.remove("bbox") {
         Some(b) => b,
         None => return Ok(None),
@@ -87,13 +114,19 @@ pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>> {
     };
     let bbox = bbox_array
         .into_iter()
-        .map(|i| i.as_f64().ok_or(Error::BboxExpectedNumericValues(i)))
-        .collect::<Result<Vec<_>>>()?;
+        .map(|i| match i.as_f64() {
+            Some(v) => Ok(T::from(v).unwrap()),
+            None => Err(Error::BboxExpectedNumericValues(i)),
+        })
+        .collect::<Result<Vec<_>, T>>()?;
     Ok(Some(bbox))
 }
 
 /// Used by FeatureCollection, Feature, Geometry
-pub fn get_foreign_members(object: JsonObject) -> Result<Option<JsonObject>> {
+pub fn get_foreign_members<T>(object: JsonObject) -> Result<Option<JsonObject>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     if object.is_empty() {
         Ok(None)
     } else {
@@ -102,7 +135,10 @@ pub fn get_foreign_members(object: JsonObject) -> Result<Option<JsonObject>> {
 }
 
 /// Used by Feature
-pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>> {
+pub fn get_properties<T>(object: &mut JsonObject) -> Result<Option<JsonObject>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let properties = expect_property(object, "properties");
     match properties {
         Ok(JsonValue::Object(x)) => Ok(Some(x)),
@@ -115,7 +151,10 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>> {
 /// Retrieve a single Position from the value of the "coordinates" key
 ///
 /// Used by Value::Point
-pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position> {
+pub fn get_coords_one_pos<T>(object: &mut JsonObject) -> Result<Position<T>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_json = get_coords_value(object)?;
     json_to_position(&coords_json)
 }
@@ -123,7 +162,10 @@ pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position> {
 /// Retrieve a one dimensional Vec of Positions from the value of the "coordinates" key
 ///
 /// Used by Value::MultiPoint and Value::LineString
-pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>> {
+pub fn get_coords_1d_pos<T>(object: &mut JsonObject) -> Result<Vec<Position<T>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_json = get_coords_value(object)?;
     json_to_1d_positions(&coords_json)
 }
@@ -131,7 +173,10 @@ pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>> {
 /// Retrieve a two dimensional Vec of Positions from the value of the "coordinates" key
 ///
 /// Used by Value::MultiLineString and Value::Polygon
-pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>> {
+pub fn get_coords_2d_pos<T>(object: &mut JsonObject) -> Result<Vec<Vec<Position<T>>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_json = get_coords_value(object)?;
     json_to_2d_positions(&coords_json)
 }
@@ -139,13 +184,19 @@ pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>> 
 /// Retrieve a three dimensional Vec of Positions from the value of the "coordinates" key
 ///
 /// Used by Value::MultiPolygon
-pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position>>>> {
+pub fn get_coords_3d_pos<T>(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position<T>>>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_json = get_coords_value(object)?;
     json_to_3d_positions(&coords_json)
 }
 
 /// Used by Value::GeometryCollection
-pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>> {
+pub fn get_geometries<T>(object: &mut JsonObject) -> Result<Vec<Geometry<T>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let geometries_json = expect_property(object, "geometries")?;
     let geometries_array = expect_owned_array(geometries_json)?;
     let mut geometries = Vec::with_capacity(geometries_array.len());
@@ -158,7 +209,10 @@ pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>> {
 }
 
 /// Used by Feature
-pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>> {
+pub fn get_id<T>(object: &mut JsonObject) -> Result<Option<feature::Id>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match object.remove("id") {
         Some(JsonValue::Number(x)) => Ok(Some(feature::Id::Number(x))),
         Some(JsonValue::String(s)) => Ok(Some(feature::Id::String(s))),
@@ -168,7 +222,10 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>> {
 }
 
 /// Used by Geometry, Value
-pub fn get_value(object: &mut JsonObject) -> Result<Value> {
+pub fn get_value<T>(object: &mut JsonObject) -> Result<Value<T>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let res = &*expect_type(object)?;
     match res {
         "Point" => Ok(Value::Point(get_coords_one_pos(object)?)),
@@ -183,7 +240,10 @@ pub fn get_value(object: &mut JsonObject) -> Result<Value> {
 }
 
 /// Used by Feature
-pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>> {
+pub fn get_geometry<T>(object: &mut JsonObject) -> Result<Option<Geometry<T>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let geometry = expect_property(object, "geometry")?;
     match geometry {
         JsonValue::Object(x) => {
@@ -196,31 +256,40 @@ pub fn get_geometry(object: &mut JsonObject) -> Result<Option<Geometry>> {
 }
 
 /// Used by FeatureCollection
-pub fn get_features(object: &mut JsonObject) -> Result<Vec<Feature>> {
+pub fn get_features<T>(object: &mut JsonObject) -> Result<Vec<Feature<T>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let prop = expect_property(object, "features")?;
     let features_json = expect_owned_array(prop)?;
     let mut features = Vec::with_capacity(features_json.len());
     for feature in features_json {
         let feature = expect_owned_object(feature)?;
-        let feature: Feature = Feature::from_json_object(feature)?;
+        let feature = Feature::from_json_object(feature)?;
         features.push(feature);
     }
     Ok(features)
 }
 
-fn json_to_position(json: &JsonValue) -> Result<Position> {
+fn json_to_position<T>(json: &JsonValue) -> Result<Position<T>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_array = expect_array(json)?;
     if coords_array.len() < 2 {
         return Err(Error::PositionTooShort(coords_array.len()));
     }
     let mut coords = Vec::with_capacity(coords_array.len());
     for position in coords_array {
-        coords.push(expect_f64(position)?);
+        coords.push(expect_float(position)?);
     }
     Ok(coords)
 }
 
-fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>> {
+fn json_to_1d_positions<T>(json: &JsonValue) -> Result<Vec<Position<T>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
@@ -229,7 +298,10 @@ fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>> {
     Ok(coords)
 }
 
-fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>> {
+fn json_to_2d_positions<T>(json: &JsonValue) -> Result<Vec<Vec<Position<T>>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {
@@ -238,7 +310,10 @@ fn json_to_2d_positions(json: &JsonValue) -> Result<Vec<Vec<Position>>> {
     Ok(coords)
 }
 
-fn json_to_3d_positions(json: &JsonValue) -> Result<Vec<Vec<Vec<Position>>>> {
+fn json_to_3d_positions<T>(json: &JsonValue) -> Result<Vec<Vec<Vec<Position<T>>>>, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     let coords_array = expect_array(json)?;
     let mut coords = Vec::with_capacity(coords_array.len());
     for item in coords_array {

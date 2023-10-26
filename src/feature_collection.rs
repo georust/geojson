@@ -34,7 +34,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// use geojson::FeatureCollection;
 /// use geojson::GeoJson;
 ///
-/// let feature_collection = FeatureCollection {
+/// let feature_collection: FeatureCollection<f64> = FeatureCollection {
 ///     bbox: None,
 ///     features: vec![],
 ///     foreign_members: None,
@@ -53,7 +53,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// ```rust
 /// use geojson::{Feature, FeatureCollection, Value};
 ///
-/// let fc: FeatureCollection = (0..10)
+/// let fc: FeatureCollection<f64> = (0..10)
 ///     .map(|idx| -> Feature {
 ///         let c = idx as f64;
 ///         Value::Point(vec![1.0 * c, 2.0 * c, 3.0 * c]).into()
@@ -62,38 +62,50 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// assert_eq!(fc.features.len(), 10);
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct FeatureCollection {
+pub struct FeatureCollection<T = f64>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
-    pub bbox: Option<Bbox>,
-    pub features: Vec<Feature>,
+    pub bbox: Option<Bbox<T>>,
+    pub features: Vec<Feature<T>>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 
-impl IntoIterator for FeatureCollection {
-    type Item = Feature;
-    type IntoIter = std::vec::IntoIter<Feature>;
+impl<T> IntoIterator for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Item = Feature<T>;
+    type IntoIter = std::vec::IntoIter<Feature<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.into_iter()
     }
 }
 
-impl<'a> IntoIterator for &'a FeatureCollection {
-    type Item = &'a Feature;
-    type IntoIter = std::slice::Iter<'a, Feature>;
+impl<'a, T> IntoIterator for &'a FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Item = &'a Feature<T>;
+    type IntoIter = std::slice::Iter<'a, Feature<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIterator::into_iter(&self.features)
     }
 }
 
-impl<'a> From<&'a FeatureCollection> for JsonObject {
-    fn from(fc: &'a FeatureCollection) -> JsonObject {
+impl<'a, T> From<&'a FeatureCollection<T>> for JsonObject
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(fc: &'a FeatureCollection<T>) -> JsonObject {
         // The unwrap() should never panic, because FeatureCollection contains only JSON-serializable types
         match serde_json::to_value(fc).unwrap() {
             serde_json::Value::Object(obj) => obj,
@@ -106,22 +118,28 @@ impl<'a> From<&'a FeatureCollection> for JsonObject {
     }
 }
 
-impl FeatureCollection {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
+impl<T> FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    pub fn from_json_object(object: JsonObject) -> Result<Self, T> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, T> {
         Self::try_from(value)
     }
 }
 
-impl TryFrom<JsonObject> for FeatureCollection {
-    type Error = Error;
+impl<T> TryFrom<JsonObject> for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(mut object: JsonObject) -> Result<Self> {
+    fn try_from(mut object: JsonObject) -> Result<Self, T> {
         match util::expect_type(&mut object)? {
-            ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
+            ref type_ if type_ == "FeatureCollection" => Ok(Self {
                 bbox: util::get_bbox(&mut object)?,
                 features: util::get_features(&mut object)?,
                 foreign_members: util::get_foreign_members(object)?,
@@ -134,10 +152,13 @@ impl TryFrom<JsonObject> for FeatureCollection {
     }
 }
 
-impl TryFrom<JsonValue> for FeatureCollection {
-    type Error = Error;
+impl<T> TryFrom<JsonValue> for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(value: JsonValue) -> Result<Self> {
+    fn try_from(value: JsonValue) -> Result<Self, T> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -146,15 +167,21 @@ impl TryFrom<JsonValue> for FeatureCollection {
     }
 }
 
-impl FromStr for FeatureCollection {
-    type Err = Error;
+impl<T> FromStr for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Err = Error<T>;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, T> {
         Self::try_from(crate::GeoJson::from_str(s)?)
     }
 }
 
-impl Serialize for FeatureCollection {
+impl<T> Serialize for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -177,8 +204,11 @@ impl Serialize for FeatureCollection {
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
+impl<'de, T> Deserialize<'de> for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection<T>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -197,8 +227,11 @@ impl<'de> Deserialize<'de> for FeatureCollection {
 /// Otherwise, the output will not have a bounding-box.
 ///
 /// [`collect`]: std::iter::Iterator::collect
-impl FromIterator<Feature> for FeatureCollection {
-    fn from_iter<T: IntoIterator<Item = Feature>>(iter: T) -> Self {
+impl<T> FromIterator<Feature<T>> for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from_iter<U: IntoIterator<Item = Feature<T>>>(iter: U) -> Self {
         let mut bbox = Some(vec![]);
 
         let features = iter
@@ -248,7 +281,7 @@ impl FromIterator<Feature> for FeatureCollection {
                 };
             })
             .collect();
-        FeatureCollection {
+        Self {
             bbox,
             features,
             foreign_members: None,
@@ -312,13 +345,15 @@ mod tests {
 
     #[test]
     fn test_from_str_ok() {
-        let feature_collection = FeatureCollection::from_str(&feature_collection_json()).unwrap();
+        let feature_collection =
+            FeatureCollection::<f64>::from_str(&feature_collection_json()).unwrap();
         assert_eq!(2, feature_collection.features.len());
     }
 
     #[test]
     fn iter_features() {
-        let feature_collection = FeatureCollection::from_str(&feature_collection_json()).unwrap();
+        let feature_collection =
+            FeatureCollection::<f64>::from_str(&feature_collection_json()).unwrap();
 
         let mut names: Vec<String> = vec![];
         for feature in &feature_collection {
@@ -342,7 +377,7 @@ mod tests {
         })
         .to_string();
 
-        let actual_failure = FeatureCollection::from_str(&geometry_json).unwrap_err();
+        let actual_failure = FeatureCollection::<f64>::from_str(&geometry_json).unwrap_err();
         match actual_failure {
             Error::ExpectedType { actual, expected } => {
                 assert_eq!(actual, "Geometry");

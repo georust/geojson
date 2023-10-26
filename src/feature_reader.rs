@@ -4,16 +4,21 @@ use crate::{Feature, Result};
 use serde::de::DeserializeOwned;
 
 use std::io::Read;
+use std::marker::PhantomData;
 
 /// Enumerates individual Features from a GeoJSON FeatureCollection
-pub struct FeatureReader<R> {
+pub struct FeatureReader<R, T = f64>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     reader: R,
+    precision: PhantomData<T>,
 }
 
-impl<R: Read> FeatureReader<R> {
+impl<R: Read, T: geo_types::CoordFloat + serde::Serialize> FeatureReader<R, T> {
     /// Create a FeatureReader from the given `reader`.
     pub fn from_reader(reader: R) -> Self {
-        Self { reader }
+        Self { reader, precision: PhantomData }
     }
 
     /// Iterate over the individual [`Feature`s](Feature) of a FeatureCollection.
@@ -47,10 +52,10 @@ impl<R: Read> FeatureReader<R> {
     /// .as_bytes();
     /// let io_reader = std::io::BufReader::new(feature_collection_string);
     ///
-    /// use geojson::FeatureReader;
+    /// use geojson::{FeatureReader, Feature};
     /// let feature_reader = FeatureReader::from_reader(io_reader);
     /// for feature in feature_reader.features() {
-    ///     let feature = feature.expect("valid geojson feature");
+    ///     let feature: Feature<f64> = feature.expect("valid geojson feature");
     ///
     ///     let name = feature.property("name").unwrap().as_str().unwrap();
     ///     let age = feature.property("age").unwrap().as_u64().unwrap();
@@ -64,7 +69,7 @@ impl<R: Read> FeatureReader<R> {
     ///     }
     /// }
     /// ```
-    pub fn features(self) -> impl Iterator<Item = Result<Feature>> {
+    pub fn features(self) -> impl Iterator<Item = Result<Feature<T>, T>> {
         #[allow(deprecated)]
         crate::FeatureIterator::new(self.reader)
     }
@@ -127,7 +132,7 @@ impl<R: Read> FeatureReader<R> {
     /// #     age: u64,
     /// # }
     ///
-    /// let feature_reader = FeatureReader::from_reader(io_reader);
+    /// let feature_reader = FeatureReader::<_, f64>::from_reader(io_reader);
     /// for feature in feature_reader.deserialize::<MyStruct>().unwrap() {
     ///     let my_struct = feature.expect("valid geojson feature");
     ///
@@ -206,7 +211,7 @@ mod tests {
     fn deserialize_into_type() {
         let feature_collection_string = feature_collection_string();
         let mut bytes_reader = feature_collection_string.as_bytes();
-        let feature_reader = FeatureReader::from_reader(&mut bytes_reader);
+        let feature_reader = FeatureReader::<_, f64>::from_reader(&mut bytes_reader);
 
         let records: Vec<MyRecord> = feature_reader
             .deserialize()

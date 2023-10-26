@@ -44,14 +44,20 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq)]
-pub enum GeoJson {
-    Geometry(Geometry),
-    Feature(Feature),
-    FeatureCollection(FeatureCollection),
+pub enum GeoJson<T = f64>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    Geometry(Geometry<T>),
+    Feature(Feature<T>),
+    FeatureCollection(FeatureCollection<T>),
 }
 
-impl<'a> From<&'a GeoJson> for JsonObject {
-    fn from(geojson: &'a GeoJson) -> JsonObject {
+impl<'a, T> From<&'a GeoJson<T>> for JsonObject
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(geojson: &'a GeoJson<T>) -> JsonObject {
         match *geojson {
             GeoJson::Geometry(ref geometry) => geometry.into(),
             GeoJson::Feature(ref feature) => feature.into(),
@@ -60,8 +66,11 @@ impl<'a> From<&'a GeoJson> for JsonObject {
     }
 }
 
-impl From<GeoJson> for JsonValue {
-    fn from(geojson: GeoJson) -> JsonValue {
+impl<T> From<GeoJson<T>> for JsonValue
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(geojson: GeoJson<T>) -> JsonValue {
         match geojson {
             GeoJson::Geometry(geometry) => JsonValue::Object(JsonObject::from(&geometry)),
             GeoJson::Feature(feature) => JsonValue::Object(JsonObject::from(&feature)),
@@ -70,13 +79,19 @@ impl From<GeoJson> for JsonValue {
     }
 }
 
-impl<G: Into<Geometry>> From<G> for GeoJson {
+impl<T, G: Into<Geometry<T>>> From<G> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn from(geometry: G) -> Self {
         GeoJson::Geometry(geometry.into())
     }
 }
 
-impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
+impl<T, G: Into<Geometry<T>>> FromIterator<G> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn from_iter<I: IntoIterator<Item = G>>(iter: I) -> Self {
         use crate::Value;
         let geometries = iter.into_iter().map(|g| g.into()).collect();
@@ -85,27 +100,40 @@ impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
     }
 }
 
-impl From<Feature> for GeoJson {
-    fn from(feature: Feature) -> Self {
+impl<T> From<Feature<T>> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(feature: Feature<T>) -> Self {
         GeoJson::Feature(feature)
     }
 }
 
-impl From<FeatureCollection> for GeoJson {
-    fn from(feature_collection: FeatureCollection) -> GeoJson {
+impl<T> From<FeatureCollection<T>> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(feature_collection: FeatureCollection<T>) -> Self {
         GeoJson::FeatureCollection(feature_collection)
     }
 }
 
-impl From<Vec<Feature>> for GeoJson {
-    fn from(features: Vec<Feature>) -> GeoJson {
-        GeoJson::from(features.into_iter().collect::<FeatureCollection>())
+impl<T> From<Vec<Feature<T>>> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(features: Vec<Feature<T>>) -> Self {
+        GeoJson::from(features.into_iter().collect::<FeatureCollection<T>>())
     }
 }
 
-impl TryFrom<GeoJson> for Geometry {
-    type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+impl<T> TryFrom<GeoJson<T>> for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
+
+    fn try_from(value: GeoJson<T>) -> Result<Self, T> {
         match value {
             GeoJson::Geometry(g) => Ok(g),
             GeoJson::Feature(_) => Err(Error::ExpectedType {
@@ -120,9 +148,13 @@ impl TryFrom<GeoJson> for Geometry {
     }
 }
 
-impl TryFrom<GeoJson> for Feature {
-    type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+impl<T> TryFrom<GeoJson<T>> for Feature<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
+
+    fn try_from(value: GeoJson<T>) -> Result<Self, T> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "Feature".to_string(),
@@ -137,9 +169,13 @@ impl TryFrom<GeoJson> for Feature {
     }
 }
 
-impl TryFrom<GeoJson> for FeatureCollection {
-    type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+impl<T> TryFrom<GeoJson<T>> for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
+
+    fn try_from(value: GeoJson<T>) -> Result<Self, T> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "FeatureCollection".to_string(),
@@ -154,8 +190,11 @@ impl TryFrom<GeoJson> for FeatureCollection {
     }
 }
 
-impl GeoJson {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
+impl<T> GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    pub fn from_json_object(object: JsonObject) -> Result<Self, T> {
         Self::try_from(object)
     }
 
@@ -191,7 +230,7 @@ impl GeoJson {
     ///     })
     /// );
     /// ```
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, T> {
         Self::try_from(value)
     }
 
@@ -201,7 +240,7 @@ impl GeoJson {
     /// use geojson::GeoJson;
     /// use serde_json::json;
     ///
-    /// let geojson = GeoJson::try_from( json!({
+    /// let geojson: GeoJson<f64> = GeoJson::try_from( json!({
     ///        "type": "Feature",
     ///        "geometry": {
     ///            "type": "Point",
@@ -235,10 +274,13 @@ impl GeoJson {
     }
 }
 
-impl TryFrom<JsonObject> for GeoJson {
-    type Error = Error;
+impl<T> TryFrom<JsonObject> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(object: JsonObject) -> Result<Self> {
+    fn try_from(object: JsonObject) -> Result<Self, T> {
         let type_ = match object.get("type") {
             Some(JsonValue::String(t)) => Type::from_str(t),
             _ => return Err(Error::GeometryUnknownType("type".to_owned())),
@@ -254,10 +296,13 @@ impl TryFrom<JsonObject> for GeoJson {
     }
 }
 
-impl TryFrom<JsonValue> for GeoJson {
-    type Error = Error;
+impl<T> TryFrom<JsonValue> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(value: JsonValue) -> Result<Self> {
+    fn try_from(value: JsonValue) -> Result<Self, T> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -296,7 +341,10 @@ impl Type {
     }
 }
 
-impl Serialize for GeoJson {
+impl<T> Serialize for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -309,8 +357,11 @@ impl Serialize for GeoJson {
     }
 }
 
-impl<'de> Deserialize<'de> for GeoJson {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
+impl<'de, T> Deserialize<'de> for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson<T>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -344,31 +395,40 @@ impl<'de> Deserialize<'de> for GeoJson {
 ///   ]
 /// }
 /// "#;
-/// let geo_json = GeoJson::from_str(&geojson_str).unwrap();
+/// let geo_json: GeoJson<f64> = GeoJson::from_str(&geojson_str).unwrap();
 /// if let GeoJson::FeatureCollection(collection) = geo_json {
 ///     assert_eq!(1, collection.features.len());
 /// } else {
 ///     panic!("expected feature collection");
 /// }
 /// ```
-impl FromStr for GeoJson {
-    type Err = Error;
+impl<T> FromStr for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Err = Error<T>;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, T> {
         let object = get_object(s)?;
 
         GeoJson::from_json_object(object)
     }
 }
 
-fn get_object(s: &str) -> Result<JsonObject> {
+fn get_object<T>(s: &str) -> Result<JsonObject, T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     match ::serde_json::from_str(s)? {
         JsonValue::Object(object) => Ok(object),
         other => Err(Error::ExpectedObjectValue(other)),
     }
 }
 
-impl fmt::Display for GeoJson {
+impl<T> fmt::Display for GeoJson<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -376,7 +436,10 @@ impl fmt::Display for GeoJson {
     }
 }
 
-impl fmt::Display for Feature {
+impl<T> fmt::Display for Feature<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -384,7 +447,10 @@ impl fmt::Display for Feature {
     }
 }
 
-impl fmt::Display for Geometry {
+impl<T> fmt::Display for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -392,7 +458,10 @@ impl fmt::Display for Geometry {
     }
 }
 
-impl fmt::Display for FeatureCollection {
+impl<T> fmt::Display for FeatureCollection<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -538,7 +607,7 @@ mod tests {
            ]
         }"#;
         assert!(matches!(
-            GeoJson::from_str(geojson_str),
+            GeoJson::<f64>::from_str(geojson_str),
             Err(Error::MalformedJson(_))
         ))
     }

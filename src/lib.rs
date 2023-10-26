@@ -419,16 +419,16 @@
 /// Bounding Boxes
 ///
 /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
-pub type Bbox = Vec<f64>;
+pub type Bbox<T = f64> = Vec<T>;
 
 /// Positions
 ///
 /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-pub type Position = Vec<f64>;
+pub type Position<T = f64> = Vec<T>;
 
-pub type PointType = Position;
-pub type LineStringType = Vec<Position>;
-pub type PolygonType = Vec<Vec<Position>>;
+pub type PointType<T = f64> = Position<T>;
+pub type LineStringType<T = f64> = Vec<Position<T>>;
+pub type PolygonType<T = f64> = Vec<Vec<Position<T>>>;
 
 mod util;
 
@@ -473,15 +473,18 @@ pub use conversion::quick_collection;
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Feature {
+pub struct Feature<T = f64>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
-    pub bbox: Option<Bbox>,
+    pub bbox: Option<Bbox<T>>,
     /// Geometry
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-    pub geometry: Option<Geometry>,
+    pub geometry: Option<Geometry<T>>,
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)

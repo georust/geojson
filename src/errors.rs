@@ -5,7 +5,7 @@ use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
 #[derive(Error, Debug)]
-pub enum Error {
+pub enum Error<T: geo_types::CoordFloat + serde::Serialize> {
     #[error("Encountered non-array value for a 'bbox' object: `{0}`")]
     BboxExpectedArray(Value),
     #[error("Encountered non-numeric value within 'bbox' array")]
@@ -30,7 +30,7 @@ pub enum Error {
     #[error(
         "Attempted to a convert a feature without a geometry into a geo_types::Geometry: `{0}`"
     )]
-    FeatureHasNoGeometry(Feature),
+    FeatureHasNoGeometry(Feature<T>),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     #[error("Error while deserializing JSON: {0}")]
@@ -50,7 +50,7 @@ pub enum Error {
     #[error("Expected a GeoJSON property for `{0}`, but got None")]
     ExpectedProperty(String),
     #[error("Expected a floating-point value, but got None")]
-    ExpectedF64Value,
+    ExpectedFloatValue,
     #[error("Expected an Array value, but got `{0}`")]
     ExpectedArrayValue(String),
     #[error("Expected an owned Object, but got `{0}`")]
@@ -59,15 +59,21 @@ pub enum Error {
     PositionTooShort(usize),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T, U = f64> = std::result::Result<T, Error<U>>;
 
-impl From<serde_json::Error> for Error {
+impl<T> From<serde_json::Error> for Error<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn from(error: serde_json::Error) -> Self {
         Self::MalformedJson(error)
     }
 }
 
-impl From<std::io::Error> for Error {
+impl<T> From<std::io::Error> for Error<T>
+where
+    T: geo_types::CoordFloat+ serde::Serialize,
+{
     fn from(error: std::io::Error) -> Self {
         Self::Io(error)
     }

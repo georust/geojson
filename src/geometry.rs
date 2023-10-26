@@ -46,44 +46,50 @@ use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer}
 /// # test()
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub enum Value {
+pub enum Value<T = f64>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     /// Point
     ///
     /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
-    Point(PointType),
+    Point(PointType<T>),
 
     /// MultiPoint
     ///
     /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3)
-    MultiPoint(Vec<PointType>),
+    MultiPoint(Vec<PointType<T>>),
 
     /// LineString
     ///
     /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4)
-    LineString(LineStringType),
+    LineString(LineStringType<T>),
 
     /// MultiLineString
     ///
     /// [GeoJSON Format Specification § 3.1.5](https://tools.ietf.org/html/rfc7946#section-3.1.5)
-    MultiLineString(Vec<LineStringType>),
+    MultiLineString(Vec<LineStringType<T>>),
 
     /// Polygon
     ///
     /// [GeoJSON Format Specification § 3.1.6](https://tools.ietf.org/html/rfc7946#section-3.1.6)
-    Polygon(PolygonType),
+    Polygon(PolygonType<T>),
 
     /// MultiPolygon
     ///
     /// [GeoJSON Format Specification § 3.1.7](https://tools.ietf.org/html/rfc7946#section-3.1.7)
-    MultiPolygon(Vec<PolygonType>),
+    MultiPolygon(Vec<PolygonType<T>>),
 
     /// GeometryCollection
     ///
     /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
-    GeometryCollection(Vec<Geometry>),
+    GeometryCollection(Vec<Geometry<T>>),
 }
 
-impl Value {
+impl<T> Value<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     pub fn type_name(&self) -> &'static str {
         match self {
             Value::Point(..) => "Point",
@@ -97,8 +103,11 @@ impl Value {
     }
 }
 
-impl<'a> From<&'a Value> for JsonObject {
-    fn from(value: &'a Value) -> JsonObject {
+impl<'a, T> From<&'a Value<T>> for JsonObject
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(value: &'a Value<T>) -> JsonObject {
         let mut map = JsonObject::new();
         map.insert(
             String::from("type"),
@@ -117,12 +126,15 @@ impl<'a> From<&'a Value> for JsonObject {
     }
 }
 
-impl Value {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
+impl<T> Value<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    pub fn from_json_object(object: JsonObject) -> Result<Self, T> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, T> {
         Self::try_from(value)
     }
 
@@ -142,18 +154,24 @@ impl Value {
     }
 }
 
-impl TryFrom<JsonObject> for Value {
-    type Error = Error;
+impl<T> TryFrom<JsonObject> for Value<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(mut object: JsonObject) -> Result<Self> {
+    fn try_from(mut object: JsonObject) -> Result<Self, T> {
         util::get_value(&mut object)
     }
 }
 
-impl TryFrom<JsonValue> for Value {
-    type Error = Error;
+impl<T> TryFrom<JsonValue> for Value<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(value: JsonValue) -> Result<Self> {
+    fn try_from(value: JsonValue) -> Result<Self, T> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -162,7 +180,10 @@ impl TryFrom<JsonValue> for Value {
     }
 }
 
-impl fmt::Display for Value {
+impl<T> fmt::Display for Value<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         ::serde_json::to_string(&JsonObject::from(self))
             .map_err(|_| fmt::Error)
@@ -170,13 +191,19 @@ impl fmt::Display for Value {
     }
 }
 
-impl<'a> From<&'a Value> for JsonValue {
-    fn from(value: &'a Value) -> JsonValue {
+impl<'a, T> From<&'a Value<T>> for JsonValue
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(value: &'a Value<T>) -> JsonValue {
         ::serde_json::to_value(value).unwrap()
     }
 }
 
-impl Serialize for Value {
+impl<T> Serialize for Value<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -259,22 +286,28 @@ impl Serialize for Value {
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct Geometry {
+pub struct Geometry<T = f64>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
-    pub bbox: Option<Bbox>,
-    pub value: Value,
+    pub bbox: Option<Bbox<T>>,
+    pub value: Value<T>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     pub foreign_members: Option<JsonObject>,
 }
 
-impl Geometry {
+impl<T> Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
     /// set to `None`.
-    pub fn new(value: Value) -> Self {
+    pub fn new(value: Value<T>) -> Self {
         Geometry {
             bbox: None,
             value,
@@ -283,8 +316,11 @@ impl Geometry {
     }
 }
 
-impl<'a> From<&'a Geometry> for JsonObject {
-    fn from(geometry: &'a Geometry) -> JsonObject {
+impl<'a, T> From<&'a Geometry<T>> for JsonObject
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn from(geometry: &'a Geometry<T>) -> JsonObject {
         let mut map = JsonObject::from(&geometry.value);
         if let Some(ref bbox) = geometry.bbox {
             map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
@@ -299,12 +335,15 @@ impl<'a> From<&'a Geometry> for JsonObject {
     }
 }
 
-impl Geometry {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
+impl<T> Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    pub fn from_json_object(object: JsonObject) -> Result<Self, T> {
         Self::try_from(object)
     }
 
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
+    pub fn from_json_value(value: JsonValue) -> Result<Self, T> {
         Self::try_from(value)
     }
 
@@ -326,10 +365,13 @@ impl Geometry {
     }
 }
 
-impl TryFrom<JsonObject> for Geometry {
-    type Error = Error;
+impl<T> TryFrom<JsonObject> for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(mut object: JsonObject) -> Result<Self> {
+    fn try_from(mut object: JsonObject) -> Result<Geometry<T>, T> {
         let bbox = util::get_bbox(&mut object)?;
         let value = util::get_value(&mut object)?;
         let foreign_members = util::get_foreign_members(object)?;
@@ -341,10 +383,13 @@ impl TryFrom<JsonObject> for Geometry {
     }
 }
 
-impl TryFrom<JsonValue> for Geometry {
-    type Error = Error;
+impl<T> TryFrom<JsonValue> for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Error = Error<T>;
 
-    fn try_from(value: JsonValue) -> Result<Self> {
+    fn try_from(value: JsonValue) -> Result<Self, T> {
         if let JsonValue::Object(obj) = value {
             Self::try_from(obj)
         } else {
@@ -353,15 +398,21 @@ impl TryFrom<JsonValue> for Geometry {
     }
 }
 
-impl FromStr for Geometry {
-    type Err = Error;
+impl<T> FromStr for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    type Err = Error<T>;
 
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_str(s: &str) -> Result<Self, T> {
         Self::try_from(crate::GeoJson::from_str(s)?)
     }
 }
 
-impl Serialize for Geometry {
+impl<T> Serialize for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -372,8 +423,11 @@ impl Serialize for Geometry {
     }
 }
 
-impl<'de> Deserialize<'de> for Geometry {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Geometry, D::Error>
+impl<'de, T> Deserialize<'de> for Geometry<T>
+where
+    T: geo_types::CoordFloat + serde::Serialize,
+{
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Geometry<T>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -385,11 +439,12 @@ impl<'de> Deserialize<'de> for Geometry {
     }
 }
 
-impl<V> From<V> for Geometry
+impl<V, T> From<V> for Geometry<T>
 where
-    V: Into<Value>,
+    T: geo_types::CoordFloat + serde::Serialize,
+    V: Into<Value<T>>,
 {
-    fn from(v: V) -> Geometry {
+    fn from(v: V) -> Geometry<T> {
         Geometry::new(v.into())
     }
 }
@@ -538,7 +593,7 @@ mod tests {
         })
         .to_string();
 
-        let geometry = Geometry::from_str(&geometry_json).unwrap();
+        let geometry = Geometry::<f64>::from_str(&geometry_json).unwrap();
         assert!(matches!(geometry.value, Value::Point(_)));
     }
 
@@ -556,7 +611,7 @@ mod tests {
         })
         .to_string();
 
-        let actual_failure = Geometry::from_str(&feature_json).unwrap_err();
+        let actual_failure = Geometry::<f64>::from_str(&feature_json).unwrap_err();
         match actual_failure {
             Error::ExpectedType { actual, expected } => {
                 assert_eq!(actual, "Feature");
@@ -568,13 +623,14 @@ mod tests {
 
     #[test]
     fn test_reject_too_few_coordinates() {
-        let err = Geometry::from_str(r#"{"type": "Point", "coordinates": []}"#).unwrap_err();
+        let err = Geometry::<f64>::from_str(r#"{"type": "Point", "coordinates": []}"#).unwrap_err();
         assert_eq!(
             err.to_string(),
             "A position must contain two or more elements, but got `0`"
         );
 
-        let err = Geometry::from_str(r#"{"type": "Point", "coordinates": [23.42]}"#).unwrap_err();
+        let err =
+            Geometry::<f64>::from_str(r#"{"type": "Point", "coordinates": [23.42]}"#).unwrap_err();
         assert_eq!(
             err.to_string(),
             "A position must contain two or more elements, but got `1`"

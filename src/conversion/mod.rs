@@ -24,8 +24,10 @@ use std::convert::TryInto;
 macro_rules! assert_almost_eq {
     ($x:expr, $y:expr, $epsilon:expr) => {{
         use num_traits::Zero;
-        let a = $x.abs();
-        let b = $y.abs();
+        let x = $x as f64;
+        let y = $y as f64;
+        let a = x.abs();
+        let b = y.abs();
         let delta = (a - b).abs();
 
         if a.is_infinite() || a.is_nan() || b.is_infinite() || b.is_nan() {
@@ -66,10 +68,10 @@ macro_rules! assert_almost_eq {
 macro_rules! try_from_owned_value {
     ($to:ty) => {
         #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-        impl<T: CoordFloat> TryFrom<geometry::Value> for $to {
-            type Error = Error;
+        impl<T: CoordFloat + serde::Serialize> TryFrom<geometry::Value<T>> for $to {
+            type Error = Error<T>;
 
-            fn try_from(value: geometry::Value) -> Result<Self> {
+            fn try_from(value: geometry::Value<T>) -> Result<Self, T> {
                 (&value).try_into()
             }
         }
@@ -80,9 +82,9 @@ pub(crate) mod from_geo_types;
 pub(crate) mod to_geo_types;
 
 // Process top-level `GeoJSON` items, returning a geo_types::GeometryCollection or an Error
-fn process_geojson<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
+fn process_geojson<T>(gj: &GeoJson<T>) -> Result<geo_types::GeometryCollection<T>, T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     match gj {
         FeatureCollection(collection) => Ok(GeometryCollection(
@@ -92,7 +94,7 @@ where
                 // Only pass on non-empty geometries
                 .filter_map(|feature| feature.geometry.as_ref())
                 .map(|geometry| geometry.clone().try_into())
-                .collect::<Result<_>>()?,
+                .collect::<Result<_, T>>()?,
         )),
         Feature(feature) => {
             if let Some(geometry) = &feature.geometry {
@@ -139,9 +141,9 @@ where
 /// let mut collection: GeometryCollection<f64> = quick_collection(&geojson).unwrap();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-pub fn quick_collection<T>(gj: &GeoJson) -> Result<geo_types::GeometryCollection<T>>
+pub fn quick_collection<T>(gj: &GeoJson<T>) -> Result<geo_types::GeometryCollection<T>, T>
 where
-    T: CoordFloat,
+    T: CoordFloat + serde::Serialize,
 {
     process_geojson(gj)
 }
