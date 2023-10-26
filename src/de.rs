@@ -225,10 +225,11 @@ where
 /// assert_eq!(features[0].name, "Downtown");
 /// assert_eq!(features[0].geometry.x(), 11.1);
 /// ```
-pub fn deserialize_geometry<'de, D, G>(deserializer: D) -> std::result::Result<G, D::Error>
+pub fn deserialize_geometry<'de, D, G, T>(deserializer: D) -> std::result::Result<G, D::Error>
 where
     D: Deserializer<'de>,
-    G: TryFrom<crate::Geometry>,
+    T: geo_types::CoordFloat + serde::Serialize,
+    G: TryFrom<crate::Geometry<T>>,
     G::Error: std::fmt::Display,
 {
     let geojson_geometry = crate::Geometry::deserialize(deserializer)?;
