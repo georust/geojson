@@ -100,7 +100,7 @@ use crate::{JsonObject, JsonValue, Result};
 
 use serde::{ser::Error, Serialize, Serializer};
 
-use std::io;
+use std::{convert::TryInto, io};
 
 /// Serialize a single data structure to a GeoJSON Feature string.
 ///
@@ -255,13 +255,77 @@ where
 /// ```
 pub fn serialize_geometry<IG, S>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
 where
-    IG: std::convert::TryInto<crate::Geometry>,
+    IG: TryInto<crate::Geometry>,
     S: serde::Serializer,
+    <IG as TryInto<crate::Geometry>>::Error: std::fmt::Display,
 {
     geometry
         .try_into()
-        .map_err(|_e| Error::custom("failed to convert geometry to geojson"))
-        .and_then(|geojson_geometry| geojson_geometry.serialize(ser))
+        .map_err(serialize_error_msg::<S>)?
+        .serialize(ser)
+}
+
+/// [`serde::serialize_with`](https://serde.rs/field-attrs.html#serialize_with) helper to serialize an optional type like a
+/// [`geo_types`], as an optional GeoJSON Geometry.
+///
+/// # Examples
+#[cfg_attr(feature = "geo-types", doc = "```")]
+#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+/// use geojson::ser::serialize_optional_geometry;
+/// use serde::Serialize;
+/// use serde_json::{json, to_value};
+///
+/// #[derive(Serialize)]
+/// struct MyStruct {
+///     count: usize,
+///     #[serde(
+///         skip_serializing_if = "Option::is_none",
+///         serialize_with = "serialize_optional_geometry"
+///     )]
+///     geometry: Option<geo_types::Point<f64>>,
+/// }
+///
+/// let my_struct = MyStruct {
+///     count: 0,
+///     geometry: Some(geo_types::Point::new(1.2, 0.5)),
+/// };
+/// let json = json! {{
+///     "count": 0,
+///     "geometry": {
+///         "type": "Point",
+///         "coordinates": [1.2, 0.5]
+///     },
+/// }};
+/// assert_eq!(json, to_value(my_struct).unwrap());
+///
+/// let my_struct = MyStruct {
+///     count: 1,
+///     geometry: None,
+/// };
+/// let json = json! {{
+///     "count": 1,
+/// }};
+/// assert_eq!(json, to_value(my_struct).unwrap());
+/// ```
+pub fn serialize_optional_geometry<'a, IG, S>(
+    geometry: &'a Option<IG>,
+    ser: S,
+) -> std::result::Result<S::Ok, S::Error>
+where
+    &'a IG: std::convert::TryInto<crate::Geometry>,
+    S: serde::Serializer,
+    <&'a IG as TryInto<crate::Geometry>>::Error: std::fmt::Display,
+{
+    geometry
+        .as_ref()
+        .map(TryInto::try_into)
+        .transpose()
+        .map_err(serialize_error_msg::<S>)?
+        .serialize(ser)
+}
+
+fn serialize_error_msg<S: Serializer>(error: impl std::fmt::Display) -> S::Error {
+    Error::custom(format!("failed to convert geometry to GeoJSON: {}", error))
 }
 
 struct Features<'a, T>
@@ -505,6 +569,41 @@ mod tests {
     mod geo_types_tests {
         use super::*;
         use crate::de::tests::feature_collection;
+
+        #[test]
+        fn serializes_optional_point() {
+            #[derive(serde::Serialize)]
+            struct MyStruct {
+                count: usize,
+                #[serde(
+                    skip_serializing_if = "Option::is_none",
+                    serialize_with = "serialize_optional_geometry"
+                )]
+                geometry: Option<geo_types::Point<f64>>,
+            }
+
+            let my_struct = MyStruct {
+                count: 0,
+                geometry: Some(geo_types::Point::new(1.2, 0.5)),
+            };
+            let json = json! {{
+                "count": 0,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [1.2, 0.5]
+                },
+            }};
+            assert_eq!(json, serde_json::to_value(my_struct).unwrap());
+
+            let my_struct = MyStruct {
+                count: 1,
+                geometry: None,
+            };
+            let json = json! {{
+                "count": 1,
+            }};
+            assert_eq!(json, serde_json::to_value(my_struct).unwrap());
+        }
 
         #[test]
         fn geometry_field_without_helper() {
