@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Add support of deserializing optional `geo-types` with `deserialize_optional_geometry`.
 * Add support for foreign members to `FeatureWriter`.
 * Added conversion from `Vec<Feature>` to `GeoJson`.
 * Changed `Serialize` impls to avoid creating intermediate `JsonObject`s.
