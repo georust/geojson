@@ -7,6 +7,7 @@
 * Add support for foreign members to `FeatureWriter`.
 * Added conversion from `Vec<Feature>` to `GeoJson`.
 * Changed `Serialize` impls to avoid creating intermediate `JsonObject`s.
+* Better CI: lint, all features
 
 ## 0.24.1
 
