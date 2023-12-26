@@ -1,10 +1,58 @@
-on: push
-name: Run tests
+name: Run Geojson tests
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - trying
+      - release/**
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   build_and_test:
+    name: Build and test all Geojson features
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: cargo install cargo-all-features
       - run: cargo build-all-features --verbose
       - run: cargo test-all-features --verbose
+  check:
+    name: Geojson Rustfmt and Clippy check
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Check formatting using Rustfmt
+        run: cargo fmt --check
+      - name: Lint using Clippy
+        run: cargo clippy --tests
+  all_checks_complete:
+    needs:
+      - build_and_test
+      - check
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Result
+        run: |
+          jq -C <<< "${needs}"
+          # Check if all needs were successful or skipped.
+          "$(jq -r 'all(.result as $result | (["success", "skipped"] | contains([$result])))' <<< "${needs}")"
+        env:
+          needs: ${{ toJson(needs) }}
