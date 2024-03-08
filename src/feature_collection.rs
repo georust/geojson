@@ -61,7 +61,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
