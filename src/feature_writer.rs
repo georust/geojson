@@ -1,5 +1,5 @@
 use crate::ser::to_feature_writer;
-use crate::{Error, Feature, JsonObject, JsonValue, Result};
+use crate::{Error, Feature, Result};
 
 use serde::Serialize;
 use std::io::Write;
