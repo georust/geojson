@@ -194,7 +194,7 @@ where
     T: CoordFloat,
 {
     line_string
-        .points_iter()
+        .points()
         .map(|point| create_point_type(&point))
         .collect()
 }
@@ -242,7 +242,7 @@ where
 {
     let mut coords = vec![polygon
         .exterior()
-        .points_iter()
+        .points()
         .map(|point| create_point_type(&point))
         .collect()];
 
