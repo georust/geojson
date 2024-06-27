@@ -356,7 +356,7 @@ where
     T: CoordFloat,
 {
     let exterior = polygon_type
-        .get(0)
+        .first()
         .map(|e| create_geo_line_string(e))
         .unwrap_or_else(|| create_geo_line_string(&vec![]));
 

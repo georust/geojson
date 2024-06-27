@@ -471,7 +471,7 @@ pub(crate) mod tests {
 
         assert_eq!(records.len(), 2);
         let first_age = {
-            let props = records.get(0).unwrap().properties.as_ref().unwrap();
+            let props = records.first().unwrap().properties.as_ref().unwrap();
             props.get("age").unwrap().as_i64().unwrap()
         };
         assert_eq!(first_age, 123);

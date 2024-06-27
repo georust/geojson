@@ -227,7 +227,7 @@ impl FromIterator<Feature> for FeatureCollection {
                     }
                     Some(fbox) if curr_len == 0 => {
                         // First iteration: just copy values from fbox
-                        *curr_bbox = fbox.clone();
+                        curr_bbox.clone_from(fbox);
                     }
                     Some(fbox) if curr_len != fbox.len() => {
                         bbox = None;
