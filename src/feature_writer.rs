@@ -187,11 +187,9 @@ impl<W: Write> FeatureWriter<W> {
         value: &T,
     ) -> Result<()> {
         match self.state {
-            State::Finished => {
-                return Err(Error::InvalidWriterState(
-                    "cannot write foreign member when writer has already finished",
-                ))
-            }
+            State::Finished => Err(Error::InvalidWriterState(
+                "cannot write foreign member when writer has already finished",
+            )),
             State::New => {
                 self.write_str(r#"{ "type": "FeatureCollection", "#)?;
                 write!(self.writer, "\"{key}\": ")?;
@@ -201,11 +199,9 @@ impl<W: Write> FeatureWriter<W> {
                 self.state = State::WritingForeignMembers;
                 Ok(())
             }
-            State::WritingFeatures => {
-                return Err(Error::InvalidWriterState(
-                    "must write foreign members before any features",
-                ))
-            }
+            State::WritingFeatures => Err(Error::InvalidWriterState(
+                "must write foreign members before any features",
+            )),
             State::WritingForeignMembers => {
                 write!(self.writer, "\"{key}\": ")?;
                 serde_json::to_writer(&mut self.writer, value)?;

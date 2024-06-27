@@ -40,6 +40,7 @@ pub struct FeatureIterator<'de, R, D = Feature> {
     lifetime: PhantomData<&'de ()>,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Copy, Clone)]
 enum State {
     BeforeFeatures,
