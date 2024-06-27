@@ -9,7 +9,7 @@
 //! }
 //! ```
 //!
-//! Your type *must* have a field called `geometry` and it must be `deserialized_with` [`deserialize_geometry`](crate::de::deserialize_geometry):
+//! Your type *must* have a field called `geometry` and it must be `deserialize_with` [`deserialize_geometry`](crate::de::deserialize_geometry):
 //!  ```rust, ignore
 //! #[derive(serde::Deserialize)]
 //! struct MyStruct {
@@ -30,7 +30,7 @@
 //!
 //! #[derive(Deserialize)]
 //! struct MyStruct {
-//!     // Deserialize from geojson, rather than expecting the type's default serialization
+//!     // Deserialize from GeoJSON, rather than expecting the type's default serialization
 //!     #[serde(deserialize_with = "deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     name: String,
@@ -76,7 +76,7 @@
 //! ```ignore
 //! #[derive(serde::Serialize, serde::Deserialize)]
 //! struct MyStruct {
-//!     // Serialize as geojson, rather than using the type's default serialization
+//!     // Serialize as GeoJSON, rather than using the type's default serialization
 //!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     ...
