@@ -9,7 +9,7 @@
 //! }
 //! ```
 //!
-//! Your type *must* have a field called `geometry` and it must be `serialized_with` [`serialize_geometry`](crate::ser::serialize_geometry):
+//! Your type *must* have a field called `geometry` and it must be `serialize_with` [`serialize_geometry`](crate::ser::serialize_geometry):
 //!  ```rust, ignore
 //! #[derive(serde::Serialize)]
 //! struct MyStruct {
@@ -85,12 +85,12 @@
 //!
 //! # Reading *and* Writing GeoJSON
 //!
-//! This module is only concerned with Writing out GeoJSON. If you'd also like to reading GeoJSON,
+//! This module is only concerned with Writing out GeoJSON. If you'd also like to read GeoJSON,
 //! you'll want to combine this with the functionality from the [`crate::de`] module:
 //! ```ignore
 //! #[derive(serde::Serialize, serde::Deserialize)]
 //! struct MyStruct {
-//!     // Serialize as geojson, rather than using the type's default serialization
+//!     // Serialize as GeoJSON, rather than using the type's default serialization
 //!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     ...

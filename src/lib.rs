@@ -55,7 +55,7 @@
 //! 1. A [`Geometry`] represents points, curves, and surfaces in coordinate space.
 //! 2. A [`Feature`] usually contains a `Geometry` and some associated data, for example a "name"
 //!    field or any other properties you'd like associated with the `Geometry`.
-//! 3. A [`FeatureCollection`] is a list of one or more `Feature`s.
+//! 3. A [`FeatureCollection`] is a list of `Feature`s.
 //!
 //! Because [`Feature`] and [`FeatureCollection`] are more flexible, bare [`Geometry`] GeoJSON
 //! documents are rarely encountered in the wild. As such, conversions from [`Geometry`]
@@ -172,21 +172,21 @@
 //!         GeoJson::FeatureCollection(ref ctn) => {
 //!             for feature in &ctn.features {
 //!                 if let Some(ref geom) = feature.geometry {
-//!                     match_geometry(geom)
+//!                     process_geometry(geom)
 //!                 }
 //!             }
 //!         }
 //!         GeoJson::Feature(ref feature) => {
 //!             if let Some(ref geom) = feature.geometry {
-//!                 match_geometry(geom)
+//!                 process_geometry(geom)
 //!             }
 //!         }
-//!         GeoJson::Geometry(ref geometry) => match_geometry(geometry),
+//!         GeoJson::Geometry(ref geometry) => process_geometry(geometry),
 //!     }
 //! }
 //!
 //! /// Process GeoJSON geometries
-//! fn match_geometry(geom: &Geometry) {
+//! fn process_geometry(geom: &Geometry) {
 //!     match geom.value {
 //!         Value::Polygon(_) => println!("Matched a Polygon"),
 //!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
@@ -195,7 +195,7 @@
 //!             // !!! GeometryCollections contain other Geometry types, and can
 //!             // nest — we deal with this by recursively processing each geometry
 //!             for geometry in gc {
-//!                 match_geometry(geometry)
+//!                 process_geometry(geometry)
 //!             }
 //!         }
 //!         // Point, LineString, and their Multi– counterparts
@@ -299,7 +299,7 @@
 //!
 //! The `geo-types` feature implements the [`TryFrom`](../std/convert/trait.TryFrom.html) trait,
 //! providing **fallible** conversions _to_ [geo-types Geometries](../geo_types/index.html#structs)
-//! from [`GeoJson`], [`Value`], or [`Geometry`] types.
+//! from [`GeoJson`], [`Value`], [`Feature`], [`FeatureCollection`] or [`Geometry`] types.
 //!
 //! #### Convert `geojson` to `geo_types::Geometry<f64>`
 //!
