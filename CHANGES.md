@@ -12,6 +12,7 @@
 * Added `GeometryCollection::try_from(&GeoJson)` and deprecated
   `quick_collection` for conventional naming and simpler docs.
   * <https://github.com/georust/geojson/pulls/214>
+* Added `GeoJson::to_string_pretty` as convenience wrappers around the same `serde_json` methods.
 
 ## 0.24.1
 
