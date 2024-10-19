@@ -97,6 +97,12 @@ impl From<FeatureCollection> for GeoJson {
     }
 }
 
+impl From<Vec<Feature>> for GeoJson {
+    fn from(features: Vec<Feature>) -> GeoJson {
+        GeoJson::from(features.into_iter().collect::<FeatureCollection>())
+    }
+}
+
 impl TryFrom<GeoJson> for Geometry {
     type Error = Error;
     fn try_from(value: GeoJson) -> Result<Self> {
@@ -295,7 +301,11 @@ impl Serialize for GeoJson {
     where
         S: Serializer,
     {
-        JsonObject::from(self).serialize(serializer)
+        match self {
+            GeoJson::Geometry(ref geometry) => geometry.serialize(serializer),
+            GeoJson::Feature(ref feature) => feature.serialize(serializer),
+            GeoJson::FeatureCollection(ref fc) => fc.serialize(serializer),
+        }
     }
 }
 
@@ -392,7 +402,7 @@ impl fmt::Display for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, GeoJson, Geometry, Value};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, Value};
     use serde_json::json;
     use std::convert::TryInto;
     use std::str::FromStr;
@@ -446,6 +456,39 @@ mod tests {
                 geometry: Some(Geometry::new(Value::Point(vec![102.0, 0.5]))),
                 id: None,
                 properties: None,
+                foreign_members: None,
+            })
+        );
+    }
+
+    #[test]
+    fn test_geojson_from_features() {
+        let features: Vec<Feature> = vec![
+            Value::Point(vec![0., 0., 0.]).into(),
+            Value::Point(vec![1., 1., 1.]).into(),
+        ];
+
+        let geojson: GeoJson = features.into();
+        assert_eq!(
+            geojson,
+            GeoJson::FeatureCollection(FeatureCollection {
+                features: vec![
+                    Feature {
+                        bbox: None,
+                        geometry: Some(Geometry::new(Value::Point(vec![0., 0., 0.]))),
+                        id: None,
+                        properties: None,
+                        foreign_members: None,
+                    },
+                    Feature {
+                        bbox: None,
+                        geometry: Some(Geometry::new(Value::Point(vec![1., 1., 1.]))),
+                        id: None,
+                        properties: None,
+                        foreign_members: None,
+                    },
+                ],
+                bbox: None,
                 foreign_members: None,
             })
         );

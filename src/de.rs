@@ -9,7 +9,7 @@
 //! }
 //! ```
 //!
-//! Your type *must* have a field called `geometry` and it must be `deserialized_with` [`deserialize_geometry`](crate::de::deserialize_geometry):
+//! Your type *must* have a field called `geometry` and it must be `deserialize_with` [`deserialize_geometry`](crate::de::deserialize_geometry):
 //!  ```rust, ignore
 //! #[derive(serde::Deserialize)]
 //! struct MyStruct {
@@ -30,7 +30,7 @@
 //!
 //! #[derive(Deserialize)]
 //! struct MyStruct {
-//!     // Deserialize from geojson, rather than expecting the type's default serialization
+//!     // Deserialize from GeoJSON, rather than expecting the type's default serialization
 //!     #[serde(deserialize_with = "deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     name: String,
@@ -76,7 +76,7 @@
 //! ```ignore
 //! #[derive(serde::Serialize, serde::Deserialize)]
 //! struct MyStruct {
-//!     // Serialize as geojson, rather than using the type's default serialization
+//!     // Serialize as GeoJSON, rather than using the type's default serialization
 //!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     ...
@@ -234,7 +234,64 @@ where
     let geojson_geometry = crate::Geometry::deserialize(deserializer)?;
     geojson_geometry
         .try_into()
-        .map_err(|err| Error::custom(format!("unable to convert from geojson Geometry: {}", err)))
+        .map_err(deserialize_error_msg::<D>)
+}
+
+/// [`serde::deserialize_with`](https://serde.rs/field-attrs.html#deserialize_with) helper to deserialize an optional GeoJSON Geometry into another type,
+/// like an optional [`geo_types`] Geometry.
+///
+/// # Examples
+#[cfg_attr(feature = "geo-types", doc = "```")]
+#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+/// use geojson::de::deserialize_optional_geometry;
+/// use serde::Deserialize;
+/// use serde_json::{json, from_value};
+///
+/// #[derive(Deserialize)]
+/// struct MyStruct {
+///     #[serde(rename = "count")]
+///     _count: usize,
+///     #[serde(default, deserialize_with = "deserialize_optional_geometry")]
+///     geometry: Option<geo_types::Point<f64>>,
+/// }
+///
+/// let json = json! {{
+///     "count": 0,
+///     "geometry": {
+///         "type": "Point",
+///         "coordinates": [125.6, 10.1]
+///     },
+/// }};
+/// let feature: MyStruct = from_value(json).unwrap();
+/// assert!(feature.geometry.is_some());
+///
+/// let json = json! {{
+///     "count": 1,
+/// }};
+/// let feature: MyStruct = from_value(json).unwrap();
+/// assert!(feature.geometry.is_none())
+/// ```
+pub fn deserialize_optional_geometry<'de, D, G>(
+    deserializer: D,
+) -> std::result::Result<Option<G>, D::Error>
+where
+    D: Deserializer<'de>,
+    G: TryFrom<crate::Geometry>,
+    G::Error: std::fmt::Display,
+{
+    Option::<crate::Geometry>::deserialize(deserializer)?
+        .map(TryInto::try_into)
+        .transpose()
+        .map_err(deserialize_error_msg::<D>)
+}
+
+fn deserialize_error_msg<'de, D: Deserializer<'de>>(
+    error: impl std::fmt::Display,
+) -> <D as serde::Deserializer<'de>>::Error {
+    Error::custom(format!(
+        "unable to convert from geojson Geometry: {}",
+        error
+    ))
 }
 
 /// Deserialize a GeoJSON FeatureCollection into [`Feature`] structs.
@@ -414,7 +471,7 @@ pub(crate) mod tests {
 
         assert_eq!(records.len(), 2);
         let first_age = {
-            let props = records.get(0).unwrap().properties.as_ref().unwrap();
+            let props = records.first().unwrap().properties.as_ref().unwrap();
             props.get("age").unwrap().as_i64().unwrap()
         };
         assert_eq!(first_age, 123);
@@ -526,6 +583,33 @@ pub(crate) mod tests {
             // is reasonably discernible.
             let expected_err_text = r#"Error while deserializing JSON: unable to convert from geojson Geometry: Expected type: `LineString`, but found `Point`"#;
             assert_eq!(err.to_string(), expected_err_text);
+        }
+
+        #[test]
+        fn deserializes_optional_point() {
+            #[derive(serde::Deserialize)]
+            struct MyStruct {
+                #[serde(rename = "count")]
+                _count: usize,
+                #[serde(default, deserialize_with = "deserialize_optional_geometry")]
+                geometry: Option<geo_types::Point<f64>>,
+            }
+
+            let json = json! {{
+                "count": 0,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [125.6, 10.1]
+                },
+            }};
+            let feature: MyStruct = serde_json::from_value(json).unwrap();
+            assert!(feature.geometry.is_some());
+
+            let json = json! {{
+                "count": 1,
+            }};
+            let feature: MyStruct = serde_json::from_value(json).unwrap();
+            assert!(feature.geometry.is_none())
         }
     }
 

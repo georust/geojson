@@ -1,10 +1,26 @@
 # Changes
 
-## UNRELEASED
+## Unreleased
+
+* Add support of serializing optional `geo-types` with `serialize_optional_geometry`.
+* Add support of deserializing optional `geo-types` with `deserialize_optional_geometry`.
+* Add support for foreign members to `FeatureWriter`.
+* Added conversion from `Vec<Feature>` to `GeoJson`.
+* Changed `Serialize` impls to avoid creating intermediate `JsonObject`s.
+* Better CI: lint, all features
+* Implement `Default` on `FeatureCollection`.
+* Added `GeometryCollection::try_from(&GeoJson)` and deprecated
+  `quick_collection` for conventional naming and simpler docs.
+  * <https://github.com/georust/geojson/pulls/214>
+
+## 0.24.1
+
+* Modified conversion from JSON to reject zero- and one-dimensional positions.
+  * PR: <https://github.com/georust/geojson/pull/225>
 
 ## 0.24.0
 
-* Added `geojson::{ser, de}` helpers to convert your custom struct to and from GeoJSON. 
+* Added `geojson::{ser, de}` helpers to convert your custom struct to and from GeoJSON.
   * For external geometry types like geo-types, use the `serialize_geometry`/`deserialize_geometry` helpers.
   * Example:
     ```

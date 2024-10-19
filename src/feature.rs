@@ -18,8 +18,7 @@ use std::str::FromStr;
 use crate::errors::{Error, Result};
 use crate::{util, Feature, Geometry, Value};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::json;
+use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
@@ -55,35 +54,18 @@ impl FromStr for Feature {
 
 impl<'a> From<&'a Feature> for JsonObject {
     fn from(feature: &'a Feature) -> JsonObject {
-        let mut map = JsonObject::new();
-        map.insert(String::from("type"), json!("Feature"));
-        map.insert(
-            String::from("geometry"),
-            serde_json::to_value(&feature.geometry).unwrap(),
-        );
-        if let Some(ref properties) = feature.properties {
-            map.insert(
-                String::from("properties"),
-                serde_json::to_value(properties).unwrap(),
-            );
-        } else {
-            map.insert(
-                String::from("properties"),
-                serde_json::to_value(Some(serde_json::Map::new())).unwrap(),
-            );
-        }
-        if let Some(ref bbox) = feature.bbox {
-            map.insert(String::from("bbox"), serde_json::to_value(bbox).unwrap());
-        }
-        if let Some(ref id) = feature.id {
-            map.insert(String::from("id"), serde_json::to_value(id).unwrap());
-        }
-        if let Some(ref foreign_members) = feature.foreign_members {
-            for (key, value) in foreign_members {
-                map.insert(key.to_owned(), value.to_owned());
+        // The unwrap() should never panic, because Feature contains only JSON-serializable types
+        match serde_json::to_value(feature).unwrap() {
+            serde_json::Value::Object(obj) => obj,
+            value => {
+                // Panic should never happen, because `impl Serialize for Feature` always produces an
+                // Object
+                panic!(
+                    "serializing Feature should result in an Object, but got something {:?}",
+                    value
+                )
             }
         }
-        map
     }
 }
 
@@ -182,7 +164,22 @@ impl Serialize for Feature {
     where
         S: Serializer,
     {
-        JsonObject::from(self).serialize(serializer)
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("type", "Feature")?;
+        map.serialize_entry("geometry", &self.geometry)?;
+        map.serialize_entry("properties", &self.properties)?;
+        if let Some(ref bbox) = self.bbox {
+            map.serialize_entry("bbox", bbox)?;
+        }
+        if let Some(ref id) = self.id {
+            map.serialize_entry("id", id)?;
+        }
+        if let Some(ref foreign_members) = self.foreign_members {
+            for (key, value) in foreign_members {
+                map.serialize_entry(key, value)?;
+            }
+        }
+        map.end()
     }
 }
 
@@ -229,8 +226,7 @@ mod tests {
     use std::str::FromStr;
 
     fn feature_json_str() -> &'static str {
-        "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
-         \"Feature\"}"
+        "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{}}"
     }
 
     fn properties() -> Option<JsonObject> {
@@ -314,8 +310,7 @@ mod tests {
     #[test]
     fn test_display_feature() {
         let f = feature().to_string();
-        assert_eq!(f, "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"properties\":{},\"type\":\
-         \"Feature\"}");
+        assert_eq!(f, "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{}}");
     }
 
     #[test]
@@ -344,7 +339,7 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_id_number() {
-        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":0,\"properties\":{},\"type\":\"Feature\"}";
+        let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":0}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
@@ -370,7 +365,7 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_id_string() {
-        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":\"foo\",\"properties\":{},\"type\":\"Feature\"}";
+        let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":\"foo\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
                 value: Value::Point(vec![1.1, 2.1]),
@@ -416,7 +411,8 @@ mod tests {
     fn encode_decode_feature_with_foreign_member() {
         use crate::JsonObject;
         use serde_json;
-        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"other_member\":\"some_value\",\"properties\":{},\"type\":\"Feature\"}";
+        let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"other_member\":\"some_value\"}";
+
         let mut foreign_members = JsonObject::new();
         foreign_members.insert(
             String::from("other_member"),
@@ -432,6 +428,29 @@ mod tests {
             bbox: None,
             id: None,
             foreign_members: Some(foreign_members),
+        };
+        // Test encode
+        let json_string = encode(&feature);
+        assert_eq!(json_string, feature_json_str);
+
+        // Test decode
+        let decoded_feature = match decode(feature_json_str.into()) {
+            GeoJson::Feature(f) => f,
+            _ => unreachable!(),
+        };
+        assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn encode_decode_feature_with_null_properties() {
+        let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"properties":null}"#;
+
+        let feature = crate::Feature {
+            geometry: Some(Value::Point(vec![1.1, 2.1]).into()),
+            properties: None,
+            bbox: None,
+            id: None,
+            foreign_members: None,
         };
         // Test encode
         let json_string = encode(&feature);
