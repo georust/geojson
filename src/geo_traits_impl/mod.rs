@@ -8,6 +8,10 @@ mod multi_polygon;
 mod point;
 mod polygon;
 
+// These structures are needed because we can't implement traits on types like
+// `geojson::PointType` because they are just type aliases of raw types like
+// `Vec<f64>`.
+
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
 pub struct PointType(crate::Position);
