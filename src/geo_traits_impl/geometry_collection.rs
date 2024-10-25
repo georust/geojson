@@ -39,24 +39,24 @@ impl<'a> geo_traits::GeometryCollectionTrait for &'a GeometryCollectionType {
         Self: 'b;
 
     fn dim(&self) -> Dimensions {
-        unimplemented!()
+        GeometryCollectionType::dim(self)
     }
 
     fn geometries(
         &self,
     ) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::GeometryType<'_>> {
-        self.0.iter()
+        GeometryCollectionType::geometries(self)
     }
 
     fn geometry(&self, i: usize) -> Option<Self::GeometryType<'_>> {
-        self.0.get(i)
+        GeometryCollectionType::geometry(self, i)
     }
 
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
-        self.0.get_unchecked(i)
+        GeometryCollectionType::geometry_unchecked(self, i)
     }
 
     fn num_geometries(&self) -> usize {
-        self.0.len()
+        GeometryCollectionType::num_geometries(self)
     }
 }

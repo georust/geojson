@@ -25,10 +25,10 @@ impl geo_traits::PointTrait for &PointType {
         Self: 'b;
 
     fn coord(&self) -> Option<Self::CoordType<'_>> {
-        Some(self)
+        PointType::coord(self)
     }
 
     fn dim(&self) -> Dimensions {
-        <Self as geo_traits::CoordTrait>::dim(self)
+        PointType::dim(self)
     }
 }

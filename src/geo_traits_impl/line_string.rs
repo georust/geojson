@@ -38,22 +38,22 @@ impl<'a> geo_traits::LineStringTrait for &'a LineStringType {
         Self: 'b;
 
     fn num_coords(&self) -> usize {
-        self.0.len()
+        LineStringType::num_coords(self)
     }
 
     fn coord(&self, i: usize) -> Option<Self::CoordType<'_>> {
-        Some(PointType::wrap_ref(&self.0[i]))
+        LineStringType::coord(self, i)
     }
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
-        self.coord(i).unwrap()
+        LineStringType::coord_unchecked(self, i)
     }
 
     fn coords(&self) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::CoordType<'_>> {
-        self.0.iter().map(PointType::wrap_ref)
+        LineStringType::coords(self)
     }
 
     fn dim(&self) -> Dimensions {
-        self.coord(0).unwrap().dim()
+        LineStringType::dim(self)
     }
 }

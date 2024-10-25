@@ -40,24 +40,24 @@ impl<'a> geo_traits::MultiLineStringTrait for &'a MultiLineStringType {
         Self: 'b;
 
     fn num_line_strings(&self) -> usize {
-        self.0.len()
+        MultiLineStringType::num_line_strings(self)
     }
 
     fn dim(&self) -> Dimensions {
-        self.line_string(0).unwrap().dim()
+        MultiLineStringType::dim(self)
     }
 
     fn line_string(&self, i: usize) -> Option<Self::LineStringType<'_>> {
-        self.0.get(i).map(LineStringType::wrap_ref)
+        MultiLineStringType::line_string(self, i)
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::LineStringType<'_> {
-        LineStringType::wrap_ref(self.0.get_unchecked(i))
+        MultiLineStringType::line_string_unchecked(self, i)
     }
 
     fn line_strings(
         &self,
     ) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::LineStringType<'_>> {
-        self.0.iter().map(LineStringType::wrap_ref)
+        MultiLineStringType::line_strings(self)
     }
 }

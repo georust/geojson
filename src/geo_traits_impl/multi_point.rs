@@ -38,22 +38,22 @@ impl<'a> geo_traits::MultiPointTrait for &'a MultiPointType {
         Self: 'b;
 
     fn num_points(&self) -> usize {
-        self.0.len()
+        MultiPointType::num_points(self)
     }
 
     fn dim(&self) -> Dimensions {
-        self.point(0).unwrap().dim() // TODO: is this okay?
+        MultiPointType::dim(self)
     }
 
     fn point(&self, i: usize) -> Option<Self::PointType<'_>> {
-        self.0.get(i).map(PointType::wrap_ref)
+        MultiPointType::point(self, i)
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::PointType<'_> {
-        PointType::wrap_ref(self.0.get_unchecked(i))
+        MultiPointType::point_unchecked(self, i)
     }
 
     fn points(&self) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::PointType<'_>> {
-        self.0.iter().map(PointType::wrap_ref)
+        MultiPointType::points(self)
     }
 }

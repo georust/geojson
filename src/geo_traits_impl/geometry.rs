@@ -71,6 +71,72 @@ impl geo_traits::GeometryTrait for crate::Value {
     }
 }
 
+impl geo_traits::GeometryTrait for &crate::Value {
+    type T = f64;
+    type PointType<'b>
+        = PointType
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LineStringType
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = PolygonType
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPointType
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineStringType
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygonType
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollectionType
+    where
+        Self: 'b;
+    type RectType<'b>
+        = UnimplementedRect<Self::T>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<Self::T>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<Self::T>
+    where
+        Self: 'b;
+
+    fn dim(&self) -> Dimensions {
+        crate::Value::dim(self)
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        crate::Value::as_type(self)
+    }
+}
+
 impl geo_traits::GeometryTrait for crate::Geometry {
     type T = f64;
     type PointType<'b> = PointType;
@@ -165,10 +231,10 @@ impl geo_traits::GeometryTrait for &crate::Geometry {
         Self::TriangleType<'_>,
         Self::LineType<'_>,
     > {
-        self.value.as_type()
+        crate::Geometry::as_type(self)
     }
 
     fn dim(&self) -> Dimensions {
-        self.value.dim()
+        crate::Geometry::dim(self)
     }
 }

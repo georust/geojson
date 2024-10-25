@@ -40,24 +40,24 @@ impl<'a> geo_traits::MultiPolygonTrait for &'a MultiPolygonType {
         Self: 'b;
 
     fn num_polygons(&self) -> usize {
-        self.0.len()
+        MultiPolygonType::num_polygons(self)
     }
 
     fn dim(&self) -> Dimensions {
-        self.polygon(0).unwrap().dim()
+        MultiPolygonType::dim(self)
     }
 
     fn polygon(&self, i: usize) -> Option<Self::PolygonType<'_>> {
-        self.0.get(i).map(PolygonType::wrap_ref)
+        MultiPolygonType::polygon(self, i)
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::PolygonType<'_> {
-        PolygonType::wrap_ref(self.0.get_unchecked(i))
+        MultiPolygonType::polygon_unchecked(self, i)
     }
 
     fn polygons(
         &self,
     ) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::PolygonType<'_>> {
-        self.0.iter().map(PolygonType::wrap_ref)
+        MultiPolygonType::polygons(self)
     }
 }
