@@ -1,10 +1,3 @@
-use bytemuck::TransparentWrapper;
-use geo_traits::{
-    CoordTrait, Dimensions, GeometryCollectionTrait, GeometryTrait, LineStringTrait,
-    MultiLineStringTrait, MultiPointTrait, MultiPolygonTrait, PolygonTrait,
-};
-use geo_traits::{UnimplementedLine, UnimplementedRect, UnimplementedTriangle};
-
 mod coord;
 mod geometry;
 mod geometry_collection;
