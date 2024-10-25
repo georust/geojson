@@ -10,35 +10,28 @@ mod polygon;
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct PointType(crate::Position);
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct LineStringType(crate::LineStringType);
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct PolygonType(crate::PolygonType);
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct MultiPointType(Vec<crate::PointType>);
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct MultiLineStringType(Vec<crate::LineStringType>);
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct MultiPolygonType(Vec<crate::PolygonType>);
 
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
-#[doc(hidden)]
 pub struct GeometryCollectionType(Vec<crate::Geometry>);
