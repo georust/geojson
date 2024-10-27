@@ -408,6 +408,7 @@ pub use crate::errors::{Error, Result};
 #[cfg(feature = "geo-types")]
 mod conversion;
 
+#[cfg(feature = "geo-traits")]
 mod geo_traits_impl;
 
 /// Build your struct from GeoJSON using [`serde`]

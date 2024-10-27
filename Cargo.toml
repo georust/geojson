@@ -12,15 +12,16 @@ edition = "2018"
 
 [features]
 default = ["geo-types"]
+geo-traits = ["dep:geo-traits", "dep:bytemuck"]
 
 [dependencies]
 serde = { version="~1.0", features = ["derive"] }
 serde_json = "~1.0"
 geo-types = { version = "0.7.13", features = ["serde"], optional = true }
+geo-traits = { version = "0.1.0", optional = true }
+bytemuck = { version = "1", features = ["derive"], optional = true }
 thiserror = "1.0.20"
 log = "0.4.17"
-geo-traits = { git = "https://github.com/kylebarron/geo/", branch = "kyle/geo-traits-crate" }
-bytemuck = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 num-traits = "0.2"
