@@ -1,5 +1,5 @@
 use super::PointType;
-use geo_traits::{CoordTrait, Dimensions};
+use geo_traits::Dimensions;
 
 impl geo_traits::CoordTrait for PointType {
     type T = f64;

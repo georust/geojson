@@ -1,6 +1,6 @@
 use super::{LineStringType, MultiLineStringType};
 use bytemuck::TransparentWrapper;
-use geo_traits::{Dimensions, LineStringTrait, MultiLineStringTrait};
+use geo_traits::{Dimensions, LineStringTrait};
 
 impl geo_traits::MultiLineStringTrait for MultiLineStringType {
     type T = f64;

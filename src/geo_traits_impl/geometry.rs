@@ -238,3 +238,127 @@ impl geo_traits::GeometryTrait for &crate::Geometry {
         crate::Geometry::dim(self)
     }
 }
+
+impl geo_traits::GeometryTrait for crate::Feature {
+    type T = f64;
+    type PointType<'b> = PointType;
+    type LineStringType<'b> = LineStringType;
+    type PolygonType<'b> = PolygonType;
+    type MultiPointType<'b> = MultiPointType;
+    type MultiLineStringType<'b> = MultiLineStringType;
+    type MultiPolygonType<'b> = MultiPolygonType;
+    type GeometryCollectionType<'b> = GeometryCollectionType;
+    type RectType<'b> = UnimplementedRect<Self::T>;
+    type TriangleType<'b> = UnimplementedTriangle<Self::T>;
+    type LineType<'b> = UnimplementedLine<Self::T>;
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        match self.geometry {
+            Some(ref g) => g.as_type(),
+            None => panic!("GeoJSON feature has no geometry"),
+        }
+    }
+
+    fn dim(&self) -> Dimensions {
+        match self.geometry {
+            Some(ref g) => g.dim(),
+            None => panic!("GeoJSON feature has no geometry"),
+        }
+    }
+}
+
+impl geo_traits::GeometryTrait for &crate::Feature {
+    type T = f64;
+    type PointType<'b> = PointType where Self: 'b;
+    type LineStringType<'b> = LineStringType where Self: 'b;
+    type PolygonType<'b> = PolygonType where Self: 'b;
+    type MultiPointType<'b> = MultiPointType where Self: 'b;
+    type MultiLineStringType<'b> = MultiLineStringType where Self: 'b;
+    type MultiPolygonType<'b> = MultiPolygonType where Self: 'b;
+    type GeometryCollectionType<'b> = GeometryCollectionType where Self: 'b;
+    type RectType<'b> = UnimplementedRect<Self::T> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<Self::T> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<Self::T> where Self: 'b;
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        crate::Feature::as_type(self)
+    }
+
+    fn dim(&self) -> Dimensions {
+        crate::Feature::dim(self)
+    }
+}
+
+impl geo_traits::GeometryTrait for crate::GeoJson {
+    type T = f64;
+    type PointType<'b> = PointType where Self: 'b;
+    type LineStringType<'b> = LineStringType where Self: 'b;
+    type PolygonType<'b> = PolygonType where Self: 'b;
+    type MultiPointType<'b> = MultiPointType where Self: 'b;
+    type MultiLineStringType<'b> = MultiLineStringType where Self: 'b;
+    type MultiPolygonType<'b> = MultiPolygonType where Self: 'b;
+    type GeometryCollectionType<'b> = GeometryCollectionType where Self: 'b;
+    type RectType<'b> = UnimplementedRect<Self::T> where Self: 'b;
+    type TriangleType<'b> = UnimplementedTriangle<Self::T> where Self: 'b;
+    type LineType<'b> = UnimplementedLine<Self::T> where Self: 'b;
+
+    fn dim(&self) -> Dimensions {
+        match self {
+            crate::GeoJson::Feature(f) => f.dim(),
+            crate::GeoJson::FeatureCollection(fc) => fc.dim(),
+            crate::GeoJson::Geometry(g) => g.dim(),
+        }
+    }
+
+    fn as_type(
+        &self,
+    ) -> geo_traits::GeometryType<
+        '_,
+        Self::PointType<'_>,
+        Self::LineStringType<'_>,
+        Self::PolygonType<'_>,
+        Self::MultiPointType<'_>,
+        Self::MultiLineStringType<'_>,
+        Self::MultiPolygonType<'_>,
+        Self::GeometryCollectionType<'_>,
+        Self::RectType<'_>,
+        Self::TriangleType<'_>,
+        Self::LineType<'_>,
+    > {
+        match self {
+            crate::GeoJson::Feature(f) => f.as_type(),
+            crate::GeoJson::FeatureCollection(_fc) => {
+                unimplemented!("TODO")
+            }
+            crate::GeoJson::Geometry(g) => g.as_type(),
+        }
+    }
+}

@@ -1,6 +1,6 @@
 use super::{LineStringType, PolygonType};
 use bytemuck::TransparentWrapper;
-use geo_traits::{Dimensions, LineStringTrait, PolygonTrait};
+use geo_traits::{Dimensions, LineStringTrait};
 
 impl geo_traits::PolygonTrait for PolygonType {
     type T = f64;
