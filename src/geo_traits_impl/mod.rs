@@ -39,3 +39,19 @@ pub struct MultiPolygonType(Vec<crate::PolygonType>);
 #[derive(bytemuck::TransparentWrapper)]
 #[repr(transparent)]
 pub struct GeometryCollectionType(Vec<crate::Geometry>);
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_implementation() {
+        let geojson_str = include_str!("../../tests/fixtures/countries.geojson");
+        let geojson = geojson_str.parse::<crate::GeoJson>().unwrap();
+        let area = area(geojson);
+        assert_eq!(area, 0.0);
+    }
+
+    // Example to demonstrate usage of geo-traits
+    fn area(g: impl geo_traits::GeometryTrait) -> f64 {
+        0.
+    }
+}
