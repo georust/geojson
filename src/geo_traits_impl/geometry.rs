@@ -283,16 +283,46 @@ impl geo_traits::GeometryTrait for crate::Feature {
 
 impl geo_traits::GeometryTrait for &crate::Feature {
     type T = f64;
-    type PointType<'b> = PointType where Self: 'b;
-    type LineStringType<'b> = LineStringType where Self: 'b;
-    type PolygonType<'b> = PolygonType where Self: 'b;
-    type MultiPointType<'b> = MultiPointType where Self: 'b;
-    type MultiLineStringType<'b> = MultiLineStringType where Self: 'b;
-    type MultiPolygonType<'b> = MultiPolygonType where Self: 'b;
-    type GeometryCollectionType<'b> = GeometryCollectionType where Self: 'b;
-    type RectType<'b> = UnimplementedRect<Self::T> where Self: 'b;
-    type TriangleType<'b> = UnimplementedTriangle<Self::T> where Self: 'b;
-    type LineType<'b> = UnimplementedLine<Self::T> where Self: 'b;
+    type PointType<'b>
+        = PointType
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LineStringType
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = PolygonType
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPointType
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineStringType
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygonType
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollectionType
+    where
+        Self: 'b;
+    type RectType<'b>
+        = UnimplementedRect<Self::T>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<Self::T>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<Self::T>
+    where
+        Self: 'b;
 
     fn as_type(
         &self,
@@ -319,16 +349,46 @@ impl geo_traits::GeometryTrait for &crate::Feature {
 
 impl geo_traits::GeometryTrait for crate::GeoJson {
     type T = f64;
-    type PointType<'b> = PointType where Self: 'b;
-    type LineStringType<'b> = LineStringType where Self: 'b;
-    type PolygonType<'b> = PolygonType where Self: 'b;
-    type MultiPointType<'b> = MultiPointType where Self: 'b;
-    type MultiLineStringType<'b> = MultiLineStringType where Self: 'b;
-    type MultiPolygonType<'b> = MultiPolygonType where Self: 'b;
-    type GeometryCollectionType<'b> = GeometryCollectionType where Self: 'b;
-    type RectType<'b> = UnimplementedRect<Self::T> where Self: 'b;
-    type TriangleType<'b> = UnimplementedTriangle<Self::T> where Self: 'b;
-    type LineType<'b> = UnimplementedLine<Self::T> where Self: 'b;
+    type PointType<'b>
+        = PointType
+    where
+        Self: 'b;
+    type LineStringType<'b>
+        = LineStringType
+    where
+        Self: 'b;
+    type PolygonType<'b>
+        = PolygonType
+    where
+        Self: 'b;
+    type MultiPointType<'b>
+        = MultiPointType
+    where
+        Self: 'b;
+    type MultiLineStringType<'b>
+        = MultiLineStringType
+    where
+        Self: 'b;
+    type MultiPolygonType<'b>
+        = MultiPolygonType
+    where
+        Self: 'b;
+    type GeometryCollectionType<'b>
+        = GeometryCollectionType
+    where
+        Self: 'b;
+    type RectType<'b>
+        = UnimplementedRect<Self::T>
+    where
+        Self: 'b;
+    type TriangleType<'b>
+        = UnimplementedTriangle<Self::T>
+    where
+        Self: 'b;
+    type LineType<'b>
+        = UnimplementedLine<Self::T>
+    where
+        Self: 'b;
 
     fn dim(&self) -> Dimensions {
         match self {
