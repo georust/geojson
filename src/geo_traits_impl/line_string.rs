@@ -21,10 +21,6 @@ impl LineStringTrait for LineStringType {
         self.coord(i).unwrap()
     }
 
-    fn coords(&self) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::CoordType<'_>> {
-        self.0.iter().map(PointType::wrap_ref)
-    }
-
     fn dim(&self) -> Dimensions {
         self.coord(0).unwrap().dim() // TODO: is this okay?
     }
@@ -47,10 +43,6 @@ impl<'a> geo_traits::LineStringTrait for &'a LineStringType {
 
     unsafe fn coord_unchecked(&self, i: usize) -> Self::CoordType<'_> {
         LineStringType::coord_unchecked(self, i)
-    }
-
-    fn coords(&self) -> impl DoubleEndedIterator + ExactSizeIterator<Item = Self::CoordType<'_>> {
-        LineStringType::coords(self)
     }
 
     fn dim(&self) -> Dimensions {
