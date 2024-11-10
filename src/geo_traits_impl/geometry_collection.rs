@@ -9,7 +9,7 @@ impl geo_traits::GeometryCollectionTrait for GeometryCollectionType {
         Self: 'b;
 
     fn dim(&self) -> Dimensions {
-        self.geometry(0).unwrap().dim()
+        self.geometry(0).map_or(Dimensions::Unknown(0), |g| g.dim())
     }
 
     fn geometries(

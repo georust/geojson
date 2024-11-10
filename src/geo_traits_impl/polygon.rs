@@ -22,7 +22,8 @@ impl geo_traits::PolygonTrait for PolygonType {
     }
 
     fn dim(&self) -> Dimensions {
-        self.exterior().unwrap().dim()
+        self.exterior()
+            .map_or(Dimensions::Unknown(0), |ls| ls.dim())
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {

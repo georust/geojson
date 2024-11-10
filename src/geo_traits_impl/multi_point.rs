@@ -14,7 +14,7 @@ impl geo_traits::MultiPointTrait for MultiPointType {
     }
 
     fn dim(&self) -> Dimensions {
-        self.point(0).unwrap().dim()
+        self.point(0).map_or(Dimensions::Unknown(0), |p| p.dim())
     }
 
     fn point(&self, i: usize) -> Option<Self::PointType<'_>> {

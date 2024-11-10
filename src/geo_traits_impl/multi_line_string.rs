@@ -14,7 +14,8 @@ impl geo_traits::MultiLineStringTrait for MultiLineStringType {
     }
 
     fn dim(&self) -> Dimensions {
-        self.line_string(0).unwrap().dim()
+        self.line_string(0)
+            .map_or(Dimensions::Unknown(0), |ls| ls.dim())
     }
 
     fn line_string(&self, i: usize) -> Option<Self::LineStringType<'_>> {

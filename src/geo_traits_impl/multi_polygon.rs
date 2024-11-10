@@ -14,7 +14,7 @@ impl geo_traits::MultiPolygonTrait for MultiPolygonType {
     }
 
     fn dim(&self) -> Dimensions {
-        self.polygon(0).unwrap().dim()
+        self.polygon(0).map_or(Dimensions::Unknown(0), |p| p.dim())
     }
 
     fn polygon(&self, i: usize) -> Option<Self::PolygonType<'_>> {
