@@ -51,7 +51,7 @@ mod test {
     }
 
     // Example to demonstrate usage of geo-traits
-    fn area(g: impl geo_traits::GeometryTrait) -> f64 {
+    fn area(_g: impl geo_traits::GeometryTrait) -> f64 {
         0.
     }
 }
