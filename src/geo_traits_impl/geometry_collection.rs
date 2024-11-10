@@ -66,7 +66,10 @@ impl geo_traits::GeometryCollectionTrait for crate::FeatureCollection {
     type GeometryType<'b> = &'b crate::Feature;
 
     fn dim(&self) -> Dimensions {
-        self.features.first().unwrap().dim()
+        self.features
+            .first()
+            .and_then(|f| f.geometry.as_ref())
+            .map_or(Dimensions::Unknown(0), |g| g.dim())
     }
 
     fn geometries(

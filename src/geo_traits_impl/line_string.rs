@@ -22,7 +22,7 @@ impl LineStringTrait for LineStringType {
     }
 
     fn dim(&self) -> Dimensions {
-        self.coord(0).unwrap().dim() // TODO: is this okay?
+        self.coord(0).map_or(Dimensions::Unknown(0), |p| p.dim())
     }
 }
 
