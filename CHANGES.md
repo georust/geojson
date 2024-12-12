@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Upgrade from thiserror v1 to v2
 * Add support of serializing optional `geo-types` with `serialize_optional_geometry`.
 * Add support of deserializing optional `geo-types` with `deserialize_optional_geometry`.
 * Add support for foreign members to `FeatureWriter`.
