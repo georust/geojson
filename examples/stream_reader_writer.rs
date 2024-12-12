@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let mut writer = {
-        let file_writer = BufWriter::new(File::create("example-output-contries.geojson")?);
+        let file_writer = BufWriter::new(File::create("example-output-countries.geojson")?);
         FeatureWriter::from_writer(file_writer)
     };
 
