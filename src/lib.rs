@@ -268,7 +268,7 @@
 //! # }
 //! ```
 //!
-//! If you wish to produce a [`FeatureCollection`] from a homogenous collection of `geo-types`, a
+//! If you wish to produce a [`FeatureCollection`] from a homogeneous collection of `geo-types`, a
 //! `From` impl is provided for `geo_types::GeometryCollection`:
 //!
 //! ```rust
