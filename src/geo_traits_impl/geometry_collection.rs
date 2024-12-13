@@ -93,7 +93,10 @@ impl geo_traits::GeometryCollectionTrait for crate::FeatureCollection {
 
 impl<'a> geo_traits::GeometryCollectionTrait for &'a crate::FeatureCollection {
     type T = f64;
-    type GeometryType<'b> = &'b crate::Feature where Self: 'b;
+    type GeometryType<'b>
+        = &'b crate::Feature
+    where
+        Self: 'b;
 
     fn dim(&self) -> Dimensions {
         crate::FeatureCollection::dim(self)

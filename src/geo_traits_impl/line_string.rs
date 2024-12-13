@@ -26,7 +26,7 @@ impl LineStringTrait for LineStringType {
     }
 }
 
-impl<'a> geo_traits::LineStringTrait for &'a LineStringType {
+impl geo_traits::LineStringTrait for &LineStringType {
     type T = f64;
     type CoordType<'b>
         = &'b PointType
