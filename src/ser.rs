@@ -344,7 +344,7 @@ where
     }
 }
 
-impl<'a, T> serde::Serialize for Features<'a, T>
+impl<T> serde::Serialize for Features<'_, T>
 where
     T: Serialize,
 {
