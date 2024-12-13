@@ -21,7 +21,7 @@ impl geo_traits::CoordTrait for PointType {
         self.0[1]
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
+    fn nth_or_panic(&self, n: usize) -> Self::T {
         self.0[n]
     }
 }
@@ -41,7 +41,7 @@ impl geo_traits::CoordTrait for &PointType {
         PointType::y(self)
     }
 
-    fn nth_unchecked(&self, n: usize) -> Self::T {
-        PointType::nth_unchecked(self, n)
+    fn nth_or_panic(&self, n: usize) -> Self::T {
+        PointType::nth_or_panic(self, n)
     }
 }
