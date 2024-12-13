@@ -48,7 +48,7 @@ enum State {
     AfterFeatures,
 }
 
-impl<'de, R, D> FeatureIterator<'de, R, D> {
+impl<R, D> FeatureIterator<'_, R, D> {
     pub fn new(reader: R) -> Self {
         FeatureIterator {
             reader,
@@ -59,7 +59,7 @@ impl<'de, R, D> FeatureIterator<'de, R, D> {
     }
 }
 
-impl<'de, R, D> FeatureIterator<'de, R, D>
+impl<R, D> FeatureIterator<'_, R, D>
 where
     R: io::Read,
 {

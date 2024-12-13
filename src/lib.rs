@@ -268,7 +268,7 @@
 //! # }
 //! ```
 //!
-//! If you wish to produce a [`FeatureCollection`] from a homogenous collection of `geo-types`, a
+//! If you wish to produce a [`FeatureCollection`] from a homogeneous collection of `geo-types`, a
 //! `From` impl is provided for `geo_types::GeometryCollection`:
 //!
 //! ```rust
@@ -333,7 +333,7 @@
 //!
 //! ### Caveats
 //! - Round-tripping with intermediate processing using the `geo` types may not produce identical output,
-//! as e.g. outer `Polygon` rings are automatically closed.
+//!   as e.g. outer `Polygon` rings are automatically closed.
 //! - `geojson` attempts to output valid geometries. In particular, it may re-orient `Polygon` rings when serialising.
 //!
 //! The [`geojson_example`](https://github.com/urschrei/geojson_example) and
