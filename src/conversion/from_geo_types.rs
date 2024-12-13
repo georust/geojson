@@ -6,7 +6,7 @@ use crate::{LineStringType, PointType, PolygonType};
 use std::convert::From;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Point<T>> for geometry::Value
+impl<T> From<&geo_types::Point<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -18,7 +18,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::MultiPoint<T>> for geometry::Value
+impl<T> From<&geo_types::MultiPoint<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -34,7 +34,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::LineString<T>> for geometry::Value
+impl<T> From<&geo_types::LineString<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -46,7 +46,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Line<T>> for geometry::Value
+impl<T> From<&geo_types::Line<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -58,7 +58,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Triangle<T>> for geometry::Value
+impl<T> From<&geo_types::Triangle<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -70,7 +70,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Rect<T>> for geometry::Value
+impl<T> From<&geo_types::Rect<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -82,7 +82,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::MultiLineString<T>> for geometry::Value
+impl<T> From<&geo_types::MultiLineString<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -94,7 +94,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Polygon<T>> for geometry::Value
+impl<T> From<&geo_types::Polygon<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -106,7 +106,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::MultiPolygon<T>> for geometry::Value
+impl<T> From<&geo_types::MultiPolygon<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -118,7 +118,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for geometry::Value
+impl<T> From<&geo_types::GeometryCollection<T>> for geometry::Value
 where
     T: CoordFloat,
 {
@@ -134,7 +134,7 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::GeometryCollection<T>> for FeatureCollection
+impl<T> From<&geo_types::GeometryCollection<T>> for FeatureCollection
 where
     T: CoordFloat,
 {

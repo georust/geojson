@@ -237,8 +237,8 @@ impl GeoJson {
     /// Convenience wrapper for [serde_json::to_string_pretty()]
     pub fn to_string_pretty(self) -> Result<String> {
         ::serde_json::to_string_pretty(&self)
-            .map_err(|err| Error::MalformedJson(err))
-            .and_then(|s| Ok(s.to_string()))
+            .map_err(Error::MalformedJson)
+            .map(|s| s.to_string())
     }
 }
 
