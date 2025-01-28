@@ -14,6 +14,8 @@
   `quick_collection` for conventional naming and simpler docs.
   * <https://github.com/georust/geojson/pulls/214>
 * Added `GeoJson::to_string_pretty` as convenience wrappers around the same `serde_json` methods.
+* The `bbox` property of a `Feature` can now be `null` (returning `None`) when parsing GeoJSON strings in order to facilitate easier processing of GeoJSON "in the wild" (e.g. Copernicus STAC GeoJSON). [The spec](https://datatracker.ietf.org/doc/html/rfc7946#section-5) does not allow this, but implementations appear to disagree.
+  * <https://github.com/georust/geojson/pull/252>
 
 ## 0.24.1
 

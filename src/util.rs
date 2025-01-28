@@ -78,8 +78,8 @@ pub fn get_coords_value(object: &mut JsonObject) -> Result<JsonValue> {
 /// Used by FeatureCollection, Feature, Geometry
 pub fn get_bbox(object: &mut JsonObject) -> Result<Option<Bbox>> {
     let bbox_json = match object.remove("bbox") {
+        Some(JsonValue::Null) | None => return Ok(None),
         Some(b) => b,
-        None => return Ok(None),
     };
     let bbox_array = match bbox_json {
         JsonValue::Array(a) => a,
