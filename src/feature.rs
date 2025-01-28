@@ -308,6 +308,22 @@ mod tests {
     }
 
     #[test]
+    fn null_bbox() {
+        let geojson_str = r#"{
+            "geometry": null,
+            "bbox": null,
+            "properties":{},
+            "type":"Feature"
+        }"#;
+        let geojson = geojson_str.parse::<GeoJson>().unwrap();
+        let feature = match geojson {
+            GeoJson::Feature(feature) => feature,
+            _ => unimplemented!(),
+        };
+        assert!(feature.bbox.is_none());
+    }
+
+    #[test]
     fn test_display_feature() {
         let f = feature().to_string();
         assert_eq!(f, "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{}}");
