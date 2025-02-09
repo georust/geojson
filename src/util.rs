@@ -213,11 +213,11 @@ fn json_to_position(json: &JsonValue) -> Result<Position> {
     if coords_array.len() < 2 {
         return Err(Error::PositionTooShort(coords_array.len()));
     }
-    let mut coords = Vec::with_capacity(coords_array.len());
+    let mut coords = tinyvec::TinyVec::with_capacity(coords_array.len());
     for position in coords_array {
         coords.push(expect_f64(position)?);
     }
-    Ok(coords)
+    Ok(Position(coords))
 }
 
 fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>> {
