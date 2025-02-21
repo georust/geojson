@@ -348,6 +348,57 @@ where
     Ok(deserializer.deserialize_map(visitor)?)
 }
 
+/// Interpret a [`Feature`] as an instance of type `T`.
+///
+/// This is analogous to [`serde_json::from_value`](https://docs.rs/serde_json/latest/serde_json/fn.from_value.html)
+///
+/// `T`'s `geometry` field will be deserialized from `feature.geometry`.
+/// All other fields will be deserialized from `feature.properties`.
+///
+/// # Examples
+#[cfg_attr(feature = "geo-types", doc = "```")]
+#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+/// use serde::Deserialize;
+/// use geojson::Feature;
+/// use geojson::de::{from_feature, deserialize_geometry, deserialize_single_feature};
+/// use std::str::FromStr;
+///
+/// #[derive(Deserialize)]
+/// struct MyStruct {
+///     // Deserialize `geometry` as GeoJSON, rather than using the type's default deserialization
+///     #[serde(deserialize_with = "deserialize_geometry")]
+///     geometry: geo_types::Point,
+///     name: String,
+/// }
+///
+/// let geojson_str = r#"{
+///     "type": "Feature",
+///     "geometry": { "type": "Point", "coordinates": [1.0, 2.0] },
+///     "properties": {
+///         "name": "My Name"
+///     }
+/// }"#;
+/// let feature  = Feature::from_str(geojson_str).unwrap();
+///
+/// let my_struct: MyStruct = from_feature(feature).unwrap();
+///
+/// assert_eq!("My Name", my_struct.name);
+/// assert_eq!(geo_types::Point::new(1.0, 2.0), my_struct.geometry);
+/// ```
+///
+/// # Errors
+///
+/// Deserialization can fail if `T`'s implementation of `Deserialize` decides to fail.
+pub fn from_feature<'de, T>(feature: Feature) -> Result<T>
+where
+    T: Deserialize<'de>,
+{
+    let feature_value: JsonValue = serde_json::to_value(feature)?;
+    let deserializer = feature_value.into_deserializer();
+    let visitor = FeatureVisitor::new();
+    Ok(deserializer.deserialize_map(visitor)?)
+}
+
 struct FeatureVisitor<D> {
     _marker: PhantomData<D>,
 }
@@ -610,6 +661,41 @@ pub(crate) mod tests {
             }};
             let feature: MyStruct = serde_json::from_value(json).unwrap();
             assert!(feature.geometry.is_none())
+        }
+
+        #[test]
+        fn test_from_feature() {
+            #[derive(Debug, PartialEq, Deserialize)]
+            struct MyStruct {
+                #[serde(deserialize_with = "deserialize_geometry")]
+                geometry: geo_types::Point<f64>,
+                name: String,
+                age: u64,
+            }
+
+            let feature = Feature {
+                bbox: None,
+                geometry: Some(crate::Geometry::new(crate::Value::Point(vec![125.6, 10.1]))),
+                id: None,
+                properties: Some(
+                    json!({
+                        "name": "Dinagat Islands",
+                        "age": 123,
+                    })
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+                ),
+                foreign_members: None,
+            };
+
+            let actual: MyStruct = from_feature(feature).unwrap();
+            let expected = MyStruct {
+                geometry: geo_types::Point::new(125.6, 10.1),
+                name: "Dinagat Islands".to_string(),
+                age: 123,
+            };
+            assert_eq!(actual, expected);
         }
     }
 

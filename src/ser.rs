@@ -96,10 +96,12 @@
 //!     ...
 //! }
 //! ```
-use crate::{JsonObject, JsonValue, Result};
+use crate::{Feature, JsonObject, JsonValue, Result};
 
 use serde::{ser::Error, Serialize, Serializer};
 
+use crate::util::expect_owned_object;
+use std::convert::TryFrom;
 use std::{convert::TryInto, io};
 
 /// Serialize a single data structure to a GeoJSON Feature string.
@@ -196,6 +198,66 @@ where
     let mut serializer = serde_json::Serializer::new(writer);
     feature_serializer.serialize(&mut serializer)?;
     Ok(())
+}
+
+/// Convert a `T` into a [`Feature`].
+///
+/// This is analogous to [`serde_json::to_value`](https://docs.rs/serde_json/latest/serde_json/fn.to_value.html)
+///
+/// Note that if (and only if) `T` has a field named `geometry`, it will be serialized to
+/// `feature.geometry`.
+///
+/// All other fields will be serialized to `feature.properties`.
+///
+/// # Examples
+#[cfg_attr(feature = "geo-types", doc = "```")]
+#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+/// use serde::Serialize;
+/// use geojson::{Feature, Value, Geometry};
+/// use geojson::ser::{to_feature, serialize_geometry};
+///
+/// #[derive(Serialize)]
+/// struct MyStruct {
+///     // Serialize `geometry` as geojson, rather than using the type's default serialization
+///     #[serde(serialize_with = "serialize_geometry")]
+///     geometry: geo_types::Point,
+///     name: String,
+/// }
+///
+/// let my_struct = MyStruct {
+///     geometry: geo_types::Point::new(1.0, 2.0),
+///     name: "My Name".to_string()
+/// };
+///
+/// let feature: Feature = to_feature(my_struct).unwrap();
+/// assert_eq!("My Name", feature.properties.unwrap()["name"]);
+/// assert_eq!(feature.geometry.unwrap(), Geometry::new(Value::Point(vec![1.0, 2.0])));
+/// ```
+///
+/// # Errors
+///
+/// Serialization can fail if `T`'s implementation of `Serialize` decides to
+/// fail, or if `T` contains a map with non-string keys.
+pub fn to_feature<T>(value: T) -> Result<Feature>
+where
+    T: Serialize,
+{
+    let js_value = serde_json::to_value(value)?;
+    let mut js_object = expect_owned_object(js_value)?;
+
+    let geometry = if let Some(geometry_value) = js_object.remove("geometry") {
+        Some(crate::Geometry::try_from(geometry_value)?)
+    } else {
+        None
+    };
+
+    Ok(Feature {
+        bbox: None,
+        geometry,
+        id: None,
+        properties: Some(js_object),
+        foreign_members: None,
+    })
 }
 
 /// Serialize elements as a GeoJSON FeatureCollection into the IO stream.
@@ -569,6 +631,7 @@ mod tests {
     mod geo_types_tests {
         use super::*;
         use crate::de::tests::feature_collection;
+        use crate::Geometry;
 
         #[test]
         fn serializes_optional_point() {
@@ -675,6 +738,42 @@ mod tests {
             let actual_output = JsonValue::from_str(&output_string).unwrap();
 
             assert_eq!(actual_output, expected_output);
+        }
+
+        #[test]
+        fn test_to_feature() {
+            #[derive(Serialize)]
+            struct MyStruct {
+                #[serde(serialize_with = "serialize_geometry")]
+                geometry: geo_types::Point<f64>,
+                name: String,
+                age: u64,
+            }
+
+            let my_struct = MyStruct {
+                geometry: geo_types::point!(x: 125.6, y: 10.1),
+                name: "Dinagat Islands".to_string(),
+                age: 123,
+            };
+
+            let actual = to_feature(&my_struct).unwrap();
+            let expected = Feature {
+                bbox: None,
+                geometry: Some(Geometry::new(crate::Value::Point(vec![125.6, 10.1]))),
+                id: None,
+                properties: Some(
+                    json!({
+                        "name": "Dinagat Islands",
+                        "age": 123
+                    })
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+                ),
+                foreign_members: None,
+            };
+
+            assert_eq!(actual, expected)
         }
 
         #[test]
