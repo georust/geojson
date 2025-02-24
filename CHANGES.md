@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## 0.24.2 - 2025-02-24
 
 * Add `to_feature` to convert a single S: Serialize to a Feature
 * Add `from_feature` to convert a single Feature to a D: Deserialize
