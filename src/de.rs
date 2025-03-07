@@ -442,7 +442,18 @@ where
                 if let JsonValue::Object(_) = value {
                     hash_map.insert("geometry".to_string(), value);
                 } else {
-                    return Err(Error::custom("GeoJSON Feature had a unexpected geometry"));
+                    return Err(Error::custom(
+                        "GeoJSON Feature had an unexpected `geometry`",
+                    ));
+                }
+            } else if key == "id" {
+                match &value {
+                    JsonValue::String(_) | JsonValue::Number(_) | JsonValue::Null => {
+                        hash_map.insert("id".to_string(), value);
+                    }
+                    _ => {
+                        return Err(Error::custom("GeoJSON Feature had an unexpected `id`"));
+                    }
                 }
             } else if key == "properties" {
                 if let JsonValue::Object(properties) = value {
@@ -451,7 +462,7 @@ where
                         hash_map.insert(prop_key, prop_value);
                     }
                 } else {
-                    return Err(Error::custom("GeoJSON Feature had a unexpected geometry"));
+                    return Err(Error::custom("GeoJSON Feature had unexpected `properties`"));
                 }
             } else {
                 log::debug!("foreign members are not handled by Feature deserializer")
@@ -661,6 +672,141 @@ pub(crate) mod tests {
             }};
             let feature: MyStruct = serde_json::from_value(json).unwrap();
             assert!(feature.geometry.is_none())
+        }
+
+        mod id_field {
+            use super::*;
+
+            #[test]
+            fn string_id() {
+                #[derive(Deserialize)]
+                struct MyStruct {
+                    #[serde(deserialize_with = "deserialize_geometry")]
+                    geometry: geo_types::Point<f64>,
+                    name: String,
+                    age: u64,
+                    id: String,
+                }
+
+                let feature_string = json!({
+                   "type": "Feature",
+                   "id": "my-id-123",
+                   "geometry": {
+                     "type": "Point",
+                     "coordinates": [125.6, 10.1]
+                   },
+                   "properties": {
+                     "name": "Dinagat Islands",
+                     "age": 123
+                   }
+                })
+                .to_string();
+
+                let my_struct: MyStruct = deserialize_single_feature(feature_string.as_bytes())
+                    .expect("a valid feature collection");
+
+                assert_eq!(my_struct.geometry, geo_types::point!(x: 125.6, y: 10.1));
+                assert_eq!(my_struct.id, "my-id-123");
+                assert_eq!(my_struct.name, "Dinagat Islands");
+                assert_eq!(my_struct.age, 123);
+            }
+
+            #[test]
+            fn numeric_id() {
+                #[derive(Deserialize)]
+                struct MyStruct {
+                    #[serde(deserialize_with = "deserialize_geometry")]
+                    geometry: geo_types::Point<f64>,
+                    name: String,
+                    age: u64,
+                    id: u64,
+                }
+
+                let feature_string = json!({
+                   "type": "Feature",
+                   "id": 123,
+                   "geometry": {
+                     "type": "Point",
+                     "coordinates": [125.6, 10.1]
+                   },
+                   "properties": {
+                     "name": "Dinagat Islands",
+                     "age": 222
+                   }
+                })
+                .to_string();
+
+                let my_struct: MyStruct = deserialize_single_feature(feature_string.as_bytes())
+                    .expect("a valid feature collection");
+
+                assert_eq!(my_struct.geometry, geo_types::point!(x: 125.6, y: 10.1));
+                assert_eq!(my_struct.id, 123);
+                assert_eq!(my_struct.name, "Dinagat Islands");
+                assert_eq!(my_struct.age, 222);
+            }
+
+            #[test]
+            fn optional_id() {
+                #[allow(unused)]
+                #[derive(Deserialize)]
+                struct MyStruct {
+                    #[serde(deserialize_with = "deserialize_geometry")]
+                    geometry: geo_types::Point<f64>,
+                    name: String,
+                    age: u64,
+                    id: Option<u64>,
+                }
+
+                let feature_string = json!({
+                   "type": "Feature",
+                   "id": 123,
+                   "geometry": {
+                     "type": "Point",
+                     "coordinates": [125.6, 10.1]
+                   },
+                   "properties": {
+                     "name": "Dinagat Islands",
+                     "age": 222
+                   }
+                })
+                .to_string();
+                let my_struct: MyStruct = deserialize_single_feature(feature_string.as_bytes())
+                    .expect("a valid feature collection");
+                assert_eq!(my_struct.id, Some(123));
+
+                let feature_string = json!({
+                   "type": "Feature",
+                   "geometry": {
+                     "type": "Point",
+                     "coordinates": [125.6, 10.1]
+                   },
+                   "properties": {
+                     "name": "Dinagat Islands",
+                     "age": 222
+                   }
+                })
+                .to_string();
+                let my_struct: MyStruct = deserialize_single_feature(feature_string.as_bytes())
+                    .expect("a valid feature collection");
+                assert_eq!(my_struct.id, None);
+
+                let feature_string = json!({
+                   "type": "Feature",
+                   "id": null,
+                   "geometry": {
+                     "type": "Point",
+                     "coordinates": [125.6, 10.1]
+                   },
+                   "properties": {
+                     "name": "Dinagat Islands",
+                     "age": 222
+                   }
+                })
+                .to_string();
+                let my_struct: MyStruct = deserialize_single_feature(feature_string.as_bytes())
+                    .expect("a valid feature collection");
+                assert_eq!(my_struct.id, None);
+            }
         }
 
         #[test]
