@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+* Potentially breaking: De/Serializing your custom structs with serde now maps your struct's `id` field to `Feature.id`, rather than to `Feature.properties.id`.
+
 ## 0.24.2 - 2025-02-24
 
 * Add `to_feature` to convert a single S: Serialize to a Feature

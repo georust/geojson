@@ -480,6 +480,9 @@ where
         let mut map = serializer.serialize_map(Some(3))?;
         map.serialize_entry("type", "Feature")?;
         map.serialize_entry("geometry", &geometry)?;
+        if json_object.contains_key("id") {
+            map.serialize_entry("id", &json_object.remove("id"))?;
+        }
         map.serialize_entry("properties", &json_object)?;
         map.end()
     }
@@ -723,6 +726,82 @@ mod tests {
 
             let expected_output = json!({
               "type": "Feature",
+              "geometry": {
+                "type": "Point",
+                "coordinates": [125.6, 10.1]
+              },
+              "properties": {
+                "name": "Dinagat Islands",
+                "age": 123
+              }
+            });
+
+            // Order might vary, so re-parse to do a semantic comparison of the content.
+            let output_string = to_feature_string(&my_struct).expect("valid serialization");
+            let actual_output = JsonValue::from_str(&output_string).unwrap();
+
+            assert_eq!(actual_output, expected_output);
+        }
+
+        #[test]
+        fn with_id_field() {
+            #[derive(Serialize)]
+            struct MyStruct {
+                #[serde(serialize_with = "serialize_geometry")]
+                geometry: geo_types::Point<f64>,
+                name: String,
+                age: u64,
+                id: &'static str,
+            }
+
+            let my_struct = MyStruct {
+                geometry: geo_types::point!(x: 125.6, y: 10.1),
+                name: "Dinagat Islands".to_string(),
+                age: 123,
+                id: "my-id-123",
+            };
+
+            let expected_output = json!({
+              "type": "Feature",
+              "id": "my-id-123",
+              "geometry": {
+                "type": "Point",
+                "coordinates": [125.6, 10.1]
+              },
+              "properties": {
+                "name": "Dinagat Islands",
+                "age": 123
+              }
+            });
+
+            // Order might vary, so re-parse to do a semantic comparison of the content.
+            let output_string = to_feature_string(&my_struct).expect("valid serialization");
+            let actual_output = JsonValue::from_str(&output_string).unwrap();
+
+            assert_eq!(actual_output, expected_output);
+        }
+
+        #[test]
+        fn with_numeric_id_field() {
+            #[derive(Serialize)]
+            struct MyStruct {
+                #[serde(serialize_with = "serialize_geometry")]
+                geometry: geo_types::Point<f64>,
+                name: String,
+                age: u64,
+                id: u64,
+            }
+
+            let my_struct = MyStruct {
+                geometry: geo_types::point!(x: 125.6, y: 10.1),
+                name: "Dinagat Islands".to_string(),
+                age: 123,
+                id: 666,
+            };
+
+            let expected_output = json!({
+              "type": "Feature",
+              "id": 666,
               "geometry": {
                 "type": "Point",
                 "coordinates": [125.6, 10.1]
