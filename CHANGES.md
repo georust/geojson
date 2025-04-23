@@ -1,5 +1,10 @@
 # Changes
 
+## Unreleased
+
+* Fix `geo_rect_conversion_test` to conform to the correctly-wound `Polygon` output from `geo_types::geometry::Rect.to_polygon`
+  * See https://github.com/georust/geojson/issues/257
+
 ## 0.24.2 - 2025-02-24
 
 * Add `to_feature` to convert a single S: Serialize to a Feature

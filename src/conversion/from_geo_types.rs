@@ -381,8 +381,9 @@ mod tests {
 
     #[test]
     fn geo_rect_conversion_test() {
+        // Same rect as geo_types::geometry::Rect::to_polygon doctest
         let c1: Coord<f64> = Coord { x: 0., y: 0. };
-        let c2: Coord<f64> = Coord { x: 10., y: 20. };
+        let c2: Coord<f64> = Coord { x: 1., y: 2. };
 
         let rect = Rect::new(c1, c2);
 
@@ -390,15 +391,16 @@ mod tests {
 
         // Geo-types Polygon construction introduces an extra vertex: let's check it!
         if let Value::Polygon(c) = geojson_polygon {
-            assert_almost_eq!(c1.x, c[0][0][0], 1e-6);
+            // checks are in the same order as the geo_types::geometry::Rect.to_polygon doctest
+            assert_almost_eq!(c2.x, c[0][0][0], 1e-6);
             assert_almost_eq!(c1.y, c[0][0][1], 1e-6);
-            assert_almost_eq!(c1.x, c[0][1][0], 1e-6);
+            assert_almost_eq!(c2.x, c[0][1][0], 1e-6);
             assert_almost_eq!(c2.y, c[0][1][1], 1e-6);
-            assert_almost_eq!(c2.x, c[0][2][0], 1e-6);
+            assert_almost_eq!(c1.x, c[0][2][0], 1e-6);
             assert_almost_eq!(c2.y, c[0][2][1], 1e-6);
-            assert_almost_eq!(c2.x, c[0][3][0], 1e-6);
+            assert_almost_eq!(c1.x, c[0][3][0], 1e-6);
             assert_almost_eq!(c1.y, c[0][3][1], 1e-6);
-            assert_almost_eq!(c1.x, c[0][4][0], 1e-6);
+            assert_almost_eq!(c2.x, c[0][4][0], 1e-6);
             assert_almost_eq!(c1.y, c[0][4][1], 1e-6);
         } else {
             panic!("Not valid geometry {:?}", geojson_polygon);
