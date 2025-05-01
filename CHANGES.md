@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+
+* Potentially breaking: De/Serializing your custom structs with serde now maps your struct's `id` field to `Feature.id`, rather than to `Feature.properties.id`.
 * Fix `geo_rect_conversion_test` to conform to the correctly-wound `Polygon` output from `geo_types::geometry::Rect.to_polygon`
   * See https://github.com/georust/geojson/issues/257
+
 
 ## 0.24.2 - 2025-02-24
 
