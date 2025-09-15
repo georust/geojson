@@ -291,4 +291,16 @@ mod tests {
             assert_eq!(features.len(), 2);
         }
     }
+
+    #[test]
+    fn empty_feature_collection() {
+        let empty = r#"{
+          "type": "FeatureCollection",
+          "features": []
+        }"#;
+        let features: Vec<Feature> = FeatureIterator::new(BufReader::new(empty.as_bytes()))
+            .map(Result::unwrap)
+            .collect();
+        assert_eq!(features.len(), 0);
+    }
 }

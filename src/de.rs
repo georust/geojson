@@ -521,7 +521,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_deserialize_feature_collection() {
+    fn test_deserialize_features_from_feature_collection() {
         use crate::Feature;
 
         let feature_collection_string = feature_collection().to_string();
@@ -645,6 +645,32 @@ pub(crate) mod tests {
             // is reasonably discernible.
             let expected_err_text = r#"Error while deserializing JSON: unable to convert from geojson Geometry: Expected type: `LineString`, but found `Point`"#;
             assert_eq!(err.to_string(), expected_err_text);
+        }
+
+        #[test]
+        fn empty_feature_collection() {
+            #[allow(unused)]
+            #[derive(Deserialize)]
+            struct MyStruct {
+                #[serde(deserialize_with = "deserialize_geometry")]
+                geometry: geo_types::Geometry<f64>,
+                name: String,
+                age: u64,
+            }
+
+            let feature_collection_string = json!({
+                "type": "FeatureCollection",
+                "features": []
+            })
+            .to_string();
+            let bytes_reader = feature_collection_string.as_bytes();
+
+            let records: Vec<MyStruct> = deserialize_feature_collection(bytes_reader)
+                .expect("a valid feature collection")
+                .collect::<Result<Vec<_>>>()
+                .expect("valid features");
+
+            assert_eq!(records.len(), 0);
         }
 
         #[test]
