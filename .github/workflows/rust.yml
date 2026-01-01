@@ -25,8 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cargo install cargo-all-features
-      - run: cargo build-all-features --verbose
-      - run: cargo test-all-features --verbose
+      - run: cargo build-all-features
+      - run: cargo test-all-features
   check:
     name: Geojson Rustfmt and Clippy check
     runs-on: ubuntu-latest

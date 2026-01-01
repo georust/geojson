@@ -240,12 +240,18 @@ fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
 where
     T: CoordFloat,
 {
-    let mut coords = vec![polygon
+    let exterior: Vec<Vec<f64>> = polygon
         .exterior()
         .points()
         .map(|point| create_point_type(&point))
-        .collect()];
+        .collect();
 
+    // If exterior is empty, return early to avoid creating [[]]
+    if exterior.is_empty() {
+        return vec![];
+    }
+
+    let mut coords = vec![exterior];
     coords.extend(
         polygon
             .interiors()
@@ -465,6 +471,22 @@ mod tests {
         } else {
             panic!("Not valid geometry {:?}", geojson_polygon);
         }
+    }
+
+    #[test]
+    fn geo_empty_polygon_conversion_test() {
+        // Test that an empty polygon serializes to coordinates: [] instead of coordinates: [[]]
+        let empty_exterior: LineString<f64> = LineString(vec![]);
+        let geo_polygon = Polygon::new(empty_exterior, vec![]);
+        let geojson_polygon = Value::from(&geo_polygon);
+
+        let geometry = Geometry::new(geojson_polygon.clone());
+        let json = serde_json::to_string(&geometry).unwrap();
+        assert!(
+            json.contains(r#""coordinates":[]"#),
+            "Empty polygon should serialize to coordinates: [], got: {}",
+            json
+        );
     }
 
     #[test]
