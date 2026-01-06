@@ -221,7 +221,7 @@ macro_rules! impl_try_from_geom_value {
 
                 fn try_from(val: Feature) -> Result<Self> {
                     match val.geometry {
-                        None => Err(Error::FeatureHasNoGeometry(val)),
+                        None => Err(Error::FeatureHasNoGeometry(Box::new(val))),
                         Some(geom) => geom.try_into(),
                     }
                 }

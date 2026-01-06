@@ -349,7 +349,7 @@
 //! Specifically, the requirements are:
 //! 1. Your type has a `geometry` field.
 //!     1. If your `geometry` field is a [`geo-types` Geometry](geo_types::geometry), you must use
-//!         the provided `serialize_with`/`deserialize_with` helpers.
+//!        the provided `serialize_with`/`deserialize_with` helpers.
 //!     2. Otherwise, your `geometry` field must be a [`crate::Geometry`].
 //! 2. Other than `geometry`, you may only use a Feature's `properties` - all other fields, like
 //!    foreign members, will be lost.

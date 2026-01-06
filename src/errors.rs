@@ -30,7 +30,7 @@ pub enum Error {
     #[error(
         "Attempted to a convert a feature without a geometry into a geo_types::Geometry: `{0}`"
     )]
-    FeatureHasNoGeometry(Feature),
+    FeatureHasNoGeometry(Box<Feature>),
     #[error("Encountered an unknown 'geometry' object type: `{0}`")]
     GeometryUnknownType(String),
     #[error("Error while deserializing JSON: {0}")]
