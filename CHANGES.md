@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+* BREAKING: Position is now a new type, rather than a type alias for Vec. 
+  The new type allows for faster handling of GeoJSON in the common (2-D) case by avoid per-coordinate heap allocations.
+  ```
+  # BEFORE: Position *was* a Vec
+  let position: Position = vec![1.0, 2.0];
+  let x = position[0];
+  
+  # AFTER: Position is its own type, buildable from a Vec
+  let position: Position = vec![1.0, 2.0].into();
+  # index access is unchanged
+  let x = position[0];
+  
+  # Alternatively, you can construct from an Array, avoiding the Vec's heap allocation.
+  let position: Position = [1.0, 2.0].into();
+  # equivalently:
+  let position = Position::from([1.0, 2.0]);
+  
+  # If you are using 3D (or more)
+  let position = Position::from(vec![1.0, 2.0, 3.0]);
+  ```
+  * See <https://github.com/georust/geojson/pulls/222>
 * Fix: Return `[]` instead of `[[]]` for `POLYGON EMPTY`.
   * See https://github.com/georust/geojson/pulls/262
 * Potentially breaking: De/Serializing your custom structs with serde now maps your struct's `id` field to `Feature.id`, rather than to `Feature.properties.id`.

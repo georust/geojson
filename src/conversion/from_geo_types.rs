@@ -1,6 +1,6 @@
 use geo_types::{self, CoordFloat};
 
-use crate::{geometry, Feature, FeatureCollection};
+use crate::{geometry, Feature, FeatureCollection, Position};
 
 use crate::{LineStringType, PointType, PolygonType};
 use std::convert::From;
@@ -185,8 +185,7 @@ where
 {
     let x: f64 = point.x().to_f64().unwrap();
     let y: f64 = point.y().to_f64().unwrap();
-
-    vec![x, y]
+    crate::Position::from([x, y])
 }
 
 fn create_line_string_type<T>(line_string: &geo_types::LineString<T>) -> LineStringType
@@ -240,7 +239,7 @@ fn create_polygon_type<T>(polygon: &geo_types::Polygon<T>) -> PolygonType
 where
     T: CoordFloat,
 {
-    let exterior: Vec<Vec<f64>> = polygon
+    let exterior: Vec<Position> = polygon
         .exterior()
         .points()
         .map(|point| create_point_type(&point))

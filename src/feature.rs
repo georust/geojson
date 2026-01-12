@@ -219,8 +219,7 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::JsonObject;
-    use crate::{feature, Error, Feature, GeoJson, Geometry, Value};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, JsonObject, Position, Value};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -248,7 +247,7 @@ mod tests {
     }
 
     fn value() -> Value {
-        Value::Point(vec![1.1, 2.1])
+        Value::Point(Position::from([1.1, 2.1]))
     }
 
     fn geometry() -> Geometry {
@@ -358,7 +357,7 @@ mod tests {
         let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":0}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: Value::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -384,7 +383,7 @@ mod tests {
         let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":\"foo\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: Value::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -436,7 +435,7 @@ mod tests {
         );
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(vec![1.1, 2.1]),
+                value: Value::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -462,7 +461,7 @@ mod tests {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"properties":null}"#;
 
         let feature = crate::Feature {
-            geometry: Some(Value::Point(vec![1.1, 2.1]).into()),
+            geometry: Some(Value::Point(Position::from([1.1, 2.1])).into()),
             properties: None,
             bbox: None,
             id: None,
