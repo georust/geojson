@@ -111,7 +111,7 @@
 //! `GeoJson` can be serialized by calling [`to_string`](geojson/enum.GeoJson.html#impl-ToString):
 //!
 //! ```rust
-//! use geojson::{Feature, GeoJson, Geometry, Position, Value};
+//! use geojson::{Feature, GeoJson, Geometry, Value};
 //! # fn get_properties() -> ::geojson::JsonObject {
 //! # let mut properties = ::geojson::JsonObject::new();
 //! # properties.insert(
@@ -122,7 +122,7 @@
 //! # }
 //! # fn main() {
 //!
-//! let geometry = Geometry::new(Value::Point(Position::from([-120.66029, 35.2812])));
+//! let geometry = Geometry::new(Value::new_point([-120.66029, 35.2812]));
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
@@ -259,11 +259,11 @@
 //!
 //! assert_eq!(
 //!     geojson::GeometryValue::from(&geo_point),
-//!     geojson::GeometryValue::Point(geojson::Position::from([2., 9.])),
+//!     geojson::GeometryValue::new_point([2., 9.]),
 //! );
 //! assert_eq!(
 //!     geojson::GeometryValue::from(&geo_geometry),
-//!     geojson::GeometryValue::Point(geojson::Position::from([2., 9.])),
+//!     geojson::GeometryValue::new_point([2., 9.]),
 //! );
 //! # }
 //! ```
@@ -435,6 +435,30 @@ impl From<[f64; 2]> for Position {
 impl From<(f64, f64)> for Position {
     fn from(value: (f64, f64)) -> Self {
         Self::from([value.0, value.1])
+    }
+}
+
+impl From<[f64; 3]> for Position {
+    fn from(value: [f64; 3]) -> Self {
+        Self(TinyVec::Heap(value.into()))
+    }
+}
+
+impl From<(f64, f64, f64)> for Position {
+    fn from(value: (f64, f64, f64)) -> Self {
+        Self::from([value.0, value.1, value.2])
+    }
+}
+
+impl From<[f64; 4]> for Position {
+    fn from(value: [f64; 4]) -> Self {
+        Self(TinyVec::Heap(value.into()))
+    }
+}
+
+impl From<(f64, f64, f64, f64)> for Position {
+    fn from(value: (f64, f64, f64, f64)) -> Self {
+        Self::from([value.0, value.1, value.2, value.3])
     }
 }
 

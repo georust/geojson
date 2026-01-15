@@ -213,7 +213,7 @@ where
 #[cfg_attr(feature = "geo-types", doc = "```")]
 #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 /// use serde::Serialize;
-/// use geojson::{Feature, GeometryValue, Geometry, Position};
+/// use geojson::{Feature, GeometryValue, Geometry};
 /// use geojson::ser::{to_feature, serialize_geometry};
 ///
 /// #[derive(Serialize)]
@@ -231,7 +231,7 @@ where
 ///
 /// let feature: Feature = to_feature(my_struct).unwrap();
 /// assert_eq!("My Name", feature.properties.unwrap()["name"]);
-/// assert_eq!(feature.geometry.unwrap(), Geometry::new(GeometryValue::Point(Position::from([1.0, 2.0]))));
+/// assert_eq!(feature.geometry.unwrap(), Geometry::new(GeometryValue::new_point([1.0, 2.0])));
 /// ```
 ///
 /// # Errors
@@ -491,7 +491,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{JsonValue, Position};
+    use crate::JsonValue;
 
     use serde_json::json;
 
@@ -506,8 +506,7 @@ mod tests {
         }
 
         let my_feature = {
-            let geometry =
-                crate::Geometry::new(crate::GeometryValue::Point(Position::from([0.0, 1.0])));
+            let geometry = crate::GeometryValue::new_point([0.0, 1.0]).into();
             let name = "burbs".to_string();
             MyStruct { geometry, name }
         };
@@ -539,9 +538,7 @@ mod tests {
         #[test]
         fn with_some_geom() {
             let my_feature = {
-                let geometry = Some(crate::Geometry::new(crate::GeometryValue::Point(
-                    Position::from([0.0, 1.0]),
-                )));
+                let geometry = Some(crate::GeometryValue::new_point([0.0, 1.0]).into());
                 let name = "burbs".to_string();
                 MyStruct { geometry, name }
             };
@@ -637,7 +634,6 @@ mod tests {
     mod geo_types_tests {
         use super::*;
         use crate::de::tests::feature_collection;
-        use crate::Geometry;
 
         #[test]
         fn serializes_optional_point() {
@@ -841,9 +837,7 @@ mod tests {
             let actual = to_feature(&my_struct).unwrap();
             let expected = Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(crate::GeometryValue::Point(Position::from(
-                    [125.6, 10.1],
-                )))),
+                geometry: Some(crate::GeometryValue::new_point([125.6, 10.1]).into()),
                 id: None,
                 properties: Some(
                     json!({
