@@ -822,9 +822,9 @@ pub(crate) mod tests {
 
             let feature = Feature {
                 bbox: None,
-                geometry: Some(crate::Geometry::new(crate::Value::Point(Position::from([
-                    125.6, 10.1,
-                ])))),
+                geometry: Some(crate::Geometry::new(crate::GeometryValue::Point(
+                    Position::from([125.6, 10.1]),
+                ))),
                 id: None,
                 properties: Some(
                     json!({

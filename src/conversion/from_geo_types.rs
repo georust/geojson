@@ -6,19 +6,19 @@ use crate::{LineStringType, PointType, PolygonType};
 use std::convert::From;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::Point<T>> for geometry::Value
+impl<T> From<&geo_types::Point<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(point: &geo_types::Point<T>) -> Self {
         let coords = create_point_type(point);
 
-        geometry::Value::Point(coords)
+        geometry::GeometryValue::Point(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::MultiPoint<T>> for geometry::Value
+impl<T> From<&geo_types::MultiPoint<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
@@ -29,96 +29,96 @@ where
             .map(|point| create_point_type(point))
             .collect();
 
-        geometry::Value::MultiPoint(coords)
+        geometry::GeometryValue::MultiPoint(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::LineString<T>> for geometry::Value
+impl<T> From<&geo_types::LineString<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(line_string: &geo_types::LineString<T>) -> Self {
         let coords = create_line_string_type(line_string);
 
-        geometry::Value::LineString(coords)
+        geometry::GeometryValue::LineString(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::Line<T>> for geometry::Value
+impl<T> From<&geo_types::Line<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(line: &geo_types::Line<T>) -> Self {
         let coords = create_from_line_type(line);
 
-        geometry::Value::LineString(coords)
+        geometry::GeometryValue::LineString(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::Triangle<T>> for geometry::Value
+impl<T> From<&geo_types::Triangle<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(triangle: &geo_types::Triangle<T>) -> Self {
         let coords = create_from_triangle_type(triangle);
 
-        geometry::Value::Polygon(coords)
+        geometry::GeometryValue::Polygon(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::Rect<T>> for geometry::Value
+impl<T> From<&geo_types::Rect<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(rect: &geo_types::Rect<T>) -> Self {
         let coords = create_from_rect_type(rect);
 
-        geometry::Value::Polygon(coords)
+        geometry::GeometryValue::Polygon(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::MultiLineString<T>> for geometry::Value
+impl<T> From<&geo_types::MultiLineString<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(multi_line_string: &geo_types::MultiLineString<T>) -> Self {
         let coords = create_multi_line_string_type(multi_line_string);
 
-        geometry::Value::MultiLineString(coords)
+        geometry::GeometryValue::MultiLineString(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::Polygon<T>> for geometry::Value
+impl<T> From<&geo_types::Polygon<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(polygon: &geo_types::Polygon<T>) -> Self {
         let coords = create_polygon_type(polygon);
 
-        geometry::Value::Polygon(coords)
+        geometry::GeometryValue::Polygon(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::MultiPolygon<T>> for geometry::Value
+impl<T> From<&geo_types::MultiPolygon<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     fn from(multi_polygon: &geo_types::MultiPolygon<T>) -> Self {
         let coords = create_multi_polygon_type(multi_polygon);
 
-        geometry::Value::MultiPolygon(coords)
+        geometry::GeometryValue::MultiPolygon(coords)
     }
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<T> From<&geo_types::GeometryCollection<T>> for geometry::Value
+impl<T> From<&geo_types::GeometryCollection<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
@@ -126,10 +126,10 @@ where
         let values = geometry_collection
             .0
             .iter()
-            .map(|geometry| geometry::Geometry::new(geometry::Value::from(geometry)))
+            .map(|geometry| geometry::Geometry::new(geometry::GeometryValue::from(geometry)))
             .collect();
 
-        geometry::Value::GeometryCollection(values)
+        geometry::GeometryValue::GeometryCollection(values)
     }
 }
 
@@ -142,7 +142,7 @@ where
         let values: Vec<Feature> = geometry_collection
             .0
             .iter()
-            .map(|geometry| geometry::Geometry::new(geometry::Value::from(geometry)).into())
+            .map(|geometry| geometry::Geometry::new(geometry::GeometryValue::from(geometry)).into())
             .collect();
 
         FeatureCollection {
@@ -154,26 +154,30 @@ where
 }
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
-impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::Value
+impl<'a, T> From<&'a geo_types::Geometry<T>> for geometry::GeometryValue
 where
     T: CoordFloat,
 {
     /// Convert from `geo_types::Geometry` enums
     fn from(geometry: &'a geo_types::Geometry<T>) -> Self {
         match *geometry {
-            geo_types::Geometry::Point(ref point) => geometry::Value::from(point),
-            geo_types::Geometry::MultiPoint(ref multi_point) => geometry::Value::from(multi_point),
-            geo_types::Geometry::LineString(ref line_string) => geometry::Value::from(line_string),
-            geo_types::Geometry::Line(ref line) => geometry::Value::from(line),
-            geo_types::Geometry::Triangle(ref triangle) => geometry::Value::from(triangle),
-            geo_types::Geometry::Rect(ref rect) => geometry::Value::from(rect),
-            geo_types::Geometry::GeometryCollection(ref gc) => geometry::Value::from(gc),
-            geo_types::Geometry::MultiLineString(ref multi_line_string) => {
-                geometry::Value::from(multi_line_string)
+            geo_types::Geometry::Point(ref point) => geometry::GeometryValue::from(point),
+            geo_types::Geometry::MultiPoint(ref multi_point) => {
+                geometry::GeometryValue::from(multi_point)
             }
-            geo_types::Geometry::Polygon(ref polygon) => geometry::Value::from(polygon),
+            geo_types::Geometry::LineString(ref line_string) => {
+                geometry::GeometryValue::from(line_string)
+            }
+            geo_types::Geometry::Line(ref line) => geometry::GeometryValue::from(line),
+            geo_types::Geometry::Triangle(ref triangle) => geometry::GeometryValue::from(triangle),
+            geo_types::Geometry::Rect(ref rect) => geometry::GeometryValue::from(rect),
+            geo_types::Geometry::GeometryCollection(ref gc) => geometry::GeometryValue::from(gc),
+            geo_types::Geometry::MultiLineString(ref multi_line_string) => {
+                geometry::GeometryValue::from(multi_line_string)
+            }
+            geo_types::Geometry::Polygon(ref polygon) => geometry::GeometryValue::from(polygon),
             geo_types::Geometry::MultiPolygon(ref multi_polygon) => {
-                geometry::Value::from(multi_polygon)
+                geometry::GeometryValue::from(multi_polygon)
             }
         }
     }
@@ -274,7 +278,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{GeoJson, Geometry, Value};
+    use crate::{GeoJson, Geometry, GeometryValue};
     use geo_types::{
         Coord, GeometryCollection, Line, LineString, MultiLineString, MultiPoint, MultiPolygon,
         Point, Polygon, Rect, Triangle,
@@ -284,9 +288,9 @@ mod tests {
     fn geo_point_conversion_test() {
         // Test with f32 coordinates
         let geo_point = Point::new(40.02f32, 116.34f32);
-        let geojson_point = Value::from(&geo_point);
+        let geojson_point = GeometryValue::from(&geo_point);
 
-        if let Value::Point(c) = geojson_point {
+        if let GeometryValue::Point(c) = geojson_point {
             assert_almost_eq!(geo_point.x(), c[0] as f32, 1e-6);
             assert_almost_eq!(geo_point.y(), c[1] as f32, 1e-6);
         } else {
@@ -295,9 +299,9 @@ mod tests {
 
         // Test with f64 coordinates.
         let geo_point = Point::new(40.02f64, 116.34f64);
-        let geojson_point = Value::from(&geo_point);
+        let geojson_point = GeometryValue::from(&geo_point);
 
-        if let Value::Point(c) = geojson_point {
+        if let GeometryValue::Point(c) = geojson_point {
             assert_almost_eq!(geo_point.x(), c[0], 1e-6);
             assert_almost_eq!(geo_point.y(), c[1], 1e-6);
         } else {
@@ -311,9 +315,9 @@ mod tests {
         let p2 = Point::new(13.02f64, 24.34f64);
 
         let geo_multi_point = MultiPoint(vec![p1, p2]);
-        let geojson_multi_point = Value::from(&geo_multi_point);
+        let geojson_multi_point = GeometryValue::from(&geo_multi_point);
 
-        if let Value::MultiPoint(c) = geojson_multi_point {
+        if let GeometryValue::MultiPoint(c) = geojson_multi_point {
             assert_almost_eq!(p1.x(), c[0][0], 1e-6);
             assert_almost_eq!(p1.y(), c[0][1], 1e-6);
             assert_almost_eq!(p2.x(), c[1][0], 1e-6);
@@ -329,9 +333,9 @@ mod tests {
         let p2 = Point::new(13.02f64, 24.34f64);
 
         let geo_line_string = LineString::from(vec![p1, p2]);
-        let geojson_line_point = Value::from(&geo_line_string);
+        let geojson_line_point = GeometryValue::from(&geo_line_string);
 
-        if let Value::LineString(c) = geojson_line_point {
+        if let GeometryValue::LineString(c) = geojson_line_point {
             assert_almost_eq!(p1.x(), c[0][0], 1e-6);
             assert_almost_eq!(p1.y(), c[0][1], 1e-6);
             assert_almost_eq!(p2.x(), c[1][0], 1e-6);
@@ -347,9 +351,9 @@ mod tests {
         let p2 = Point::new(13.02f64, 24.34f64);
 
         let geo_line = Line::new(p1, p2);
-        let geojson_line_point = Value::from(&geo_line);
+        let geojson_line_point = GeometryValue::from(&geo_line);
 
-        if let Value::LineString(c) = geojson_line_point {
+        if let GeometryValue::LineString(c) = geojson_line_point {
             assert_almost_eq!(p1.x(), c[0][0], 1e-6);
             assert_almost_eq!(p1.y(), c[0][1], 1e-6);
             assert_almost_eq!(p2.x(), c[1][0], 1e-6);
@@ -367,10 +371,10 @@ mod tests {
 
         let triangle = Triangle(c1, c2, c3);
 
-        let geojson_polygon = Value::from(&triangle);
+        let geojson_polygon = GeometryValue::from(&triangle);
 
         // Geo-types Polygon construction introduces an extra vertex: let's check it!
-        if let Value::Polygon(c) = geojson_polygon {
+        if let GeometryValue::Polygon(c) = geojson_polygon {
             assert_almost_eq!(c1.x, c[0][0][0], 1e-6);
             assert_almost_eq!(c1.y, c[0][0][1], 1e-6);
             assert_almost_eq!(c2.x, c[0][1][0], 1e-6);
@@ -392,10 +396,10 @@ mod tests {
 
         let rect = Rect::new(c1, c2);
 
-        let geojson_polygon = Value::from(&rect);
+        let geojson_polygon = GeometryValue::from(&rect);
 
         // Geo-types Polygon construction introduces an extra vertex: let's check it!
-        if let Value::Polygon(c) = geojson_polygon {
+        if let GeometryValue::Polygon(c) = geojson_polygon {
             // checks are in the same order as the geo_types::geometry::Rect.to_polygon doctest
             assert_almost_eq!(c2.x, c[0][0][0], 1e-6);
             assert_almost_eq!(c1.y, c[0][0][1], 1e-6);
@@ -423,9 +427,9 @@ mod tests {
         let geo_line_string2 = LineString::from(vec![p3, p4]);
 
         let geo_multi_line_string = MultiLineString(vec![geo_line_string1, geo_line_string2]);
-        let geojson_multi_line_point = Value::from(&geo_multi_line_string);
+        let geojson_multi_line_point = GeometryValue::from(&geo_multi_line_string);
 
-        if let Value::MultiLineString(c) = geojson_multi_line_point {
+        if let GeometryValue::MultiLineString(c) = geojson_multi_line_point {
             assert_almost_eq!(p1.x(), c[0][0][0], 1e-6);
             assert_almost_eq!(p1.y(), c[0][0][1], 1e-6);
             assert_almost_eq!(p2.x(), c[0][1][0], 1e-6);
@@ -452,9 +456,9 @@ mod tests {
         let geo_line_string2 = LineString::from(vec![p4, p5, p6, p4]);
 
         let geo_polygon = Polygon::new(geo_line_string1, vec![geo_line_string2]);
-        let geojson_polygon = Value::from(&geo_polygon);
+        let geojson_polygon = GeometryValue::from(&geo_polygon);
 
-        if let Value::Polygon(c) = geojson_polygon {
+        if let GeometryValue::Polygon(c) = geojson_polygon {
             assert_almost_eq!(p1.x(), c[0][0][0], 1e-6);
             assert_almost_eq!(p1.y(), c[0][0][1], 1e-6);
             assert_almost_eq!(p2.x(), c[0][1][0], 1e-6);
@@ -477,7 +481,7 @@ mod tests {
         // Test that an empty polygon serializes to coordinates: [] instead of coordinates: [[]]
         let empty_exterior: LineString<f64> = LineString(vec![]);
         let geo_polygon = Polygon::new(empty_exterior, vec![]);
-        let geojson_polygon = Value::from(&geo_polygon);
+        let geojson_polygon = GeometryValue::from(&geo_polygon);
 
         let geometry = Geometry::new(geojson_polygon.clone());
         let json = serde_json::to_string(&geometry).unwrap();
@@ -503,9 +507,9 @@ mod tests {
         let geo_polygon1 = Polygon::new(geo_line_string1, vec![]);
         let geo_polygon2 = Polygon::new(geo_line_string2, vec![]);
         let geo_multi_polygon = MultiPolygon(vec![geo_polygon1, geo_polygon2]);
-        let geojson_multi_polygon = Value::from(&geo_multi_polygon);
+        let geojson_multi_polygon = GeometryValue::from(&geo_multi_polygon);
 
-        if let Value::MultiPolygon(c) = geojson_multi_polygon {
+        if let GeometryValue::MultiPolygon(c) = geojson_multi_polygon {
             assert_almost_eq!(p1.x(), c[0][0][0][0], 1e-6);
             assert_almost_eq!(p1.y(), c[0][0][0][1], 1e-6);
             assert_almost_eq!(p2.x(), c[0][0][1][0], 1e-6);
@@ -545,17 +549,17 @@ mod tests {
             geo_types::Geometry::MultiPolygon(geo_multi_polygon),
         ]);
 
-        let geojson_geometry_collection = Value::from(&geo_geometry_collection);
+        let geojson_geometry_collection = GeometryValue::from(&geo_geometry_collection);
 
-        if let Value::GeometryCollection(geometries) = geojson_geometry_collection {
+        if let GeometryValue::GeometryCollection(geometries) = geojson_geometry_collection {
             let geometry_type = |geometry: &Geometry| match geometry.value {
-                Value::Point(..) => "Point",
-                Value::MultiPoint(..) => "MultiPoint",
-                Value::LineString(..) => "LineString",
-                Value::MultiLineString(..) => "MultiLineString",
-                Value::Polygon(..) => "Polygon",
-                Value::MultiPolygon(..) => "MultiPolygon",
-                Value::GeometryCollection(..) => "GeometryCollection",
+                GeometryValue::Point(..) => "Point",
+                GeometryValue::MultiPoint(..) => "MultiPoint",
+                GeometryValue::LineString(..) => "LineString",
+                GeometryValue::MultiLineString(..) => "MultiLineString",
+                GeometryValue::Polygon(..) => "Polygon",
+                GeometryValue::MultiPolygon(..) => "MultiPolygon",
+                GeometryValue::GeometryCollection(..) => "GeometryCollection",
             };
 
             assert_eq!(3, geometries.len());

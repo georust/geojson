@@ -16,7 +16,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
-use crate::{util, Feature, Geometry, Value};
+use crate::{util, Feature, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -32,8 +32,8 @@ impl From<Geometry> for Feature {
     }
 }
 
-impl From<Value> for Feature {
-    fn from(val: Value) -> Feature {
+impl From<GeometryValue> for Feature {
+    fn from(val: GeometryValue) -> Feature {
         Feature {
             bbox: None,
             foreign_members: None,
@@ -219,7 +219,7 @@ impl Serialize for Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, Error, Feature, GeoJson, Geometry, JsonObject, Position, Value};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, GeometryValue, JsonObject, Position};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -246,8 +246,8 @@ mod tests {
         }
     }
 
-    fn value() -> Value {
-        Value::Point(Position::from([1.1, 2.1]))
+    fn value() -> GeometryValue {
+        GeometryValue::Point(Position::from([1.1, 2.1]))
     }
 
     fn geometry() -> Geometry {
@@ -357,7 +357,7 @@ mod tests {
         let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":0}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(Position::from([1.1, 2.1])),
+                value: GeometryValue::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -383,7 +383,7 @@ mod tests {
         let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":\"foo\"}";
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(Position::from([1.1, 2.1])),
+                value: GeometryValue::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -435,7 +435,7 @@ mod tests {
         );
         let feature = crate::Feature {
             geometry: Some(Geometry {
-                value: Value::Point(Position::from([1.1, 2.1])),
+                value: GeometryValue::Point(Position::from([1.1, 2.1])),
                 bbox: None,
                 foreign_members: None,
             }),
@@ -461,7 +461,7 @@ mod tests {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"properties":null}"#;
 
         let feature = crate::Feature {
-            geometry: Some(Value::Point(Position::from([1.1, 2.1])).into()),
+            geometry: Some(GeometryValue::Point(Position::from([1.1, 2.1])).into()),
             properties: None,
             bbox: None,
             id: None,
