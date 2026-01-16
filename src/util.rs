@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::errors::{Error, Result};
-use crate::{feature, Bbox, Feature, Geometry, Position, Value};
+use crate::{feature, Bbox, Feature, Geometry, GeometryValue, Position};
 use crate::{JsonObject, JsonValue};
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String> {
@@ -114,7 +114,7 @@ pub fn get_properties(object: &mut JsonObject) -> Result<Option<JsonObject>> {
 
 /// Retrieve a single Position from the value of the "coordinates" key
 ///
-/// Used by Value::Point
+/// Used by GeometryValue::Point
 pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position> {
     let coords_json = get_coords_value(object)?;
     json_to_position(&coords_json)
@@ -122,7 +122,7 @@ pub fn get_coords_one_pos(object: &mut JsonObject) -> Result<Position> {
 
 /// Retrieve a one dimensional Vec of Positions from the value of the "coordinates" key
 ///
-/// Used by Value::MultiPoint and Value::LineString
+/// Used by GeometryValue::MultiPoint and GeometryValue::LineString
 pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>> {
     let coords_json = get_coords_value(object)?;
     json_to_1d_positions(&coords_json)
@@ -130,7 +130,7 @@ pub fn get_coords_1d_pos(object: &mut JsonObject) -> Result<Vec<Position>> {
 
 /// Retrieve a two dimensional Vec of Positions from the value of the "coordinates" key
 ///
-/// Used by Value::MultiLineString and Value::Polygon
+/// Used by GeometryValue::MultiLineString and GeometryValue::Polygon
 pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>> {
     let coords_json = get_coords_value(object)?;
     json_to_2d_positions(&coords_json)
@@ -138,13 +138,13 @@ pub fn get_coords_2d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Position>>> 
 
 /// Retrieve a three dimensional Vec of Positions from the value of the "coordinates" key
 ///
-/// Used by Value::MultiPolygon
+/// Used by GeometryValue::MultiPolygon
 pub fn get_coords_3d_pos(object: &mut JsonObject) -> Result<Vec<Vec<Vec<Position>>>> {
     let coords_json = get_coords_value(object)?;
     json_to_3d_positions(&coords_json)
 }
 
-/// Used by Value::GeometryCollection
+/// Used by GeometryValue::GeometryCollection
 pub fn get_geometries(object: &mut JsonObject) -> Result<Vec<Geometry>> {
     let geometries_json = expect_property(object, "geometries")?;
     let geometries_array = expect_owned_array(geometries_json)?;
@@ -168,16 +168,16 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>> {
 }
 
 /// Used by Geometry, Value
-pub fn get_value(object: &mut JsonObject) -> Result<Value> {
+pub fn get_value(object: &mut JsonObject) -> Result<GeometryValue> {
     let res = &*expect_type(object)?;
     match res {
-        "Point" => Ok(Value::Point(get_coords_one_pos(object)?)),
-        "MultiPoint" => Ok(Value::MultiPoint(get_coords_1d_pos(object)?)),
-        "LineString" => Ok(Value::LineString(get_coords_1d_pos(object)?)),
-        "MultiLineString" => Ok(Value::MultiLineString(get_coords_2d_pos(object)?)),
-        "Polygon" => Ok(Value::Polygon(get_coords_2d_pos(object)?)),
-        "MultiPolygon" => Ok(Value::MultiPolygon(get_coords_3d_pos(object)?)),
-        "GeometryCollection" => Ok(Value::GeometryCollection(get_geometries(object)?)),
+        "Point" => Ok(GeometryValue::Point(get_coords_one_pos(object)?)),
+        "MultiPoint" => Ok(GeometryValue::MultiPoint(get_coords_1d_pos(object)?)),
+        "LineString" => Ok(GeometryValue::LineString(get_coords_1d_pos(object)?)),
+        "MultiLineString" => Ok(GeometryValue::MultiLineString(get_coords_2d_pos(object)?)),
+        "Polygon" => Ok(GeometryValue::Polygon(get_coords_2d_pos(object)?)),
+        "MultiPolygon" => Ok(GeometryValue::MultiPolygon(get_coords_3d_pos(object)?)),
+        "GeometryCollection" => Ok(GeometryValue::GeometryCollection(get_geometries(object)?)),
         _ => Err(Error::GeometryUnknownType(res.to_string())),
     }
 }

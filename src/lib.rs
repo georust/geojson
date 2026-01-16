@@ -59,13 +59,13 @@
 //!
 //! Because [`Feature`] and [`FeatureCollection`] are more flexible, bare [`Geometry`] GeoJSON
 //! documents are rarely encountered in the wild. As such, conversions from [`Geometry`]
-//! or [Geometry `Value`](Value) to [`Feature`] objects are provided via the [`From`] trait.
+//! or [Geometry `Value`](GeometryValue) to [`Feature`] objects are provided via the [`From`] trait.
 //!
 //! *Beware:* A common point of confusion arises when converting a [GeoJson
-//! `GeometryCollection`](Value::GeometryCollection). Do you want it converted to a single
-//! [`Feature`] whose geometry is a [`GeometryCollection`](Value::GeometryCollection), or do you
+//! `GeometryCollection`](GeometryValue::GeometryCollection). Do you want it converted to a single
+//! [`Feature`] whose geometry is a [`GeometryCollection`](GeometryValue::GeometryCollection), or do you
 //! want a [`FeatureCollection`] with each *element* of the
-//! [`GeometryCollection`](Value::GeometryCollection) converted to its own [`Feature`], potentially
+//! [`GeometryCollection`](GeometryValue::GeometryCollection) converted to its own [`Feature`], potentially
 //! with their own individual properties. Either is possible, but it's important you understand
 //! which one you want.
 //!
@@ -75,7 +75,7 @@
 //! [`GeoJson`] can be deserialized by calling [`str::parse`](https://doc.rust-lang.org/std/primitive.str.html#method.parse):
 //!
 //! ```
-//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! use geojson::{Feature, GeoJson, Geometry, GeometryValue};
 //! use std::convert::TryFrom;
 //!
 //! let geojson_str = r#"
@@ -97,7 +97,7 @@
 //!
 //! // read geometry data
 //! let geometry: Geometry = feature.geometry.unwrap();
-//! if let Value::Point(coords) = geometry.value {
+//! if let GeometryValue::Point(coords) = geometry.value {
 //!     assert_eq!(coords.as_slice(), &[-118.2836, 34.0956]);
 //! }
 //!
@@ -157,14 +157,14 @@
 //! it has several subtleties that must be taken into account when parsing it:
 //!
 //! - The `geometry` field of a [`Feature`] is an [`Option`] — it can be blank.
-//! - [`GeometryCollection`](Value::GeometryCollection)s contain other [`Geometry`] objects, and can nest.
+//! - [`GeometryCollection`](GeometryValue::GeometryCollection)s contain other [`Geometry`] objects, and can nest.
 //! - We strive to produce strictly valid output, but we are more permissive about what we accept
 //!   as input.
 //!
 //! Here's a minimal example which will parse and process a GeoJSON string.
 //!
 //! ```rust
-//! use geojson::{GeoJson, Geometry, Value};
+//! use geojson::{GeoJson, Geometry, GeometryValue};
 //!
 //! /// Process top-level GeoJSON Object
 //! fn process_geojson(gj: &GeoJson) {
@@ -188,9 +188,9 @@
 //! /// Process GeoJSON geometries
 //! fn process_geometry(geom: &Geometry) {
 //!     match geom.value {
-//!         Value::Polygon(_) => println!("Matched a Polygon"),
-//!         Value::MultiPolygon(_) => println!("Matched a MultiPolygon"),
-//!         Value::GeometryCollection(ref gc) => {
+//!         GeometryValue::Polygon(_) => println!("Matched a Polygon"),
+//!         GeometryValue::MultiPolygon(_) => println!("Matched a MultiPolygon"),
+//!         GeometryValue::GeometryCollection(ref gc) => {
 //!             println!("Matched a GeometryCollection");
 //!             // !!! GeometryCollections contain other Geometry types, and can
 //!             // nest — we deal with this by recursively processing each geometry
@@ -247,7 +247,7 @@
 //!
 //! ### Convert `geo-types` to `geojson`
 //!
-//! [`From`] is implemented on the [`Value`] enum variants to allow conversion _from_ [`geo-types`
+//! [`From`] is implemented on the [`GeometryValue`] enum variants to allow conversion _from_ [`geo-types`
 //! Geometries](../geo_types/index.html#structs).
 //!
 //! ```
@@ -258,12 +258,12 @@
 //! let geo_geometry: geo_types::Geometry<f64> = geo_types::Geometry::from(geo_point);
 //!
 //! assert_eq!(
-//!     geojson::Value::from(&geo_point),
-//!     geojson::Value::Point(geojson::Position::from([2., 9.])),
+//!     geojson::GeometryValue::from(&geo_point),
+//!     geojson::GeometryValue::Point(geojson::Position::from([2., 9.])),
 //! );
 //! assert_eq!(
-//!     geojson::Value::from(&geo_geometry),
-//!     geojson::Value::Point(geojson::Position::from([2., 9.])),
+//!     geojson::GeometryValue::from(&geo_geometry),
+//!     geojson::GeometryValue::Point(geojson::Position::from([2., 9.])),
 //! );
 //! # }
 //! ```
@@ -299,7 +299,7 @@
 //!
 //! The `geo-types` feature implements the [`TryFrom`](../std/convert/trait.TryFrom.html) trait,
 //! providing **fallible** conversions _to_ [geo-types Geometries](../geo_types/index.html#structs)
-//! from [`GeoJson`], [`Value`], [`Feature`], [`FeatureCollection`] or [`Geometry`] types.
+//! from [`GeoJson`], [`GeometryValue`], [`Feature`], [`FeatureCollection`] or [`Geometry`] types.
 //!
 //! #### Convert `geojson` to `geo_types::Geometry<f64>`
 //!
@@ -466,7 +466,9 @@ mod geojson;
 pub use crate::geojson::GeoJson;
 
 mod geometry;
-pub use crate::geometry::{Geometry, Value};
+#[allow(deprecated)]
+pub use crate::geometry::Value;
+pub use crate::geometry::{Geometry, GeometryValue};
 
 pub mod feature;
 

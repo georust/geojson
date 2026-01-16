@@ -25,7 +25,7 @@ use std::str::FromStr;
 ///
 /// ```
 /// use std::convert::TryInto;
-/// use geojson::{Feature, GeoJson, Geometry, Value};
+/// use geojson::{Feature, GeoJson, Geometry, GeometryValue};
 /// use serde_json::json;
 /// let json_value = json!({
 ///     "type": "Feature",
@@ -78,9 +78,9 @@ impl<G: Into<Geometry>> From<G> for GeoJson {
 
 impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
     fn from_iter<I: IntoIterator<Item = G>>(iter: I) -> Self {
-        use crate::Value;
+        use crate::GeometryValue;
         let geometries = iter.into_iter().map(|g| g.into()).collect();
-        let collection = Value::GeometryCollection(geometries);
+        let collection = GeometryValue::GeometryCollection(geometries);
         GeoJson::Geometry(Geometry::new(collection))
     }
 }
@@ -164,7 +164,7 @@ impl GeoJson {
     /// # Example
     /// ```
     /// use std::convert::TryInto;
-    /// use geojson::{Feature, GeoJson, Geometry, Position, Value};
+    /// use geojson::{Feature, GeoJson, Geometry, Position, GeometryValue};
     /// use serde_json::json;
     ///
     /// let json_value = json!({
@@ -184,7 +184,7 @@ impl GeoJson {
     ///     geojson,
     ///     GeoJson::Feature(Feature {
     ///         bbox: None,
-    ///         geometry: Some(Geometry::new(Value::Point(Position::from([102.0, 0.5])))),
+    ///         geometry: Some(Geometry::new(GeometryValue::Point(Position::from([102.0, 0.5])))),
     ///         id: None,
     ///         properties: None,
     ///         foreign_members: None,
@@ -409,7 +409,7 @@ impl fmt::Display for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, Position, Value};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, GeometryValue, Position};
     use serde_json::json;
     use std::convert::TryInto;
     use std::str::FromStr;
@@ -460,7 +460,9 @@ mod tests {
             geojson,
             GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(Value::Point(Position::from([102.0, 0.5])))),
+                geometry: Some(Geometry::new(GeometryValue::Point(Position::from([
+                    102.0, 0.5
+                ])))),
                 id: None,
                 properties: None,
                 foreign_members: None,
@@ -471,8 +473,8 @@ mod tests {
     #[test]
     fn test_geojson_from_features() {
         let features: Vec<Feature> = vec![
-            Value::Point(Position::from(vec![0., 0., 0.])).into(),
-            Value::Point(Position::from(vec![1., 1., 1.])).into(),
+            GeometryValue::Point(Position::from(vec![0., 0., 0.])).into(),
+            GeometryValue::Point(Position::from(vec![1., 1., 1.])).into(),
         ];
 
         let geojson: GeoJson = features.into();
@@ -482,7 +484,7 @@ mod tests {
                 features: vec![
                     Feature {
                         bbox: None,
-                        geometry: Some(Geometry::new(Value::Point(Position::from(vec![
+                        geometry: Some(Geometry::new(GeometryValue::Point(Position::from(vec![
                             0., 0., 0.
                         ])))),
                         id: None,
@@ -491,7 +493,7 @@ mod tests {
                     },
                     Feature {
                         bbox: None,
-                        geometry: Some(Geometry::new(Value::Point(Position::from(vec![
+                        geometry: Some(Geometry::new(GeometryValue::Point(Position::from(vec![
                             1., 1., 1.
                         ])))),
                         id: None,
@@ -522,7 +524,9 @@ mod tests {
             geojson,
             GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(Value::Point(Position::from([102.0, 0.5])))),
+                geometry: Some(Geometry::new(GeometryValue::Point(Position::from([
+                    102.0, 0.5
+                ])))),
                 id: None,
                 properties: None,
                 foreign_members: None,

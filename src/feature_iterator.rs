@@ -130,7 +130,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Geometry, Position, Value};
+    use crate::{Geometry, GeometryValue, Position};
 
     use std::io::BufReader;
 
@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: Value::Point(Position::from([102.0, 0.5])),
+                value: GeometryValue::Point(Position::from([102.0, 0.5])),
                 foreign_members: None,
             },
             fi.next().unwrap().unwrap().geometry.unwrap()
@@ -196,7 +196,7 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: Value::LineString(vec![
+                value: GeometryValue::LineString(vec![
                     Position::from([102.0, 0.0]),
                     Position::from([103.0, 1.0]),
                     Position::from([104.0, 0.0]),
@@ -209,7 +209,7 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: Value::Polygon(vec![vec![
+                value: GeometryValue::Polygon(vec![vec![
                     Position::from([100.0, 0.0]),
                     Position::from([101.0, 0.0]),
                     Position::from([101.0, 1.0]),
