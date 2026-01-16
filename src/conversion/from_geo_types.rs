@@ -275,23 +275,21 @@ mod tests {
         let geo_point = Point::new(40.02f32, 116.34f32);
         let geojson_point = GeometryValue::from(&geo_point);
 
-        if let GeometryValue::Point(c) = geojson_point {
-            assert_almost_eq!(geo_point.x(), c[0] as f32, 1e-6);
-            assert_almost_eq!(geo_point.y(), c[1] as f32, 1e-6);
-        } else {
+        let GeometryValue::Point { coordinates } = geojson_point else {
             panic!("Not valid geometry {:?}", geojson_point);
-        }
+        };
+        assert_almost_eq!(geo_point.x(), coordinates[0] as f32, 1e-6);
+        assert_almost_eq!(geo_point.y(), coordinates[1] as f32, 1e-6);
 
         // Test with f64 coordinates.
         let geo_point = Point::new(40.02f64, 116.34f64);
         let geojson_point = GeometryValue::from(&geo_point);
 
-        if let GeometryValue::Point(c) = geojson_point {
-            assert_almost_eq!(geo_point.x(), c[0], 1e-6);
-            assert_almost_eq!(geo_point.y(), c[1], 1e-6);
-        } else {
+        let GeometryValue::Point { coordinates } = geojson_point else {
             panic!("Not valid geometry {:?}", geojson_point);
-        }
+        };
+        assert_eq!(geo_point.x(), coordinates[0]);
+        assert_eq!(geo_point.y(), coordinates[1]);
     }
 
     #[test]
@@ -302,14 +300,13 @@ mod tests {
         let geo_multi_point = MultiPoint(vec![p1, p2]);
         let geojson_multi_point = GeometryValue::from(&geo_multi_point);
 
-        if let GeometryValue::MultiPoint(c) = geojson_multi_point {
-            assert_almost_eq!(p1.x(), c[0][0], 1e-6);
-            assert_almost_eq!(p1.y(), c[0][1], 1e-6);
-            assert_almost_eq!(p2.x(), c[1][0], 1e-6);
-            assert_almost_eq!(p2.y(), c[1][1], 1e-6);
-        } else {
+        let GeometryValue::MultiPoint { coordinates } = geojson_multi_point else {
             panic!("Not valid geometry {:?}", geojson_multi_point);
-        }
+        };
+        assert_eq!(p1.x(), coordinates[0][0]);
+        assert_eq!(p1.y(), coordinates[0][1]);
+        assert_eq!(p2.x(), coordinates[1][0]);
+        assert_eq!(p2.y(), coordinates[1][1]);
     }
 
     #[test]
@@ -320,14 +317,13 @@ mod tests {
         let geo_line_string = LineString::from(vec![p1, p2]);
         let geojson_line_point = GeometryValue::from(&geo_line_string);
 
-        if let GeometryValue::LineString(c) = geojson_line_point {
-            assert_almost_eq!(p1.x(), c[0][0], 1e-6);
-            assert_almost_eq!(p1.y(), c[0][1], 1e-6);
-            assert_almost_eq!(p2.x(), c[1][0], 1e-6);
-            assert_almost_eq!(p2.y(), c[1][1], 1e-6);
-        } else {
+        let GeometryValue::LineString { coordinates } = geojson_line_point else {
             panic!("Not valid geometry {:?}", geojson_line_point);
-        }
+        };
+        assert_eq!(p1.x(), coordinates[0][0]);
+        assert_eq!(p1.y(), coordinates[0][1]);
+        assert_eq!(p2.x(), coordinates[1][0]);
+        assert_eq!(p2.y(), coordinates[1][1]);
     }
 
     #[test]
@@ -338,14 +334,13 @@ mod tests {
         let geo_line = Line::new(p1, p2);
         let geojson_line_point = GeometryValue::from(&geo_line);
 
-        if let GeometryValue::LineString(c) = geojson_line_point {
-            assert_almost_eq!(p1.x(), c[0][0], 1e-6);
-            assert_almost_eq!(p1.y(), c[0][1], 1e-6);
-            assert_almost_eq!(p2.x(), c[1][0], 1e-6);
-            assert_almost_eq!(p2.y(), c[1][1], 1e-6);
-        } else {
+        let GeometryValue::LineString { coordinates } = geojson_line_point else {
             panic!("Not valid geometry {:?}", geojson_line_point);
-        }
+        };
+        assert_eq!(p1.x(), coordinates[0][0]);
+        assert_eq!(p1.y(), coordinates[0][1]);
+        assert_eq!(p2.x(), coordinates[1][0]);
+        assert_eq!(p2.y(), coordinates[1][1]);
     }
 
     #[test]
@@ -359,18 +354,17 @@ mod tests {
         let geojson_polygon = GeometryValue::from(&triangle);
 
         // Geo-types Polygon construction introduces an extra vertex: let's check it!
-        if let GeometryValue::Polygon(c) = geojson_polygon {
-            assert_almost_eq!(c1.x, c[0][0][0], 1e-6);
-            assert_almost_eq!(c1.y, c[0][0][1], 1e-6);
-            assert_almost_eq!(c2.x, c[0][1][0], 1e-6);
-            assert_almost_eq!(c2.y, c[0][1][1], 1e-6);
-            assert_almost_eq!(c3.x, c[0][2][0], 1e-6);
-            assert_almost_eq!(c3.y, c[0][2][1], 1e-6);
-            assert_almost_eq!(c1.x, c[0][3][0], 1e-6);
-            assert_almost_eq!(c1.y, c[0][3][1], 1e-6);
-        } else {
+        let GeometryValue::Polygon { coordinates } = geojson_polygon else {
             panic!("Not valid geometry {:?}", geojson_polygon);
-        }
+        };
+        assert_eq!(c1.x, coordinates[0][0][0]);
+        assert_eq!(c1.y, coordinates[0][0][1]);
+        assert_eq!(c2.x, coordinates[0][1][0]);
+        assert_eq!(c2.y, coordinates[0][1][1]);
+        assert_eq!(c3.x, coordinates[0][2][0]);
+        assert_eq!(c3.y, coordinates[0][2][1]);
+        assert_eq!(c1.x, coordinates[0][3][0]);
+        assert_eq!(c1.y, coordinates[0][3][1]);
     }
 
     #[test]
@@ -384,21 +378,21 @@ mod tests {
         let geojson_polygon = GeometryValue::from(&rect);
 
         // Geo-types Polygon construction introduces an extra vertex: let's check it!
-        if let GeometryValue::Polygon(c) = geojson_polygon {
-            // checks are in the same order as the geo_types::geometry::Rect.to_polygon doctest
-            assert_almost_eq!(c2.x, c[0][0][0], 1e-6);
-            assert_almost_eq!(c1.y, c[0][0][1], 1e-6);
-            assert_almost_eq!(c2.x, c[0][1][0], 1e-6);
-            assert_almost_eq!(c2.y, c[0][1][1], 1e-6);
-            assert_almost_eq!(c1.x, c[0][2][0], 1e-6);
-            assert_almost_eq!(c2.y, c[0][2][1], 1e-6);
-            assert_almost_eq!(c1.x, c[0][3][0], 1e-6);
-            assert_almost_eq!(c1.y, c[0][3][1], 1e-6);
-            assert_almost_eq!(c2.x, c[0][4][0], 1e-6);
-            assert_almost_eq!(c1.y, c[0][4][1], 1e-6);
-        } else {
+        let GeometryValue::Polygon { coordinates } = geojson_polygon else {
             panic!("Not valid geometry {:?}", geojson_polygon);
-        }
+        };
+
+        // checks are in the same order as the geo_types::geometry::Rect.to_polygon doctest
+        assert_eq!(c2.x, coordinates[0][0][0]);
+        assert_eq!(c1.y, coordinates[0][0][1]);
+        assert_eq!(c2.x, coordinates[0][1][0]);
+        assert_eq!(c2.y, coordinates[0][1][1]);
+        assert_eq!(c1.x, coordinates[0][2][0]);
+        assert_eq!(c2.y, coordinates[0][2][1]);
+        assert_eq!(c1.x, coordinates[0][3][0]);
+        assert_eq!(c1.y, coordinates[0][3][1]);
+        assert_eq!(c2.x, coordinates[0][4][0]);
+        assert_eq!(c1.y, coordinates[0][4][1]);
     }
 
     #[test]
@@ -414,18 +408,17 @@ mod tests {
         let geo_multi_line_string = MultiLineString(vec![geo_line_string1, geo_line_string2]);
         let geojson_multi_line_point = GeometryValue::from(&geo_multi_line_string);
 
-        if let GeometryValue::MultiLineString(c) = geojson_multi_line_point {
-            assert_almost_eq!(p1.x(), c[0][0][0], 1e-6);
-            assert_almost_eq!(p1.y(), c[0][0][1], 1e-6);
-            assert_almost_eq!(p2.x(), c[0][1][0], 1e-6);
-            assert_almost_eq!(p2.y(), c[0][1][1], 1e-6);
-            assert_almost_eq!(p3.x(), c[1][0][0], 1e-6);
-            assert_almost_eq!(p3.y(), c[1][0][1], 1e-6);
-            assert_almost_eq!(p4.x(), c[1][1][0], 1e-6);
-            assert_almost_eq!(p4.y(), c[1][1][1], 1e-6);
-        } else {
+        let GeometryValue::MultiLineString { coordinates } = geojson_multi_line_point else {
             panic!("Not valid geometry {:?}", geojson_multi_line_point);
-        }
+        };
+        assert_eq!(p1.x(), coordinates[0][0][0]);
+        assert_eq!(p1.y(), coordinates[0][0][1]);
+        assert_eq!(p2.x(), coordinates[0][1][0]);
+        assert_eq!(p2.y(), coordinates[0][1][1]);
+        assert_eq!(p3.x(), coordinates[1][0][0]);
+        assert_eq!(p3.y(), coordinates[1][0][1]);
+        assert_eq!(p4.x(), coordinates[1][1][0]);
+        assert_eq!(p4.y(), coordinates[1][1][1]);
     }
 
     #[test]
@@ -443,22 +436,21 @@ mod tests {
         let geo_polygon = Polygon::new(geo_line_string1, vec![geo_line_string2]);
         let geojson_polygon = GeometryValue::from(&geo_polygon);
 
-        if let GeometryValue::Polygon(c) = geojson_polygon {
-            assert_almost_eq!(p1.x(), c[0][0][0], 1e-6);
-            assert_almost_eq!(p1.y(), c[0][0][1], 1e-6);
-            assert_almost_eq!(p2.x(), c[0][1][0], 1e-6);
-            assert_almost_eq!(p2.y(), c[0][1][1], 1e-6);
-            assert_almost_eq!(p3.x(), c[0][2][0], 1e-6);
-            assert_almost_eq!(p3.y(), c[0][2][1], 1e-6);
-            assert_almost_eq!(p4.x(), c[1][0][0], 1e-6);
-            assert_almost_eq!(p4.y(), c[1][0][1], 1e-6);
-            assert_almost_eq!(p5.x(), c[1][1][0], 1e-6);
-            assert_almost_eq!(p5.y(), c[1][1][1], 1e-6);
-            assert_almost_eq!(p6.x(), c[1][2][0], 1e-6);
-            assert_almost_eq!(p6.y(), c[1][2][1], 1e-6);
-        } else {
+        let GeometryValue::Polygon { coordinates } = geojson_polygon else {
             panic!("Not valid geometry {:?}", geojson_polygon);
-        }
+        };
+        assert_eq!(p1.x(), coordinates[0][0][0]);
+        assert_eq!(p1.y(), coordinates[0][0][1]);
+        assert_eq!(p2.x(), coordinates[0][1][0]);
+        assert_eq!(p2.y(), coordinates[0][1][1]);
+        assert_eq!(p3.x(), coordinates[0][2][0]);
+        assert_eq!(p3.y(), coordinates[0][2][1]);
+        assert_eq!(p4.x(), coordinates[1][0][0]);
+        assert_eq!(p4.y(), coordinates[1][0][1]);
+        assert_eq!(p5.x(), coordinates[1][1][0]);
+        assert_eq!(p5.y(), coordinates[1][1][1]);
+        assert_eq!(p6.x(), coordinates[1][2][0]);
+        assert_eq!(p6.y(), coordinates[1][2][1]);
     }
 
     #[test]
@@ -494,22 +486,21 @@ mod tests {
         let geo_multi_polygon = MultiPolygon(vec![geo_polygon1, geo_polygon2]);
         let geojson_multi_polygon = GeometryValue::from(&geo_multi_polygon);
 
-        if let GeometryValue::MultiPolygon(c) = geojson_multi_polygon {
-            assert_almost_eq!(p1.x(), c[0][0][0][0], 1e-6);
-            assert_almost_eq!(p1.y(), c[0][0][0][1], 1e-6);
-            assert_almost_eq!(p2.x(), c[0][0][1][0], 1e-6);
-            assert_almost_eq!(p2.y(), c[0][0][1][1], 1e-6);
-            assert_almost_eq!(p3.x(), c[0][0][2][0], 1e-6);
-            assert_almost_eq!(p3.y(), c[0][0][2][1], 1e-6);
-            assert_almost_eq!(p4.x(), c[1][0][0][0], 1e-6);
-            assert_almost_eq!(p4.y(), c[1][0][0][1], 1e-6);
-            assert_almost_eq!(p5.x(), c[1][0][1][0], 1e-6);
-            assert_almost_eq!(p5.y(), c[1][0][1][1], 1e-6);
-            assert_almost_eq!(p6.x(), c[1][0][2][0], 1e-6);
-            assert_almost_eq!(p6.y(), c[1][0][2][1], 1e-6);
-        } else {
+        let GeometryValue::MultiPolygon { coordinates } = geojson_multi_polygon else {
             panic!("Not valid geometry {:?}", geojson_multi_polygon);
-        }
+        };
+        assert_eq!(p1.x(), coordinates[0][0][0][0]);
+        assert_eq!(p1.y(), coordinates[0][0][0][1]);
+        assert_eq!(p2.x(), coordinates[0][0][1][0]);
+        assert_eq!(p2.y(), coordinates[0][0][1][1]);
+        assert_eq!(p3.x(), coordinates[0][0][2][0]);
+        assert_eq!(p3.y(), coordinates[0][0][2][1]);
+        assert_eq!(p4.x(), coordinates[1][0][0][0]);
+        assert_eq!(p4.y(), coordinates[1][0][0][1]);
+        assert_eq!(p5.x(), coordinates[1][0][1][0]);
+        assert_eq!(p5.y(), coordinates[1][0][1][1]);
+        assert_eq!(p6.x(), coordinates[1][0][2][0]);
+        assert_eq!(p6.y(), coordinates[1][0][2][1]);
     }
 
     #[test]
@@ -536,24 +527,13 @@ mod tests {
 
         let geojson_geometry_collection = GeometryValue::from(&geo_geometry_collection);
 
-        if let GeometryValue::GeometryCollection(geometries) = geojson_geometry_collection {
-            let geometry_type = |geometry: &Geometry| match geometry.value {
-                GeometryValue::Point(..) => "Point",
-                GeometryValue::MultiPoint(..) => "MultiPoint",
-                GeometryValue::LineString(..) => "LineString",
-                GeometryValue::MultiLineString(..) => "MultiLineString",
-                GeometryValue::Polygon(..) => "Polygon",
-                GeometryValue::MultiPolygon(..) => "MultiPolygon",
-                GeometryValue::GeometryCollection(..) => "GeometryCollection",
-            };
-
-            assert_eq!(3, geometries.len());
-            assert_eq!(geometry_type(&geometries[0]), "MultiPoint");
-            assert_eq!(geometry_type(&geometries[1]), "MultiLineString");
-            assert_eq!(geometry_type(&geometries[2]), "MultiPolygon");
-        } else {
+        let GeometryValue::GeometryCollection { geometries } = geojson_geometry_collection else {
             panic!("Not valid geometry {:?}", geojson_geometry_collection);
-        }
+        };
+
+        assert_eq!(geometries[0].value.type_name(), "MultiPoint");
+        assert_eq!(geometries[1].value.type_name(), "MultiLineString");
+        assert_eq!(geometries[2].value.type_name(), "MultiPolygon");
     }
 
     #[test]

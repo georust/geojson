@@ -97,8 +97,8 @@
 //!
 //! // read geometry data
 //! let geometry: Geometry = feature.geometry.unwrap();
-//! if let GeometryValue::Point(coords) = geometry.value {
-//!     assert_eq!(coords.as_slice(), &[-118.2836, 34.0956]);
+//! if let GeometryValue::Point { coordinates } = geometry.value {
+//!     assert_eq!(coordinates.as_slice(), &[-118.2836, 34.0956]);
 //! }
 //!
 //! # else {
@@ -187,14 +187,14 @@
 //!
 //! /// Process GeoJSON geometries
 //! fn process_geometry(geom: &Geometry) {
-//!     match geom.value {
-//!         GeometryValue::Polygon(_) => println!("Matched a Polygon"),
-//!         GeometryValue::MultiPolygon(_) => println!("Matched a MultiPolygon"),
-//!         GeometryValue::GeometryCollection(ref gc) => {
+//!     match &geom.value {
+//!         GeometryValue::Polygon { .. } => println!("Matched a Polygon"),
+//!         GeometryValue::MultiPolygon { .. } => println!("Matched a MultiPolygon"),
+//!         GeometryValue::GeometryCollection { geometries } => {
 //!             println!("Matched a GeometryCollection");
 //!             // !!! GeometryCollections contain other Geometry types, and can
 //!             // nest — we deal with this by recursively processing each geometry
-//!             for geometry in gc {
+//!             for geometry in geometries {
 //!                 process_geometry(geometry)
 //!             }
 //!         }
