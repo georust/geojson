@@ -199,22 +199,11 @@ impl<'de> Deserialize<'de> for Feature {
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(untagged)]
 pub enum Id {
     String(String),
     Number(serde_json::Number),
-}
-
-impl Serialize for Id {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            Id::String(ref s) => s.serialize(serializer),
-            Id::Number(ref n) => n.serialize(serializer),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -540,5 +529,19 @@ mod tests {
             }
             e => panic!("unexpected error: {}", e),
         };
+    }
+
+    #[test]
+    fn test_id_serialize_string() {
+        let id = feature::Id::String("foo".to_string());
+        let json = serde_json::to_string(&id).unwrap();
+        assert_eq!(json, "\"foo\"");
+    }
+
+    #[test]
+    fn test_id_serialize_number_integer() {
+        let id = feature::Id::Number(42.into());
+        let json = serde_json::to_string(&id).unwrap();
+        assert_eq!(json, "42");
     }
 }
