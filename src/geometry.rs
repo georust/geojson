@@ -16,7 +16,7 @@ use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
-use crate::{util, Bbox, LineStringType, PointType, PolygonType};
+use crate::{util, Bbox, LineStringType, PointType, PolygonType, Position};
 use crate::{JsonObject, JsonValue};
 use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -36,11 +36,11 @@ pub type Value = GeometryValue;
 /// let genum = geo_types::Geometry::from(point);
 /// assert_eq!(
 ///     geojson::GeometryValue::from(&point),
-///     geojson::GeometryValue::Point(geojson::Position::from([2., 9.])),
+///     geojson::GeometryValue::new_point([2., 9.]),
 /// );
 /// assert_eq!(
 ///     geojson::GeometryValue::from(&genum),
-///     geojson::GeometryValue::Point(geojson::Position::from([2., 9.])),
+///     geojson::GeometryValue::new_point([2., 9.]),
 /// );
 /// # }
 /// # #[cfg(not(feature = "geo-types"))]
@@ -96,6 +96,57 @@ impl GeometryValue {
             GeometryValue::MultiPolygon(..) => "MultiPolygon",
             GeometryValue::GeometryCollection(..) => "GeometryCollection",
         }
+    }
+    pub fn new_point(value: impl Into<Position>) -> GeometryValue {
+        GeometryValue::Point(value.into())
+    }
+    pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position>>) -> GeometryValue {
+        let coordinates: Vec<Position> = value.into_iter().map(Into::into).collect();
+        GeometryValue::LineString(coordinates)
+    }
+    pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position>>) -> GeometryValue {
+        let coordinates: Vec<Position> = value.into_iter().map(Into::into).collect();
+        GeometryValue::MultiPoint(coordinates)
+    }
+    pub fn new_multi_line_string(
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+    ) -> GeometryValue {
+        let coordinates: Vec<Vec<Position>> = value
+            .into_iter()
+            .map(|line_string| line_string.into_iter().map(Into::into).collect())
+            .collect();
+        GeometryValue::MultiLineString(coordinates)
+    }
+    pub fn new_polygon(
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+    ) -> GeometryValue {
+        let coordinates: Vec<Vec<Position>> = value
+            .into_iter()
+            .map(|ring| ring.into_iter().map(Into::into).collect())
+            .collect();
+        GeometryValue::Polygon(coordinates)
+    }
+    pub fn new_multi_polygon(
+        value: impl IntoIterator<
+            Item = impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+        >,
+    ) -> GeometryValue {
+        let coordinates: Vec<Vec<Vec<Position>>> = value
+            .into_iter()
+            .map(|polygon| {
+                polygon
+                    .into_iter()
+                    .map(|ring| ring.into_iter().map(Into::into).collect())
+                    .collect()
+            })
+            .collect();
+        GeometryValue::MultiPolygon(coordinates)
+    }
+    pub fn new_geometry_collection(
+        value: impl IntoIterator<Item = impl Into<Geometry>>,
+    ) -> GeometryValue {
+        let geometries: Vec<Geometry> = value.into_iter().map(Into::into).collect();
+        GeometryValue::GeometryCollection(geometries)
     }
 }
 
@@ -209,10 +260,16 @@ impl Serialize for GeometryValue {
 /// let geometry = Geometry::new(GeometryValue::Point(Position::from([7.428959, 1.513394])));
 /// ```
 ///
+/// Constructors make this more concise.
+/// ```
+/// # use geojson::{Geometry, GeometryValue};
+/// let geometry = Geometry::new(GeometryValue::new_point([7.428959, 1.513394]));
+/// ```
+///
 /// Geometries can be created from `Value`s.
 /// ```
 /// # use geojson::{Geometry, Position, GeometryValue};
-/// let geometry1: Geometry = GeometryValue::Point(Position::from([7.428959, 1.513394])).into();
+/// let geometry: Geometry = GeometryValue::new_point([7.428959, 1.513394]).into();
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
@@ -221,7 +278,7 @@ impl Serialize for GeometryValue {
 /// use geojson::{GeoJson, Geometry, Position, GeometryValue};
 /// use serde_json;
 ///
-/// let geometry = Geometry::new(GeometryValue::Point(Position::from([7.428959, 1.513394])));
+/// let geometry: Geometry = GeometryValue::new_point([7.428959, 1.513394]).into();
 ///
 /// let geojson_string = geometry.to_string();
 ///
@@ -244,7 +301,7 @@ impl Serialize for GeometryValue {
 /// };
 ///
 /// assert_eq!(
-///     Geometry::new(GeometryValue::Point(Position::from([7.428959, 1.513394])),),
+///     Geometry::new(GeometryValue::new_point([7.428959, 1.513394])),
 ///     geometry,
 /// );
 /// ```
@@ -256,7 +313,7 @@ impl Serialize for GeometryValue {
 /// use geojson::{Geometry, Position, GeometryValue};
 /// use std::convert::TryInto;
 ///
-/// let geometry = Geometry::new(GeometryValue::Point(Position::from([7.428959, 1.513394])));
+/// let geometry = Geometry::new(GeometryValue::new_point([7.428959, 1.513394]));
 /// # #[cfg(feature = "geo-types")]
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
@@ -398,7 +455,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, GeoJson, Geometry, GeometryValue, JsonObject, Position};
+    use crate::{Error, GeoJson, Geometry, GeometryValue, JsonObject};
     use serde_json::json;
     use std::str::FromStr;
 
@@ -413,7 +470,7 @@ mod tests {
     fn encode_decode_geometry() {
         let geometry_json_str = "{\"type\":\"Point\",\"coordinates\":[1.1,2.1]}";
         let geometry = Geometry {
-            value: GeometryValue::Point(Position::from([1.1, 2.1])),
+            value: GeometryValue::new_point([1.1, 2.1]),
             bbox: None,
             foreign_members: None,
         };
@@ -447,7 +504,7 @@ mod tests {
         assert_eq!(
             geometry,
             Geometry {
-                value: GeometryValue::Point(Position::from([0.0, 0.1])),
+                value: GeometryValue::new_point([0.0, 0.1]),
                 bbox: None,
                 foreign_members: None,
             }
@@ -456,11 +513,7 @@ mod tests {
 
     #[test]
     fn test_geometry_display() {
-        let v = GeometryValue::LineString(vec![
-            Position::from([0.0, 0.1]),
-            Position::from([0.1, 0.2]),
-            Position::from([0.2, 0.3]),
-        ]);
+        let v = GeometryValue::new_line_string([[0.0, 0.1], [0.1, 0.2], [0.2, 0.3]]);
         let geometry = Geometry::new(v);
         assert_eq!(
             geometry.to_string(),
@@ -470,11 +523,7 @@ mod tests {
 
     #[test]
     fn test_value_display() {
-        let v = GeometryValue::LineString(vec![
-            Position::from([0.0, 0.1]),
-            Position::from([0.1, 0.2]),
-            Position::from([0.2, 0.3]),
-        ]);
+        let v = GeometryValue::new_line_string([[0.0, 0.1], [0.1, 0.2], [0.2, 0.3]]);
         assert_eq!(
             "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
             v.to_string()
@@ -491,7 +540,7 @@ mod tests {
             serde_json::to_value(true).unwrap(),
         );
         let geometry = Geometry {
-            value: GeometryValue::Point(Position::from([1.1, 2.1])),
+            value: GeometryValue::new_point([1.1, 2.1]),
             bbox: None,
             foreign_members: Some(foreign_members),
         };
@@ -512,20 +561,9 @@ mod tests {
     fn encode_decode_geometry_collection() {
         let geometry_collection = Geometry {
             bbox: None,
-            value: GeometryValue::GeometryCollection(vec![
-                Geometry {
-                    bbox: None,
-                    value: GeometryValue::Point(Position::from([100.0, 0.0])),
-                    foreign_members: None,
-                },
-                Geometry {
-                    bbox: None,
-                    value: GeometryValue::LineString(vec![
-                        Position::from([101.0, 0.0]),
-                        Position::from([102.0, 1.0]),
-                    ]),
-                    foreign_members: None,
-                },
+            value: GeometryValue::new_geometry_collection([
+                GeometryValue::new_point([100.0, 0.0]),
+                GeometryValue::new_line_string([[101.0, 0.0], [102.0, 1.0]]),
             ]),
             foreign_members: None,
         };

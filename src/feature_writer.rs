@@ -270,7 +270,7 @@ impl<W: Write> Drop for FeatureWriter<W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{JsonValue, Position};
+    use crate::{GeometryValue, JsonValue};
 
     use serde_json::json;
 
@@ -328,9 +328,7 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(crate::Geometry::from(crate::GeometryValue::Point(
-                        Position::from([1.1, 1.2]),
-                    ))),
+                    geometry: Some(GeometryValue::new_point([1.1, 1.2]).into()),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,
@@ -344,9 +342,7 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(crate::Geometry::from(crate::GeometryValue::Point(
-                        Position::from([2.1, 2.2]),
-                    ))),
+                    geometry: Some(GeometryValue::new_point([2.1, 2.2]).into()),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,
@@ -388,16 +384,12 @@ mod tests {
         {
             let mut writer = FeatureWriter::from_writer(&mut buffer);
             let record_1 = MyRecord {
-                geometry: crate::Geometry::from(crate::GeometryValue::Point(Position::from([
-                    1.1, 1.2,
-                ]))),
+                geometry: GeometryValue::new_point([1.1, 1.2]).into(),
                 name: "Mishka".to_string(),
                 age: 12,
             };
             let record_2 = MyRecord {
-                geometry: crate::Geometry::from(crate::GeometryValue::Point(Position::from([
-                    2.1, 2.2,
-                ]))),
+                geometry: GeometryValue::new_point([2.1, 2.2]).into(),
                 name: "Jane".to_string(),
                 age: 22,
             };
@@ -449,9 +441,7 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(crate::Geometry::from(crate::GeometryValue::Point(
-                        Position::from([1.1, 1.2]),
-                    ))),
+                    geometry: Some(GeometryValue::new_point([1.1, 1.2]).into()),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,

@@ -79,8 +79,7 @@ impl<G: Into<Geometry>> From<G> for GeoJson {
 impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
     fn from_iter<I: IntoIterator<Item = G>>(iter: I) -> Self {
         use crate::GeometryValue;
-        let geometries = iter.into_iter().map(|g| g.into()).collect();
-        let collection = GeometryValue::GeometryCollection(geometries);
+        let collection = GeometryValue::new_geometry_collection(iter.into_iter().map(Into::into));
         GeoJson::Geometry(Geometry::new(collection))
     }
 }
@@ -184,7 +183,7 @@ impl GeoJson {
     ///     geojson,
     ///     GeoJson::Feature(Feature {
     ///         bbox: None,
-    ///         geometry: Some(Geometry::new(GeometryValue::Point(Position::from([102.0, 0.5])))),
+    ///         geometry: Some(GeometryValue::new_point([102.0, 0.5]).into()),
     ///         id: None,
     ///         properties: None,
     ///         foreign_members: None,
@@ -409,7 +408,7 @@ impl fmt::Display for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, GeometryValue, Position};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, GeometryValue};
     use serde_json::json;
     use std::convert::TryInto;
     use std::str::FromStr;
@@ -460,9 +459,7 @@ mod tests {
             geojson,
             GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(GeometryValue::Point(Position::from([
-                    102.0, 0.5
-                ])))),
+                geometry: Some(GeometryValue::new_point([102.0, 0.5]).into()),
                 id: None,
                 properties: None,
                 foreign_members: None,
@@ -473,8 +470,8 @@ mod tests {
     #[test]
     fn test_geojson_from_features() {
         let features: Vec<Feature> = vec![
-            GeometryValue::Point(Position::from(vec![0., 0., 0.])).into(),
-            GeometryValue::Point(Position::from(vec![1., 1., 1.])).into(),
+            GeometryValue::new_point([0., 0., 0.]).into(),
+            GeometryValue::new_point([1., 1., 1.]).into(),
         ];
 
         let geojson: GeoJson = features.into();
@@ -484,18 +481,14 @@ mod tests {
                 features: vec![
                     Feature {
                         bbox: None,
-                        geometry: Some(Geometry::new(GeometryValue::Point(Position::from(vec![
-                            0., 0., 0.
-                        ])))),
+                        geometry: Some(GeometryValue::new_point([0., 0., 0.]).into()),
                         id: None,
                         properties: None,
                         foreign_members: None,
                     },
                     Feature {
                         bbox: None,
-                        geometry: Some(Geometry::new(GeometryValue::Point(Position::from(vec![
-                            1., 1., 1.
-                        ])))),
+                        geometry: Some(GeometryValue::new_point([1., 1., 1.]).into()),
                         id: None,
                         properties: None,
                         foreign_members: None,
@@ -524,9 +517,7 @@ mod tests {
             geojson,
             GeoJson::Feature(Feature {
                 bbox: None,
-                geometry: Some(Geometry::new(GeometryValue::Point(Position::from([
-                    102.0, 0.5
-                ])))),
+                geometry: Some(GeometryValue::new_point([102.0, 0.5]).into()),
                 id: None,
                 properties: None,
                 foreign_members: None,

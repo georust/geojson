@@ -2,25 +2,28 @@
 
 ## Unreleased
 
-* BREAKING: Position is now a new type, rather than a type alias for Vec. 
-  The new type allows for faster handling of GeoJSON in the common (2-D) case by avoid per-coordinate heap allocations.
-  ```
-  # BEFORE: Position *was* a Vec
+* BREAKING: `Position` is now a struct, rather than a type alias for `Vec`.
+  The new struct uses the [tinyvec crate](https://crates.io/crates/tinyvec),
+  which allows for faster GeoJSON processing in the common (2-D) case by
+  avoiding per-coordinate heap allocations.
+  ```rust
+  // BEFORE: Position *was* a Vec. A Vec is always allocated on the heap, which is slow.
   let position: Position = vec![1.0, 2.0];
   let x = position[0];
-  
-  # AFTER: Position is its own type, buildable from a Vec
+
+  // AFTER: Position is its own type, buildable *from* a Vec.
   let position: Position = vec![1.0, 2.0].into();
-  # index access is unchanged
+  // index access is unchanged
   let x = position[0];
-  
-  # Alternatively, you can construct from an Array, avoiding the Vec's heap allocation.
+
+  // Alternatively, you can now construct from an Array, avoiding the Vec's heap allocation.
   let position: Position = [1.0, 2.0].into();
-  # equivalently:
+  // equivalently:
   let position = Position::from([1.0, 2.0]);
-  
-  # If you are using 3D (or more)
-  let position = Position::from(vec![1.0, 2.0, 3.0]);
+
+  // You can still build 3D+ Positions. These higher dimension coordinates will use Heap storage.
+  let position = Position::from([1.0, 2.0, 3.0]);
+  let position = Position::from(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
   ```
   * See <https://github.com/georust/geojson/pulls/222>
 * Fix: Return `[]` instead of `[[]]` for `POLYGON EMPTY`.
@@ -32,6 +35,31 @@
   * See <https://github.com/georust/geojson/pulls/260>
 * `geojson::Value` has been renamed to `geojson::GeometryValue` for clarity. The old spelling is still available, but deprecated.
   * See <https://github.com/georust/geojson/pull/264>
+* Add ergonomic constructors to `geojson::GeometryValue`.
+  ```rust
+  // BEFORE
+  let point = GeometryValue::Point(Position::from([1.0, 2.0]));
+  let line_string = GeometryValue::LineString(vec![
+    Position::from([1.0, 2.0]),
+    Position::from([3.0, 4.0])
+  ]);
+  let geometry_collection = GeometryValue::GeometryCollection(vec![
+    Geometry::new(point),
+    Geometry::new(line_string)
+  ]);
+
+  // AFTER
+  let point = GeometryValue::new_point([1.0, 2.0]);
+  let line_string = GeometryValue::new_line_string(vec![
+    [1.0, 2.0],
+    [3.0 4.0]
+  ]);
+  let geometry_collection = GeometryValue::new_geometry_collection(vec![
+    point,
+    line_string
+  ]);
+  ```
+  * See <https://github.com/georust/geojson/pull/265>
 
 
 ## 0.24.2 - 2025-02-24

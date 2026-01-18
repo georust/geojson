@@ -130,7 +130,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Geometry, GeometryValue, Position};
+    use crate::{Geometry, GeometryValue};
 
     use std::io::BufReader;
 
@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: GeometryValue::Point(Position::from([102.0, 0.5])),
+                value: GeometryValue::new_point([102.0, 0.5]),
                 foreign_members: None,
             },
             fi.next().unwrap().unwrap().geometry.unwrap()
@@ -196,11 +196,11 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: GeometryValue::LineString(vec![
-                    Position::from([102.0, 0.0]),
-                    Position::from([103.0, 1.0]),
-                    Position::from([104.0, 0.0]),
-                    Position::from([105.0, 1.0])
+                value: GeometryValue::new_line_string([
+                    [102.0, 0.0],
+                    [103.0, 1.0],
+                    [104.0, 0.0],
+                    [105.0, 1.0]
                 ]),
                 foreign_members: None,
             },
@@ -209,12 +209,12 @@ mod tests {
         assert_eq!(
             Geometry {
                 bbox: None,
-                value: GeometryValue::Polygon(vec![vec![
-                    Position::from([100.0, 0.0]),
-                    Position::from([101.0, 0.0]),
-                    Position::from([101.0, 1.0]),
-                    Position::from([100.0, 1.0]),
-                    Position::from([100.0, 0.0])
+                value: GeometryValue::new_polygon([[
+                    [100.0, 0.0],
+                    [101.0, 0.0],
+                    [101.0, 1.0],
+                    [100.0, 1.0],
+                    [100.0, 0.0]
                 ]]),
                 foreign_members: None,
             },

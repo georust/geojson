@@ -548,8 +548,6 @@ pub(crate) mod tests {
     #[cfg(feature = "geo-types")]
     mod geo_types_tests {
         use super::*;
-
-        use crate::Position;
         use serde::Deserialize;
 
         #[test]
@@ -822,9 +820,7 @@ pub(crate) mod tests {
 
             let feature = Feature {
                 bbox: None,
-                geometry: Some(crate::Geometry::new(crate::GeometryValue::Point(
-                    Position::from([125.6, 10.1]),
-                ))),
+                geometry: Some(crate::GeometryValue::new_point([125.6, 10.1]).into()),
                 id: None,
                 properties: Some(
                     json!({
