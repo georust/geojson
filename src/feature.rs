@@ -16,6 +16,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
+use crate::util::deserialize_foreign_members_ignoring_known_keys;
 use crate::{feature, util, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -23,7 +24,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 /// Feature Objects
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub struct Feature {
     /// Bounding Box
@@ -51,8 +52,21 @@ pub struct Feature {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        flatten,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_feature_foreign_members"
+    )]
     pub foreign_members: Option<JsonObject>,
+}
+
+fn deserialize_feature_foreign_members<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_foreign_members_ignoring_known_keys(deserializer, &["type"])
 }
 
 impl From<Geometry> for Feature {
@@ -194,23 +208,10 @@ impl TryFrom<JsonValue> for Feature {
     }
 }
 
-impl<'de> Deserialize<'de> for Feature {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Feature, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
-
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Id {
     String(String),

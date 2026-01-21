@@ -15,6 +15,58 @@
 use crate::errors::{Error, Result};
 use crate::{feature, Bbox, Feature, Geometry, GeometryValue, Position};
 use crate::{JsonObject, JsonValue};
+use serde::de::{IgnoredAny, MapAccess, Visitor};
+use serde::Deserializer;
+use std::fmt;
+use std::fmt::Formatter;
+
+// Deserializing Geometry/Feature in some contexts causes known fields to appear redundantly.
+// e.g. When deserializing a `Feature` or your own custom struct, where Geometry is a sub-field of
+// another struct being deserialized.
+// I don't exactly understand why, but I think it's related to the `serde(flatten)` attribute on the
+// foreign_members fields. In any case, this should go away soon with some upcoming work to introduce
+// a faster intermediate deserialization representation.
+pub(crate) fn deserialize_foreign_members_ignoring_known_keys<'de, D>(
+    deserializer: D,
+    known_keys: &'static [&'static str],
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct ForeignMemberVisitor {
+        known_keys: &'static [&'static str],
+    }
+    impl<'de_v> Visitor<'de_v> for ForeignMemberVisitor {
+        type Value = Option<JsonObject>;
+        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            formatter.write_str("foreign members as Option<JsonObject>")
+        }
+        fn visit_map<A>(self, mut map: A) -> std::result::Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de_v>,
+        {
+            let mut output: Option<JsonObject> = None;
+            while let Some(key) = map.next_key::<String>()? {
+                if self.known_keys.contains(&key.as_str()) {
+                    _ = map.next_value::<IgnoredAny>()?;
+                    continue;
+                }
+                match &mut output {
+                    Some(output) => {
+                        output.insert(key, map.next_value::<JsonValue>()?);
+                    }
+                    None => {
+                        let mut object = JsonObject::new();
+                        object.insert(key, map.next_value::<JsonValue>()?);
+                        output = Some(object);
+                    }
+                }
+            }
+            Ok(output)
+        }
+    }
+    deserializer.deserialize_map(ForeignMemberVisitor { known_keys })
+}
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String> {
     let prop = expect_property(value, "type")?;

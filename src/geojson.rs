@@ -15,7 +15,7 @@
 use crate::errors::{Error, Result};
 use crate::{Feature, FeatureCollection, Geometry};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
@@ -43,7 +43,8 @@ use std::str::FromStr;
 /// let feature2: Feature = geojson.try_into().unwrap();
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum GeoJson {
     Geometry(Geometry),
     Feature(Feature),
@@ -299,32 +300,6 @@ impl Type {
             "FeatureCollection" => Some(Type::FeatureCollection),
             _ => None,
         }
-    }
-}
-
-impl Serialize for GeoJson {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            GeoJson::Geometry(ref geometry) => geometry.serialize(serializer),
-            GeoJson::Feature(ref feature) => feature.serialize(serializer),
-            GeoJson::FeatureCollection(ref fc) => fc.serialize(serializer),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for GeoJson {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<GeoJson, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        GeoJson::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 

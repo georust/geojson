@@ -16,6 +16,7 @@ use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
+use crate::util::deserialize_foreign_members_ignoring_known_keys;
 use crate::{util, Bbox, LineStringType, PointType, PolygonType, Position};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -47,7 +48,7 @@ pub type Value = GeometryValue;
 /// # fn test() {}
 /// # test()
 /// ```
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum GeometryValue {
     /// Point
@@ -280,7 +281,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// # #[cfg(feature = "geo-types")]
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Geometry {
     /// Bounding Box
     ///
@@ -294,8 +295,24 @@ pub struct Geometry {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        flatten,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_geometry_foreign_members"
+    )]
     pub foreign_members: Option<JsonObject>,
+}
+
+fn deserialize_geometry_foreign_members<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_foreign_members_ignoring_known_keys(
+        deserializer,
+        &["type", "coordinates", "geometries"],
+    )
 }
 
 impl Geometry {
@@ -368,19 +385,6 @@ impl FromStr for Geometry {
 
     fn from_str(s: &str) -> Result<Self> {
         Self::try_from(crate::GeoJson::from_str(s)?)
-    }
-}
-
-impl<'de> Deserialize<'de> for Geometry {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Geometry, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        Geometry::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
     }
 }
 
