@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use serde::ser::SerializeMap;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::str::FromStr;
@@ -20,7 +19,7 @@ use std::str::FromStr;
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// Feature Collection Objects
 ///
@@ -61,16 +60,19 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[serde(tag = "type")]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Bbox>,
     pub features: Vec<Feature>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
 }
 
@@ -151,29 +153,6 @@ impl FromStr for FeatureCollection {
 
     fn from_str(s: &str) -> Result<Self> {
         Self::try_from(crate::GeoJson::from_str(s)?)
-    }
-}
-
-impl Serialize for FeatureCollection {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut map = serializer.serialize_map(None)?;
-        map.serialize_entry("type", "FeatureCollection")?;
-        map.serialize_entry("features", &self.features)?;
-
-        if let Some(ref bbox) = self.bbox {
-            map.serialize_entry("bbox", bbox)?;
-        }
-
-        if let Some(ref foreign_members) = self.foreign_members {
-            for (key, value) in foreign_members {
-                map.serialize_entry(key, value)?;
-            }
-        }
-
-        map.end()
     }
 }
 
@@ -349,5 +328,21 @@ mod tests {
             }
             e => panic!("unexpected error: {}", e),
         };
+    }
+
+    #[test]
+    fn encode_decode_feature_collection_with_foreign_members() {
+        let mut foreign_members = serde_json::Map::new();
+        foreign_members.insert("extra".to_string(), serde_json::json!("data"));
+
+        let feature_collection = FeatureCollection {
+            bbox: None,
+            features: vec![],
+            foreign_members: Some(foreign_members),
+        };
+
+        let json_string = serde_json::to_string(&feature_collection).unwrap();
+        let decoded: FeatureCollection = json_string.parse().unwrap();
+        assert_eq!(decoded, feature_collection);
     }
 }

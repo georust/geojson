@@ -18,7 +18,7 @@ use std::{convert::TryFrom, fmt};
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, LineStringType, PointType, PolygonType, Position};
 use crate::{JsonObject, JsonValue};
-use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 #[deprecated(note = "Renamed to GeometryValue")]
 pub type Value = GeometryValue;
@@ -47,66 +47,69 @@ pub type Value = GeometryValue;
 /// # fn test() {}
 /// # test()
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(tag = "type")]
 pub enum GeometryValue {
     /// Point
     ///
     /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
-    Point(PointType),
+    Point { coordinates: PointType },
 
     /// MultiPoint
     ///
     /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3)
-    MultiPoint(Vec<PointType>),
+    MultiPoint { coordinates: Vec<PointType> },
 
     /// LineString
     ///
     /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4)
-    LineString(LineStringType),
+    LineString { coordinates: LineStringType },
 
     /// MultiLineString
     ///
     /// [GeoJSON Format Specification § 3.1.5](https://tools.ietf.org/html/rfc7946#section-3.1.5)
-    MultiLineString(Vec<LineStringType>),
+    MultiLineString { coordinates: Vec<LineStringType> },
 
     /// Polygon
     ///
     /// [GeoJSON Format Specification § 3.1.6](https://tools.ietf.org/html/rfc7946#section-3.1.6)
-    Polygon(PolygonType),
+    Polygon { coordinates: PolygonType },
 
     /// MultiPolygon
     ///
     /// [GeoJSON Format Specification § 3.1.7](https://tools.ietf.org/html/rfc7946#section-3.1.7)
-    MultiPolygon(Vec<PolygonType>),
+    MultiPolygon { coordinates: Vec<PolygonType> },
 
     /// GeometryCollection
     ///
     /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
-    GeometryCollection(Vec<Geometry>),
+    GeometryCollection { geometries: Vec<Geometry> },
 }
 
 impl GeometryValue {
     pub fn type_name(&self) -> &'static str {
         match self {
-            GeometryValue::Point(..) => "Point",
-            GeometryValue::MultiPoint(..) => "MultiPoint",
-            GeometryValue::LineString(..) => "LineString",
-            GeometryValue::MultiLineString(..) => "MultiLineString",
-            GeometryValue::Polygon(..) => "Polygon",
-            GeometryValue::MultiPolygon(..) => "MultiPolygon",
-            GeometryValue::GeometryCollection(..) => "GeometryCollection",
+            GeometryValue::Point { .. } => "Point",
+            GeometryValue::MultiPoint { .. } => "MultiPoint",
+            GeometryValue::LineString { .. } => "LineString",
+            GeometryValue::MultiLineString { .. } => "MultiLineString",
+            GeometryValue::Polygon { .. } => "Polygon",
+            GeometryValue::MultiPolygon { .. } => "MultiPolygon",
+            GeometryValue::GeometryCollection { .. } => "GeometryCollection",
         }
     }
     pub fn new_point(value: impl Into<Position>) -> GeometryValue {
-        GeometryValue::Point(value.into())
+        GeometryValue::Point {
+            coordinates: value.into(),
+        }
     }
     pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position>>) -> GeometryValue {
         let coordinates: Vec<Position> = value.into_iter().map(Into::into).collect();
-        GeometryValue::LineString(coordinates)
+        GeometryValue::LineString { coordinates }
     }
     pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position>>) -> GeometryValue {
         let coordinates: Vec<Position> = value.into_iter().map(Into::into).collect();
-        GeometryValue::MultiPoint(coordinates)
+        GeometryValue::MultiPoint { coordinates }
     }
     pub fn new_multi_line_string(
         value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
@@ -115,7 +118,7 @@ impl GeometryValue {
             .into_iter()
             .map(|line_string| line_string.into_iter().map(Into::into).collect())
             .collect();
-        GeometryValue::MultiLineString(coordinates)
+        GeometryValue::MultiLineString { coordinates }
     }
     pub fn new_polygon(
         value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
@@ -124,7 +127,7 @@ impl GeometryValue {
             .into_iter()
             .map(|ring| ring.into_iter().map(Into::into).collect())
             .collect();
-        GeometryValue::Polygon(coordinates)
+        GeometryValue::Polygon { coordinates }
     }
     pub fn new_multi_polygon(
         value: impl IntoIterator<
@@ -140,33 +143,24 @@ impl GeometryValue {
                     .collect()
             })
             .collect();
-        GeometryValue::MultiPolygon(coordinates)
+        GeometryValue::MultiPolygon { coordinates }
     }
     pub fn new_geometry_collection(
         value: impl IntoIterator<Item = impl Into<Geometry>>,
     ) -> GeometryValue {
         let geometries: Vec<Geometry> = value.into_iter().map(Into::into).collect();
-        GeometryValue::GeometryCollection(geometries)
+        GeometryValue::GeometryCollection { geometries }
     }
 }
 
 impl<'a> From<&'a GeometryValue> for JsonObject {
     fn from(value: &'a GeometryValue) -> JsonObject {
-        let mut map = JsonObject::new();
-        map.insert(
-            String::from("type"),
-            // The unwrap() should never panic, because &str always serializes to JSON
-            ::serde_json::to_value(value.type_name()).unwrap(),
-        );
-        map.insert(
-            String::from(match value {
-                GeometryValue::GeometryCollection(..) => "geometries",
-                _ => "coordinates",
-            }),
-            // The unwrap() should never panic, because Value contains only JSON-serializable types
-            ::serde_json::to_value(value).unwrap(),
-        );
-        map
+        let value = ::serde_json::to_value(value)
+            .expect("GeometryValue contains only JSON-serializable types");
+        let serde_json::Value::Object(object) = value else {
+            unreachable!("GeometryValue always serializes to a JsonObject");
+        };
+        object
     }
 }
 
@@ -177,21 +171,6 @@ impl GeometryValue {
 
     pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
-    }
-
-    fn serialize_to_map<SM: SerializeMap>(
-        &self,
-        map: &mut SM,
-    ) -> std::result::Result<(), SM::Error> {
-        map.serialize_entry("type", self.type_name())?;
-        map.serialize_entry(
-            match self {
-                GeometryValue::GeometryCollection(..) => "geometries",
-                _ => "coordinates",
-            },
-            self,
-        )?;
-        Ok(())
     }
 }
 
@@ -217,7 +196,7 @@ impl TryFrom<JsonValue> for GeometryValue {
 
 impl fmt::Display for GeometryValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        ::serde_json::to_string(&JsonObject::from(self))
+        ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
             .and_then(|s| f.write_str(&s))
     }
@@ -226,23 +205,6 @@ impl fmt::Display for GeometryValue {
 impl<'a> From<&'a GeometryValue> for JsonValue {
     fn from(value: &'a GeometryValue) -> JsonValue {
         ::serde_json::to_value(value).unwrap()
-    }
-}
-
-impl Serialize for GeometryValue {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            GeometryValue::Point(x) => x.serialize(serializer),
-            GeometryValue::MultiPoint(x) => x.serialize(serializer),
-            GeometryValue::LineString(x) => x.serialize(serializer),
-            GeometryValue::MultiLineString(x) => x.serialize(serializer),
-            GeometryValue::Polygon(x) => x.serialize(serializer),
-            GeometryValue::MultiPolygon(x) => x.serialize(serializer),
-            GeometryValue::GeometryCollection(x) => x.serialize(serializer),
-        }
     }
 }
 
@@ -257,7 +219,7 @@ impl Serialize for GeometryValue {
 /// ```
 /// use geojson::{Geometry, Position, GeometryValue};
 ///
-/// let geometry = Geometry::new(GeometryValue::Point(Position::from([7.428959, 1.513394])));
+/// let geometry = Geometry::new(GeometryValue::Point { coordinates: Position::from([7.428959, 1.513394]) });
 /// ```
 ///
 /// Constructors make this more concise.
@@ -266,7 +228,7 @@ impl Serialize for GeometryValue {
 /// let geometry = Geometry::new(GeometryValue::new_point([7.428959, 1.513394]));
 /// ```
 ///
-/// Geometries can be created from `Value`s.
+/// `GeometryValue` can be converted `into` a `Geometry`.
 /// ```
 /// # use geojson::{Geometry, Position, GeometryValue};
 /// let geometry: Geometry = GeometryValue::new_point([7.428959, 1.513394]).into();
@@ -293,12 +255,9 @@ impl Serialize for GeometryValue {
 /// ```
 /// use geojson::{GeoJson, Geometry, Position, GeometryValue};
 ///
-/// let geojson_str = "{\"coordinates\":[7.428959,1.513394],\"type\":\"Point\"}";
+/// let geojson_str = r#"{"type":"Point", "coordinates":[7.428959,1.513394]}"#;
 ///
-/// let geometry = match geojson_str.parse::<GeoJson>() {
-///     Ok(GeoJson::Geometry(g)) => g,
-///     _ => return,
-/// };
+/// let geometry = geojson_str.parse::<Geometry>().expect("valid Geometry GeoJSON");
 ///
 /// assert_eq!(
 ///     Geometry::new(GeometryValue::new_point([7.428959, 1.513394])),
@@ -317,16 +276,21 @@ impl Serialize for GeometryValue {
 /// # #[cfg(feature = "geo-types")]
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Geometry {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Bbox>,
+
+    #[serde(flatten)]
     pub value: GeometryValue,
+
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
 }
 
@@ -366,23 +330,6 @@ impl Geometry {
     pub fn from_json_value(value: JsonValue) -> Result<Self> {
         Self::try_from(value)
     }
-
-    fn serialize_to_map<SM: SerializeMap>(
-        &self,
-        map: &mut SM,
-    ) -> std::result::Result<(), SM::Error> {
-        self.value.serialize_to_map(map)?;
-        if let Some(ref bbox) = self.bbox {
-            map.serialize_entry("bbox", bbox)?;
-        }
-
-        if let Some(ref foreign_members) = self.foreign_members {
-            for (key, value) in foreign_members {
-                map.serialize_entry(key, value)?
-            }
-        }
-        Ok(())
-    }
 }
 
 impl TryFrom<JsonObject> for Geometry {
@@ -417,17 +364,6 @@ impl FromStr for Geometry {
 
     fn from_str(s: &str) -> Result<Self> {
         Self::try_from(crate::GeoJson::from_str(s)?)
-    }
-}
-
-impl Serialize for Geometry {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut map = serializer.serialize_map(None)?;
-        self.serialize_to_map(&mut map)?;
-        map.end()
     }
 }
 
@@ -525,7 +461,7 @@ mod tests {
     fn test_value_display() {
         let v = GeometryValue::new_line_string([[0.0, 0.1], [0.1, 0.2], [0.2, 0.3]]);
         assert_eq!(
-            "{\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]],\"type\":\"LineString\"}",
+            r#"{"type":"LineString","coordinates":[[0.0,0.1],[0.1,0.2],[0.2,0.3]]}"#,
             v.to_string()
         );
     }
@@ -590,7 +526,7 @@ mod tests {
         .to_string();
 
         let geometry = Geometry::from_str(&geometry_json).unwrap();
-        assert!(matches!(geometry.value, GeometryValue::Point(_)));
+        assert!(matches!(geometry.value, GeometryValue::Point { .. }));
     }
 
     #[test]

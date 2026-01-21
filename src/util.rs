@@ -171,13 +171,27 @@ pub fn get_id(object: &mut JsonObject) -> Result<Option<feature::Id>> {
 pub fn get_value(object: &mut JsonObject) -> Result<GeometryValue> {
     let res = &*expect_type(object)?;
     match res {
-        "Point" => Ok(GeometryValue::Point(get_coords_one_pos(object)?)),
-        "MultiPoint" => Ok(GeometryValue::MultiPoint(get_coords_1d_pos(object)?)),
-        "LineString" => Ok(GeometryValue::LineString(get_coords_1d_pos(object)?)),
-        "MultiLineString" => Ok(GeometryValue::MultiLineString(get_coords_2d_pos(object)?)),
-        "Polygon" => Ok(GeometryValue::Polygon(get_coords_2d_pos(object)?)),
-        "MultiPolygon" => Ok(GeometryValue::MultiPolygon(get_coords_3d_pos(object)?)),
-        "GeometryCollection" => Ok(GeometryValue::GeometryCollection(get_geometries(object)?)),
+        "Point" => Ok(GeometryValue::Point {
+            coordinates: get_coords_one_pos(object)?,
+        }),
+        "MultiPoint" => Ok(GeometryValue::MultiPoint {
+            coordinates: get_coords_1d_pos(object)?,
+        }),
+        "LineString" => Ok(GeometryValue::LineString {
+            coordinates: get_coords_1d_pos(object)?,
+        }),
+        "MultiLineString" => Ok(GeometryValue::MultiLineString {
+            coordinates: get_coords_2d_pos(object)?,
+        }),
+        "Polygon" => Ok(GeometryValue::Polygon {
+            coordinates: get_coords_2d_pos(object)?,
+        }),
+        "MultiPolygon" => Ok(GeometryValue::MultiPolygon {
+            coordinates: get_coords_3d_pos(object)?,
+        }),
+        "GeometryCollection" => Ok(GeometryValue::GeometryCollection {
+            geometries: get_geometries(object)?,
+        }),
         _ => Err(Error::GeometryUnknownType(res.to_string())),
     }
 }

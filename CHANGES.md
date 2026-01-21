@@ -60,7 +60,21 @@
   ]);
   ```
   * See <https://github.com/georust/geojson/pull/265>
+* The `geojson::GeometryValue` enum variants now have a named field, rather than a newtype.
+  ```rust
+  let position = Position::from([1,2]);
 
+  // before
+  let point = geojson::GeometryValue::Point(position);
+  let geometry_collection = geojson::GeometryValue::GeometryCollection(vec![point.into()]);
+
+  // after
+  let point = geojson::GeometryValue::Point { coordinates: position };
+  let geometry_collection = geojson::GeometryValue::GeometryCollection { geometries: vec![point.into()] };
+  
+  // or using the new constructor
+  let point = geojson::GeometryValue::new_point(position);
+  ```
 
 ## 0.24.2 - 2025-02-24
 

@@ -15,7 +15,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::Point(point_type) => Ok(create_geo_point(point_type)),
+            GeometryValue::Point { coordinates } => Ok(create_geo_point(coordinates)),
             other => Err(mismatch_geom_err("Point", other)),
         }
     }
@@ -31,8 +31,8 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::MultiPoint(multi_point_type) => Ok(geo_types::MultiPoint(
-                multi_point_type
+            GeometryValue::MultiPoint { coordinates } => Ok(geo_types::MultiPoint(
+                coordinates
                     .iter()
                     .map(|point_type| create_geo_point(point_type))
                     .collect(),
@@ -52,9 +52,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::LineString(multi_point_type) => {
-                Ok(create_geo_line_string(multi_point_type))
-            }
+            GeometryValue::LineString { coordinates } => Ok(create_geo_line_string(coordinates)),
             other => Err(mismatch_geom_err("LineString", other)),
         }
     }
@@ -70,8 +68,8 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::MultiLineString(multi_line_string_type) => {
-                Ok(create_geo_multi_line_string(multi_line_string_type))
+            GeometryValue::MultiLineString { coordinates } => {
+                Ok(create_geo_multi_line_string(coordinates))
             }
             other => Err(mismatch_geom_err("MultiLineString", other)),
         }
@@ -88,7 +86,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::Polygon(polygon_type) => Ok(create_geo_polygon(polygon_type)),
+            GeometryValue::Polygon { coordinates } => Ok(create_geo_polygon(coordinates)),
             other => Err(mismatch_geom_err("Polygon", other)),
         }
     }
@@ -104,8 +102,8 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<geo_types::MultiPolygon<T>> {
         match value {
-            GeometryValue::MultiPolygon(multi_polygon_type) => {
-                Ok(create_geo_multi_polygon(multi_polygon_type))
+            GeometryValue::MultiPolygon { coordinates } => {
+                Ok(create_geo_multi_polygon(coordinates))
             }
             other => Err(mismatch_geom_err("MultiPolygon", other)),
         }
@@ -122,7 +120,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::GeometryCollection(geometries) => {
+            GeometryValue::GeometryCollection { geometries } => {
                 let geojson_geometries = geometries
                     .iter()
                     .map(|geometry| (&geometry.value).try_into().unwrap())
@@ -144,35 +142,33 @@ where
     type Error = Error;
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
-        match value {
-            GeometryValue::Point(ref point_type) => {
-                Ok(geo_types::Geometry::Point(create_geo_point(point_type)))
+        match &value {
+            GeometryValue::Point { coordinates } => {
+                Ok(geo_types::Geometry::Point(create_geo_point(coordinates)))
             }
-            GeometryValue::MultiPoint(ref multi_point_type) => {
+            GeometryValue::MultiPoint { coordinates } => {
                 Ok(geo_types::Geometry::MultiPoint(geo_types::MultiPoint(
-                    multi_point_type
+                    coordinates
                         .iter()
                         .map(|point_type| create_geo_point(point_type))
                         .collect(),
                 )))
             }
-            GeometryValue::LineString(ref line_string_type) => Ok(geo_types::Geometry::LineString(
-                create_geo_line_string(line_string_type),
+            GeometryValue::LineString { coordinates } => Ok(geo_types::Geometry::LineString(
+                create_geo_line_string(coordinates),
             )),
-            GeometryValue::MultiLineString(ref multi_line_string_type) => {
-                Ok(geo_types::Geometry::MultiLineString(
-                    create_geo_multi_line_string(multi_line_string_type),
-                ))
-            }
-            GeometryValue::Polygon(ref polygon_type) => Ok(geo_types::Geometry::Polygon(
-                create_geo_polygon(polygon_type),
-            )),
-            GeometryValue::MultiPolygon(ref multi_polygon_type) => Ok(
-                geo_types::Geometry::MultiPolygon(create_geo_multi_polygon(multi_polygon_type)),
+            GeometryValue::MultiLineString { coordinates } => Ok(
+                geo_types::Geometry::MultiLineString(create_geo_multi_line_string(coordinates)),
             ),
-            GeometryValue::GeometryCollection(ref gc_type) => {
+            GeometryValue::Polygon { coordinates } => Ok(geo_types::Geometry::Polygon(
+                create_geo_polygon(coordinates),
+            )),
+            GeometryValue::MultiPolygon { coordinates } => Ok(geo_types::Geometry::MultiPolygon(
+                create_geo_multi_polygon(coordinates),
+            )),
+            GeometryValue::GeometryCollection { geometries } => {
                 let gc = geo_types::Geometry::GeometryCollection(geo_types::GeometryCollection(
-                    gc_type
+                    geometries
                         .iter()
                         .cloned()
                         .map(|geom| geom.try_into())

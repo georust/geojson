@@ -407,24 +407,13 @@ mod tests {
         ));
         let geojson_geometry_collection = GeometryValue::from(&geo_geometry_collection);
 
-        if let GeometryValue::GeometryCollection(geometries) = geojson_geometry_collection {
-            let geometry_type = |geometry: &Geometry| match geometry.value {
-                GeometryValue::Point(..) => "Point",
-                GeometryValue::MultiPoint(..) => "MultiPoint",
-                GeometryValue::LineString(..) => "LineString",
-                GeometryValue::MultiLineString(..) => "MultiLineString",
-                GeometryValue::Polygon(..) => "Polygon",
-                GeometryValue::MultiPolygon(..) => "MultiPolygon",
-                GeometryValue::GeometryCollection(..) => "GeometryCollection",
-            };
-
-            assert_eq!(3, geometries.len());
-            assert_eq!(geometry_type(&geometries[0]), "MultiPoint");
-            assert_eq!(geometry_type(&geometries[1]), "MultiLineString");
-            assert_eq!(geometry_type(&geometries[2]), "MultiPolygon");
-        } else {
+        let GeometryValue::GeometryCollection { geometries } = geojson_geometry_collection else {
             panic!("Not valid geometry {:?}", geojson_geometry_collection);
-        }
+        };
+
+        assert_eq!(geometries[0].value.type_name(), "MultiPoint");
+        assert_eq!(geometries[1].value.type_name(), "MultiLineString");
+        assert_eq!(geometries[2].value.type_name(), "MultiPolygon");
     }
 
     #[test]

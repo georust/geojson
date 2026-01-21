@@ -97,8 +97,8 @@
 //!
 //! // read geometry data
 //! let geometry: Geometry = feature.geometry.unwrap();
-//! if let GeometryValue::Point(coords) = geometry.value {
-//!     assert_eq!(coords.as_slice(), &[-118.2836, 34.0956]);
+//! if let GeometryValue::Point { coordinates } = geometry.value {
+//!     assert_eq!(coordinates.as_slice(), &[-118.2836, 34.0956]);
 //! }
 //!
 //! # else {
@@ -111,7 +111,7 @@
 //! `GeoJson` can be serialized by calling [`to_string`](geojson/enum.GeoJson.html#impl-ToString):
 //!
 //! ```rust
-//! use geojson::{Feature, GeoJson, Geometry, Value};
+//! use geojson::{Feature, GeoJson, Geometry, GeometryValue};
 //! # fn get_properties() -> ::geojson::JsonObject {
 //! # let mut properties = ::geojson::JsonObject::new();
 //! # properties.insert(
@@ -122,7 +122,7 @@
 //! # }
 //! # fn main() {
 //!
-//! let geometry = Geometry::new(Value::new_point([-120.66029, 35.2812]));
+//! let geometry = Geometry::new(GeometryValue::new_point([-120.66029, 35.2812]));
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
@@ -187,14 +187,14 @@
 //!
 //! /// Process GeoJSON geometries
 //! fn process_geometry(geom: &Geometry) {
-//!     match geom.value {
-//!         GeometryValue::Polygon(_) => println!("Matched a Polygon"),
-//!         GeometryValue::MultiPolygon(_) => println!("Matched a MultiPolygon"),
-//!         GeometryValue::GeometryCollection(ref gc) => {
+//!     match &geom.value {
+//!         GeometryValue::Polygon { .. } => println!("Matched a Polygon"),
+//!         GeometryValue::MultiPolygon { .. } => println!("Matched a MultiPolygon"),
+//!         GeometryValue::GeometryCollection { geometries } => {
 //!             println!("Matched a GeometryCollection");
 //!             // !!! GeometryCollections contain other Geometry types, and can
 //!             // nest — we deal with this by recursively processing each geometry
-//!             for geometry in gc {
+//!             for geometry in geometries {
 //!                 process_geometry(geometry)
 //!             }
 //!         }
@@ -355,7 +355,7 @@
 //!    foreign members, will be lost.
 //!
 //! ```ignore
-//! #[derive(serde::Serialize, serde::Deserialize)]
+//! #[derive(Serialize, Deserialize)]
 //! struct MyStruct {
 //!     // Serialize as geojson, rather than using the type's default serialization
 //!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
@@ -401,7 +401,7 @@ use tinyvec::TinyVec;
 /// let position_3d = Position::from(vec![1.0, 2.0, 3.0]);
 /// let z = position_3d[2];
 /// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Position(TinyVec<[f64; 2]>);
 
 impl Position {
@@ -526,14 +526,18 @@ pub use feature_writer::FeatureWriter;
 #[cfg(feature = "geo-types")]
 pub use conversion::quick_collection;
 
+use serde::{Deserialize, Serialize};
+
 /// Feature Objects
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[serde(tag = "type")]
 pub struct Feature {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Bbox>,
     /// Geometry
     ///
@@ -542,6 +546,7 @@ pub struct Feature {
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<feature::Id>,
     /// Properties
     ///
@@ -554,6 +559,7 @@ pub struct Feature {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
 }
 
