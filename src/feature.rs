@@ -18,7 +18,7 @@ use std::str::FromStr;
 use crate::errors::{Error, Result};
 use crate::{util, Feature, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
-use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
@@ -159,30 +159,6 @@ impl TryFrom<JsonValue> for Feature {
     }
 }
 
-impl Serialize for Feature {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut map = serializer.serialize_map(None)?;
-        map.serialize_entry("type", "Feature")?;
-        map.serialize_entry("geometry", &self.geometry)?;
-        map.serialize_entry("properties", &self.properties)?;
-        if let Some(ref bbox) = self.bbox {
-            map.serialize_entry("bbox", bbox)?;
-        }
-        if let Some(ref id) = self.id {
-            map.serialize_entry("id", id)?;
-        }
-        if let Some(ref foreign_members) = self.foreign_members {
-            for (key, value) in foreign_members {
-                map.serialize_entry(key, value)?;
-            }
-        }
-        map.end()
-    }
-}
-
 impl<'de> Deserialize<'de> for Feature {
     fn deserialize<D>(deserializer: D) -> std::result::Result<Feature, D::Error>
     where
@@ -199,22 +175,11 @@ impl<'de> Deserialize<'de> for Feature {
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(untagged)]
 pub enum Id {
     String(String),
     Number(serde_json::Number),
-}
-
-impl Serialize for Id {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            Id::String(ref s) => s.serialize(serializer),
-            Id::Number(ref n) => n.serialize(serializer),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -354,8 +319,8 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_id_number() {
-        let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":0}";
-        let feature = crate::Feature {
+        let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"id":0,"properties":{}}"#;
+        let feature = Feature {
             geometry: Some(Geometry {
                 value: GeometryValue::new_point([1.1, 2.1]),
                 bbox: None,
@@ -380,7 +345,7 @@ mod tests {
 
     #[test]
     fn encode_decode_feature_with_id_string() {
-        let feature_json_str = "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{},\"id\":\"foo\"}";
+        let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"id":"foo","properties":{}}"#;
         let feature = crate::Feature {
             geometry: Some(Geometry {
                 value: GeometryValue::new_point([1.1, 2.1]),
@@ -540,5 +505,19 @@ mod tests {
             }
             e => panic!("unexpected error: {}", e),
         };
+    }
+
+    #[test]
+    fn test_id_serialize_string() {
+        let id = feature::Id::String("foo".to_string());
+        let json = serde_json::to_string(&id).unwrap();
+        assert_eq!(json, "\"foo\"");
+    }
+
+    #[test]
+    fn test_id_serialize_number_integer() {
+        let id = feature::Id::Number(42.into());
+        let json = serde_json::to_string(&id).unwrap();
+        assert_eq!(json, "42");
     }
 }
