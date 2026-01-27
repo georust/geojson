@@ -16,10 +16,9 @@ use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
-use crate::util::deserialize_foreign_members_ignoring_known_keys;
 use crate::{util, Bbox, LineStringType, PointType, PolygonType, Position};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[deprecated(note = "Renamed to GeometryValue")]
 pub type Value = GeometryValue;
@@ -282,6 +281,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
 /// ```
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "deserialize::RawGeometry")]
 pub struct Geometry {
     /// Bounding Box
     ///
@@ -295,24 +295,8 @@ pub struct Geometry {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    #[serde(
-        flatten,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "deserialize_geometry_foreign_members"
-    )]
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
-}
-
-fn deserialize_geometry_foreign_members<'de, D>(
-    deserializer: D,
-) -> std::result::Result<Option<JsonObject>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserialize_foreign_members_ignoring_known_keys(
-        deserializer,
-        &["type", "coordinates", "geometries"],
-    )
 }
 
 impl Geometry {
@@ -394,6 +378,249 @@ where
 {
     fn from(v: V) -> Geometry {
         Geometry::new(v.into())
+    }
+}
+
+mod deserialize {
+    use super::*;
+    use serde::de::{Deserializer, SeqAccess, Visitor};
+    use std::fmt::Formatter;
+    use tinyvec::TinyVec;
+
+    /// Internal enum for geometry type discrimination during deserialization.
+    #[derive(Debug, Clone, PartialEq, Deserialize)]
+    enum GeometryType {
+        Point,
+        LineString,
+        Polygon,
+        MultiPoint,
+        MultiLineString,
+        MultiPolygon,
+        GeometryCollection,
+    }
+
+    /// An efficiently deserializable representation for Geometry coordinates
+    #[derive(Debug, Clone, PartialEq)]
+    #[allow(clippy::enum_variant_names)]
+    enum Coordinates {
+        ZeroDimensional(Position),
+        OneDimensional(Vec<Position>),
+        TwoDimensional(Vec<Vec<Position>>),
+        ThreeDimensional(Vec<Vec<Vec<Position>>>),
+    }
+
+    impl<'de> Deserialize<'de> for Coordinates {
+        fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            /// While parsing the coordinates field, the next element will be either an individual Float
+            /// or a (potentially nested) sequence of floats.
+            enum CoordsElement {
+                Float(f64),
+                Coords(Coordinates),
+            }
+
+            impl<'de> Deserialize<'de> for CoordsElement {
+                fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    struct CoordsElementVisitor;
+                    impl<'de> Visitor<'de> for CoordsElementVisitor {
+                        type Value = CoordsElement;
+
+                        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+                            formatter.write_str("a coordinate element (number or array)")
+                        }
+
+                        fn visit_i64<E>(self, value: i64) -> std::result::Result<CoordsElement, E> {
+                            Ok(CoordsElement::Float(value as f64))
+                        }
+
+                        fn visit_u64<E>(self, value: u64) -> std::result::Result<CoordsElement, E> {
+                            Ok(CoordsElement::Float(value as f64))
+                        }
+
+                        fn visit_f64<E>(self, value: f64) -> std::result::Result<CoordsElement, E> {
+                            Ok(CoordsElement::Float(value))
+                        }
+
+                        fn visit_seq<A>(
+                            self,
+                            mut seq: A,
+                        ) -> std::result::Result<Self::Value, A::Error>
+                        where
+                            A: SeqAccess<'de>,
+                        {
+                            let coords = match seq.next_element::<CoordsElement>()? {
+                                // Empty array [] - treat as OneDimensional([])
+                                None => Coordinates::OneDimensional(vec![]),
+                                // First element is a float -> this is a position [x, y, ...]
+                                Some(CoordsElement::Float(first)) => {
+                                    let mut floats = TinyVec::<[f64; 2]>::new();
+                                    floats.push(first);
+                                    while let Some(next) = seq.next_element::<f64>()? {
+                                        floats.push(next);
+                                    }
+                                    Coordinates::ZeroDimensional(Position::from(floats))
+                                }
+                                // First element is a sequence, collect the rest of the elements.
+                                Some(CoordsElement::Coords(coords)) => match coords {
+                                    Coordinates::ZeroDimensional(first) => {
+                                        let mut positions_1d = vec![first];
+                                        while let Some(next) = seq.next_element::<Position>()? {
+                                            positions_1d.push(next);
+                                        }
+                                        Coordinates::OneDimensional(positions_1d)
+                                    }
+                                    Coordinates::OneDimensional(positions_1d) => {
+                                        let mut positions_2d = vec![positions_1d];
+                                        while let Some(next) =
+                                            seq.next_element::<Vec<Position>>()?
+                                        {
+                                            positions_2d.push(next);
+                                        }
+                                        Coordinates::TwoDimensional(positions_2d)
+                                    }
+                                    Coordinates::TwoDimensional(positions_2d) => {
+                                        let mut positions_3d = vec![positions_2d];
+                                        while let Some(next) =
+                                            seq.next_element::<Vec<Vec<Position>>>()?
+                                        {
+                                            positions_3d.push(next);
+                                        }
+                                        Coordinates::ThreeDimensional(positions_3d)
+                                    }
+                                    Coordinates::ThreeDimensional(_) => {
+                                        return Err(serde::de::Error::custom(
+                                            "coordinate nesting too deep",
+                                        ))
+                                    }
+                                },
+                            };
+                            Ok(CoordsElement::Coords(coords))
+                        }
+                    }
+                    deserializer.deserialize_any(CoordsElementVisitor)
+                }
+            }
+
+            match CoordsElement::deserialize(deserializer)? {
+                CoordsElement::Float(_) => {
+                    Err(serde::de::Error::custom("expected array, got number"))
+                }
+                CoordsElement::Coords(coords) => Ok(coords),
+            }
+        }
+    }
+
+    /// Internal struct for deserializing geometry JSON into before converting to Geometry.
+    /// This captures all possible geometry fields, allowing validation during TryFrom conversion.
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct RawGeometry {
+        r#type: GeometryType,
+        #[serde(default)]
+        coordinates: Option<Coordinates>,
+        #[serde(default)]
+        geometries: Option<Vec<Geometry>>,
+        #[serde(default)]
+        bbox: Option<Bbox>,
+        /// Captures all other fields as foreign members
+        #[serde(flatten)]
+        foreign_members: Option<JsonObject>,
+    }
+
+    impl TryFrom<RawGeometry> for Geometry {
+        type Error = Error;
+
+        fn try_from(raw: RawGeometry) -> Result<Self> {
+            let foreign_members =
+                raw.foreign_members
+                    .and_then(|fm| if fm.is_empty() { None } else { Some(fm) });
+
+            let value = match (raw.r#type, raw.coordinates, raw.geometries) {
+                // Point: ZeroDimensional coordinates
+                (GeometryType::Point, Some(Coordinates::ZeroDimensional(coordinates)), None) => {
+                    GeometryValue::Point { coordinates }
+                }
+
+                // LineString: OneDimensional coordinates (handles empty case too)
+                (
+                    GeometryType::LineString,
+                    Some(Coordinates::OneDimensional(coordinates)),
+                    None,
+                ) => GeometryValue::LineString { coordinates },
+
+                // Polygon: TwoDimensional coordinates
+                (GeometryType::Polygon, Some(Coordinates::TwoDimensional(coordinates)), None) => {
+                    GeometryValue::Polygon { coordinates }
+                }
+                // Empty Polygon (coordinates: [] deserializes as OneDimensional([]))
+                (GeometryType::Polygon, Some(Coordinates::OneDimensional(coordinates)), None)
+                    if coordinates.is_empty() =>
+                {
+                    GeometryValue::Polygon {
+                        coordinates: vec![],
+                    }
+                }
+
+                // MultiPoint: OneDimensional coordinates (handles empty case too)
+                (
+                    GeometryType::MultiPoint,
+                    Some(Coordinates::OneDimensional(coordinates)),
+                    None,
+                ) => GeometryValue::MultiPoint { coordinates },
+
+                // MultiLineString: TwoDimensional coordinates
+                (
+                    GeometryType::MultiLineString,
+                    Some(Coordinates::TwoDimensional(coordinates)),
+                    None,
+                ) => GeometryValue::MultiLineString { coordinates },
+                // Empty MultiLineString (coordinates: [] deserializes as OneDimensional([]))
+                (
+                    GeometryType::MultiLineString,
+                    Some(Coordinates::OneDimensional(coordinates)),
+                    None,
+                ) if coordinates.is_empty() => GeometryValue::MultiLineString {
+                    coordinates: vec![],
+                },
+
+                // MultiPolygon: ThreeDimensional coordinates
+                (
+                    GeometryType::MultiPolygon,
+                    Some(Coordinates::ThreeDimensional(coordinates)),
+                    None,
+                ) => GeometryValue::MultiPolygon { coordinates },
+                // Empty MultiPolygon (coordinates: [] deserializes as OneDimensional([]))
+                (
+                    GeometryType::MultiPolygon,
+                    Some(Coordinates::OneDimensional(coordinates)),
+                    None,
+                ) if coordinates.is_empty() => GeometryValue::MultiPolygon {
+                    coordinates: vec![],
+                },
+
+                // GeometryCollection: geometries array, no coordinates
+                (GeometryType::GeometryCollection, None, Some(geometries)) => {
+                    GeometryValue::GeometryCollection { geometries }
+                }
+
+                // Invalid combinations
+                _ => {
+                    return Err(Error::GeometryUnknownType(
+                        "invalid geometry: mismatched type and coordinates".to_string(),
+                    ))
+                }
+            };
+
+            Ok(Geometry {
+                bbox: raw.bbox,
+                value,
+                foreign_members,
+            })
+        }
     }
 }
 
