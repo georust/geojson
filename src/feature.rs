@@ -16,9 +16,44 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
-use crate::{util, Feature, Geometry, GeometryValue};
+use crate::{feature, util, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize};
+
+/// Feature Objects
+///
+/// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[serde(tag = "type")]
+pub struct Feature {
+    /// Bounding Box
+    ///
+    /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bbox: Option<Bbox>,
+    /// Geometry
+    ///
+    /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+    pub geometry: Option<Geometry>,
+    /// Identifier
+    ///
+    /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<feature::Id>,
+    /// Properties
+    ///
+    /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+    ///
+    /// NOTE: This crate will permissively parse a Feature whose json is missing a `properties` key.
+    /// Because the spec implies that the `properties` key must be present, we will always include
+    /// the `properties` key when serializing.
+    pub properties: Option<JsonObject>,
+    /// Foreign Members
+    ///
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub foreign_members: Option<JsonObject>,
+}
 
 impl From<Geometry> for Feature {
     fn from(geom: Geometry) -> Feature {
