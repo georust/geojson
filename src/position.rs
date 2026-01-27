@@ -39,6 +39,14 @@ impl Position {
     pub fn as_slice_mut(&mut self) -> &mut [f64] {
         &mut self.0
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl<I: SliceIndex<[f64]>> Index<I> for Position {

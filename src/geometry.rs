@@ -381,15 +381,16 @@ where
     }
 }
 
-mod deserialize {
+pub(crate) mod deserialize {
     use super::*;
+    use crate::util::normalize_foreign_members;
     use serde::de::{Deserializer, SeqAccess, Visitor};
     use std::fmt::Formatter;
     use tinyvec::TinyVec;
 
     /// Internal enum for geometry type discrimination during deserialization.
     #[derive(Debug, Clone, PartialEq, Deserialize)]
-    enum GeometryType {
+    pub(crate) enum GeometryType {
         Point,
         LineString,
         Polygon,
@@ -402,7 +403,7 @@ mod deserialize {
     /// An efficiently deserializable representation for Geometry coordinates
     #[derive(Debug, Clone, PartialEq)]
     #[allow(clippy::enum_variant_names)]
-    enum Coordinates {
+    pub(crate) enum Coordinates {
         ZeroDimensional(Position),
         OneDimensional(Vec<Position>),
         TwoDimensional(Vec<Vec<Position>>),
@@ -518,31 +519,39 @@ mod deserialize {
     /// Internal struct for deserializing geometry JSON into before converting to Geometry.
     /// This captures all possible geometry fields, allowing validation during TryFrom conversion.
     #[derive(Debug, Clone, Deserialize)]
+    #[serde(expecting = "Geometry object")]
     pub(crate) struct RawGeometry {
-        r#type: GeometryType,
+        pub(crate) r#type: GeometryType,
         #[serde(default)]
-        coordinates: Option<Coordinates>,
+        pub(crate) coordinates: Option<Coordinates>,
         #[serde(default)]
-        geometries: Option<Vec<Geometry>>,
+        pub(crate) geometries: Option<Vec<Geometry>>,
         #[serde(default)]
-        bbox: Option<Bbox>,
+        pub(crate) bbox: Option<Bbox>,
         /// Captures all other fields as foreign members
         #[serde(flatten)]
-        foreign_members: Option<JsonObject>,
+        pub(crate) foreign_members: Option<JsonObject>,
     }
 
     impl TryFrom<RawGeometry> for Geometry {
         type Error = Error;
 
-        fn try_from(raw: RawGeometry) -> Result<Self> {
-            let foreign_members =
-                raw.foreign_members
-                    .and_then(|fm| if fm.is_empty() { None } else { Some(fm) });
+        fn try_from(mut raw: RawGeometry) -> Result<Self> {
+            normalize_foreign_members(&mut raw.foreign_members);
 
             let value = match (raw.r#type, raw.coordinates, raw.geometries) {
                 // Point: ZeroDimensional coordinates
                 (GeometryType::Point, Some(Coordinates::ZeroDimensional(coordinates)), None) => {
+                    if coordinates.len() < 2 {
+                        return Err(Error::PositionTooShort(coordinates.len()));
+                    }
                     GeometryValue::Point { coordinates }
+                }
+                // Empty Point (coordinates: [] deserializes as OneDimensional([]))
+                (GeometryType::Point, Some(Coordinates::OneDimensional(coordinates)), None)
+                    if coordinates.is_empty() =>
+                {
+                    return Err(Error::PositionTooShort(0));
                 }
 
                 // LineString: OneDimensional coordinates (handles empty case too)
@@ -618,7 +627,7 @@ mod deserialize {
             Ok(Geometry {
                 bbox: raw.bbox,
                 value,
-                foreign_members,
+                foreign_members: raw.foreign_members,
             })
         }
     }
@@ -791,15 +800,13 @@ mod tests {
     #[test]
     fn test_reject_too_few_coordinates() {
         let err = Geometry::from_str(r#"{"type": "Point", "coordinates": []}"#).unwrap_err();
-        assert_eq!(
-            err.to_string(),
-            "A position must contain two or more elements, but got `0`"
-        );
+        assert!(err
+            .to_string()
+            .contains("A position must contain two or more elements, but got `0`"));
 
         let err = Geometry::from_str(r#"{"type": "Point", "coordinates": [23.42]}"#).unwrap_err();
-        assert_eq!(
-            err.to_string(),
-            "A position must contain two or more elements, but got `1`"
-        );
+        assert!(err
+            .to_string()
+            .contains("A position must contain two or more elements, but got `1`"));
     }
 }
