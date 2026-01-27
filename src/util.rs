@@ -231,7 +231,7 @@ fn json_to_position(json: &JsonValue) -> Result<Position> {
     for position in coords_array {
         coords.push(expect_f64(position)?);
     }
-    Ok(Position(coords))
+    Ok(Position::from(coords))
 }
 
 fn json_to_1d_positions(json: &JsonValue) -> Result<Vec<Position>> {

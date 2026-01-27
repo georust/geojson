@@ -217,9 +217,11 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// Constructing a `Geometry`:
 ///
 /// ```
-/// use geojson::{Geometry, Position, GeometryValue};
+/// use geojson::{Geometry, GeometryValue, Position};
 ///
-/// let geometry = Geometry::new(GeometryValue::Point { coordinates: Position::from([7.428959, 1.513394]) });
+/// let geometry = Geometry::new(GeometryValue::Point {
+///     coordinates: Position::from([7.428959, 1.513394]),
+/// });
 /// ```
 ///
 /// Constructors make this more concise.
@@ -237,7 +239,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// Serializing a `Geometry` to a GeoJSON string:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, Position, GeometryValue};
+/// use geojson::{GeoJson, Geometry, GeometryValue, Position};
 /// use serde_json;
 ///
 /// let geometry: Geometry = GeometryValue::new_point([7.428959, 1.513394]).into();
@@ -253,11 +255,13 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// Deserializing a GeoJSON string into a `Geometry`:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, Position, GeometryValue};
+/// use geojson::{GeoJson, Geometry, GeometryValue, Position};
 ///
 /// let geojson_str = r#"{"type":"Point", "coordinates":[7.428959,1.513394]}"#;
 ///
-/// let geometry = geojson_str.parse::<Geometry>().expect("valid Geometry GeoJSON");
+/// let geometry = geojson_str
+///     .parse::<Geometry>()
+///     .expect("valid Geometry GeoJSON");
 ///
 /// assert_eq!(
 ///     Geometry::new(GeometryValue::new_point([7.428959, 1.513394])),
@@ -269,7 +273,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// feature):
 ///
 /// ```
-/// use geojson::{Geometry, Position, GeometryValue};
+/// use geojson::{Geometry, GeometryValue, Position};
 /// use std::convert::TryInto;
 ///
 /// let geometry = Geometry::new(GeometryValue::new_point([7.428959, 1.513394]));

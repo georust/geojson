@@ -50,7 +50,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 /// Collect from an iterator:
 ///
 /// ```rust
-/// use geojson::{Feature, FeatureCollection, Position, GeometryValue};
+/// use geojson::{Feature, FeatureCollection, GeometryValue, Position};
 ///
 /// let fc: FeatureCollection = (0..10)
 ///     .map(|idx| -> Feature {
