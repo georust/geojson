@@ -44,7 +44,7 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(untagged, try_from = "deserialize::RawGeoJson")]
 pub enum GeoJson {
     Geometry(Geometry),
     Feature(Feature),
@@ -242,22 +242,15 @@ impl GeoJson {
     }
 }
 
+// REVIEW NOTE: Previously, we deserialized a `JsonObject`, and then converted that to `GeoJson`.
+// Now that we can deserialize directly to `GeoJson` a lot of conversions to/from JsonObject/JsonValue
+// feel vestigial. Should we remove them? Maybe somebody has a use for them?
+// Unfortunately, you cannot deprecate trait impls.
 impl TryFrom<JsonObject> for GeoJson {
     type Error = Error;
 
     fn try_from(object: JsonObject) -> Result<Self> {
-        let type_ = match object.get("type") {
-            Some(JsonValue::String(t)) => Type::from_str(t),
-            _ => return Err(Error::GeometryUnknownType("type".to_owned())),
-        };
-        let type_ = type_.ok_or(Error::EmptyType)?;
-        match type_ {
-            Type::Feature => Feature::try_from(object).map(GeoJson::Feature),
-            Type::FeatureCollection => {
-                FeatureCollection::try_from(object).map(GeoJson::FeatureCollection)
-            }
-            _ => Geometry::try_from(object).map(GeoJson::Geometry),
-        }
+        Self::try_from(JsonValue::Object(object))
     }
 }
 
@@ -265,41 +258,7 @@ impl TryFrom<JsonValue> for GeoJson {
     type Error = Error;
 
     fn try_from(value: JsonValue) -> Result<Self> {
-        if let JsonValue::Object(obj) = value {
-            Self::try_from(obj)
-        } else {
-            Err(Error::GeoJsonExpectedObject(value))
-        }
-    }
-}
-
-#[derive(PartialEq, Clone, Copy)]
-enum Type {
-    Point,
-    MultiPoint,
-    LineString,
-    MultiLineString,
-    Polygon,
-    MultiPolygon,
-    GeometryCollection,
-    Feature,
-    FeatureCollection,
-}
-
-impl Type {
-    fn from_str(s: &str) -> Option<Self> {
-        match s {
-            "Point" => Some(Type::Point),
-            "MultiPoint" => Some(Type::MultiPoint),
-            "LineString" => Some(Type::LineString),
-            "MultiLineString" => Some(Type::MultiLineString),
-            "Polygon" => Some(Type::Polygon),
-            "MultiPolygon" => Some(Type::MultiPolygon),
-            "GeometryCollection" => Some(Type::GeometryCollection),
-            "Feature" => Some(Type::Feature),
-            "FeatureCollection" => Some(Type::FeatureCollection),
-            _ => None,
-        }
+        serde_json::from_value(value).map_err(Error::MalformedJson)
     }
 }
 
@@ -336,16 +295,7 @@ impl FromStr for GeoJson {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let object = get_object(s)?;
-
-        GeoJson::from_json_object(object)
-    }
-}
-
-fn get_object(s: &str) -> Result<JsonObject> {
-    match ::serde_json::from_str(s)? {
-        JsonValue::Object(object) => Ok(object),
-        other => Err(Error::ExpectedObjectValue(other)),
+        Ok(serde_json::from_str(s)?)
     }
 }
 
@@ -378,6 +328,117 @@ impl fmt::Display for FeatureCollection {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
             .and_then(|s| f.write_str(&s))
+    }
+}
+
+mod deserialize {
+    use crate::geometry::deserialize::{Coordinates, GeometryType, RawGeometry};
+    use crate::util::normalize_foreign_members;
+    use crate::{feature, Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject};
+    use serde::Deserialize;
+    use std::convert::TryFrom;
+
+    #[derive(Debug, Clone, PartialEq, Deserialize)]
+    enum GeoJsonType {
+        Feature,
+        FeatureCollection,
+        Point,
+        LineString,
+        Polygon,
+        MultiPoint,
+        MultiLineString,
+        MultiPolygon,
+        GeometryCollection,
+    }
+
+    impl GeoJsonType {
+        /// Convert to GeometryType if this is a geometry variant
+        fn as_geometry_type(&self) -> Option<GeometryType> {
+            match self {
+                GeoJsonType::Point => Some(GeometryType::Point),
+                GeoJsonType::LineString => Some(GeometryType::LineString),
+                GeoJsonType::Polygon => Some(GeometryType::Polygon),
+                GeoJsonType::MultiPoint => Some(GeometryType::MultiPoint),
+                GeoJsonType::MultiLineString => Some(GeometryType::MultiLineString),
+                GeoJsonType::MultiPolygon => Some(GeometryType::MultiPolygon),
+                GeoJsonType::GeometryCollection => Some(GeometryType::GeometryCollection),
+                GeoJsonType::Feature | GeoJsonType::FeatureCollection => None,
+            }
+        }
+    }
+
+    /// Internal struct for deserializing any GeoJSON object before converting to GeoJson.
+    /// This captures all possible fields that can appear in any GeoJSON object type.
+    #[derive(Debug, Clone, Deserialize)]
+    #[serde(expecting = "GeoJson object")] // TODO test this "expecting"
+    pub(crate) struct RawGeoJson {
+        r#type: GeoJsonType,
+
+        // Common field
+        bbox: Option<Bbox>,
+
+        // Geometry field (except GeometryCollection)
+        coordinates: Option<Coordinates>,
+
+        // GeometryCollection field
+        geometries: Option<Vec<Geometry>>,
+
+        // FeatureCollection field
+        features: Option<Vec<Feature>>,
+
+        // Feature fields
+        id: Option<feature::Id>,
+        geometry: Option<Geometry>,
+        properties: Option<JsonObject>,
+
+        // Foreign members (captures all other fields)
+        #[serde(flatten)]
+        foreign_members: Option<JsonObject>,
+    }
+
+    impl TryFrom<RawGeoJson> for GeoJson {
+        type Error = Error;
+
+        fn try_from(mut raw: RawGeoJson) -> crate::Result<Self> {
+            normalize_foreign_members(&mut raw.foreign_members);
+
+            match raw.r#type {
+                GeoJsonType::FeatureCollection => {
+                    let features = raw.features.ok_or_else(|| {
+                        use serde::de::Error as _;
+                        Error::MalformedJson(serde_json::Error::missing_field("features"))
+                    })?;
+                    Ok(GeoJson::FeatureCollection(FeatureCollection {
+                        bbox: raw.bbox,
+                        features,
+                        foreign_members: raw.foreign_members,
+                    }))
+                }
+
+                GeoJsonType::Feature => Ok(GeoJson::Feature(Feature {
+                    bbox: raw.bbox,
+                    geometry: raw.geometry,
+                    id: raw.id,
+                    properties: raw.properties,
+                    foreign_members: raw.foreign_members,
+                })),
+
+                // Delegate all geometry types to RawGeometry
+                geojson_type => {
+                    let geometry_type = geojson_type.as_geometry_type().expect(
+                        "as_geometry_type returns Some for all variants except Feature/FeatureCollection",
+                    );
+                    let raw_geom = RawGeometry {
+                        r#type: geometry_type,
+                        coordinates: raw.coordinates,
+                        geometries: raw.geometries,
+                        bbox: raw.bbox,
+                        foreign_members: raw.foreign_members,
+                    };
+                    Ok(GeoJson::Geometry(Geometry::try_from(raw_geom)?))
+                }
+            }
+        }
     }
 }
 

@@ -469,7 +469,6 @@ mod tests {
             ]
         });
 
-        println!("{}", String::from_utf8(buffer.clone()).unwrap());
         let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");
         assert_eq!(actual_json, expected)
     }
