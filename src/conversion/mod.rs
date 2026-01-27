@@ -19,49 +19,6 @@ use crate::geojson::GeoJson;
 use crate::Result;
 use std::convert::TryFrom;
 
-#[cfg(test)]
-macro_rules! assert_almost_eq {
-    ($x:expr, $y:expr, $epsilon:expr) => {{
-        use num_traits::Zero;
-        let a = $x.abs();
-        let b = $y.abs();
-        let delta = (a - b).abs();
-
-        if a.is_infinite() || a.is_nan() || b.is_infinite() || b.is_nan() {
-            panic!(
-                "Assertion failed: Non comparable value ({} = {}, {} = {})",
-                stringify!($x),
-                $x,
-                stringify!($y),
-                $y
-            );
-        } else if a.is_zero() || b.is_zero() {
-            if delta > $epsilon {
-                panic!(
-                    "Assertion failed: ({} = {}, {} = {}, delta = {})",
-                    stringify!($x),
-                    $x,
-                    stringify!($y),
-                    $y,
-                    delta / b
-                );
-            }
-        } else {
-            let normalized_delta = delta / b;
-            if normalized_delta > $epsilon {
-                panic!(
-                    "Assertion failed: ({} = {}, {} = {}, delta = {})",
-                    stringify!($x),
-                    $x,
-                    stringify!($y),
-                    $y,
-                    normalized_delta
-                );
-            }
-        }
-    }};
-}
-
 macro_rules! try_from_owned_value {
     ($to:ty) => {
         #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
