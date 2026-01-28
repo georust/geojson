@@ -419,7 +419,7 @@ mod tests {
     #[test]
     fn test_from_geo_type_to_geojson() {
         let point = point!(x: 1.0, y: 2.0);
-        let actual = serde_json::Value::from(GeoJson::from(&point));
+        let actual = serde_json::to_value(GeoJson::from(&point)).unwrap();
         let expected = serde_json::json!({"coordinates": [1.0, 2.0], "type": "Point"});
         assert_eq!(actual, expected);
     }
@@ -443,6 +443,6 @@ mod tests {
                 {"coordinates": [3.0, 4.0], "type": "Point"},
             ]
         });
-        assert_eq!(serde_json::Value::from(actual), expected);
+        assert_eq!(serde_json::to_value(actual).unwrap(), expected);
     }
 }

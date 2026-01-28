@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
-use crate::{util, Bbox, Feature};
-use crate::{JsonObject, JsonValue};
+use crate::JsonObject;
+use crate::{Bbox, Feature};
 use serde::{Deserialize, Serialize};
 
 /// Feature Collection Objects
@@ -135,65 +134,11 @@ impl<'a> IntoIterator for &'a FeatureCollection {
     }
 }
 
-impl<'a> From<&'a FeatureCollection> for JsonObject {
-    fn from(fc: &'a FeatureCollection) -> JsonObject {
-        // The unwrap() should never panic, because FeatureCollection contains only JSON-serializable types
-        match serde_json::to_value(fc).unwrap() {
-            serde_json::Value::Object(obj) => obj,
-            value => {
-                // Panic should never happen, because `impl Serialize for FeatureCollection` always produces an
-                // Object
-                panic!("serializing FeatureCollection should result in an Object, but got something {:?}", value)
-            }
-        }
-    }
-}
-
-impl FeatureCollection {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
-        Self::try_from(object)
-    }
-
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
-        Self::try_from(value)
-    }
-}
-
-impl TryFrom<JsonObject> for FeatureCollection {
-    type Error = Error;
-
-    fn try_from(mut object: JsonObject) -> Result<Self> {
-        match util::expect_type(&mut object)? {
-            ref type_ if type_ == "FeatureCollection" => Ok(FeatureCollection {
-                bbox: util::get_bbox(&mut object)?,
-                features: util::get_features(&mut object)?,
-                foreign_members: util::get_foreign_members(object)?,
-            }),
-            type_ => Err(Error::ExpectedType {
-                expected: "FeatureCollection".to_owned(),
-                actual: type_,
-            }),
-        }
-    }
-}
-
-impl TryFrom<JsonValue> for FeatureCollection {
-    type Error = Error;
-
-    fn try_from(value: JsonValue) -> Result<Self> {
-        if let JsonValue::Object(obj) = value {
-            Self::try_from(obj)
-        } else {
-            Err(Error::GeoJsonExpectedObject(value))
-        }
-    }
-}
-
 impl FromStr for FeatureCollection {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::try_from(crate::GeoJson::from_str(s)?)
+        Ok(serde_json::from_str(s)?)
     }
 }
 
@@ -265,7 +210,7 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, GeometryValue};
+    use crate::{Feature, FeatureCollection, GeoJson, Geometry, GeometryValue};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -371,24 +316,6 @@ mod tests {
         }
 
         assert_eq!(names, vec!["Downtown", "Uptown"]);
-    }
-
-    #[test]
-    fn test_from_str_with_unexpected_type() {
-        let geometry_json = json!({
-            "type": "Point",
-            "coordinates": [125.6, 10.1]
-        })
-        .to_string();
-
-        let actual_failure = FeatureCollection::from_str(&geometry_json).unwrap_err();
-        match actual_failure {
-            Error::ExpectedType { actual, expected } => {
-                assert_eq!(actual, "Geometry");
-                assert_eq!(expected, "FeatureCollection");
-            }
-            e => panic!("unexpected error: {}", e),
-        };
     }
 
     #[test]

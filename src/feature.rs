@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
-use crate::{feature, util, Bbox, Geometry, GeometryValue};
+use crate::{feature, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 
@@ -128,7 +127,7 @@ impl FromStr for Feature {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::try_from(crate::GeoJson::from_str(s)?)
+        Ok(serde_json::from_str(s)?)
     }
 }
 
@@ -150,14 +149,6 @@ impl<'a> From<&'a Feature> for JsonObject {
 }
 
 impl Feature {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
-        Self::try_from(object)
-    }
-
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
-        Self::try_from(value)
-    }
-
     /// Return the value of this property, if it's set
     pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
         self.properties
@@ -209,36 +200,6 @@ impl Feature {
     }
 }
 
-impl TryFrom<JsonObject> for Feature {
-    type Error = Error;
-
-    fn try_from(mut object: JsonObject) -> Result<Self> {
-        let res = &*util::expect_type(&mut object)?;
-        match res {
-            "Feature" => Ok(Feature {
-                geometry: util::get_geometry(&mut object)?,
-                properties: util::get_properties(&mut object)?,
-                id: util::get_id(&mut object)?,
-                bbox: util::get_bbox(&mut object)?,
-                foreign_members: util::get_foreign_members(object)?,
-            }),
-            _ => Err(Error::NotAFeature(res.to_string())),
-        }
-    }
-}
-
-impl TryFrom<JsonValue> for Feature {
-    type Error = Error;
-
-    fn try_from(value: JsonValue) -> Result<Self> {
-        if let JsonValue::Object(obj) = value {
-            Self::try_from(obj)
-        } else {
-            Err(Error::GeoJsonExpectedObject(value))
-        }
-    }
-}
-
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -265,25 +226,13 @@ mod tests {
     }
 
     fn feature() -> Feature {
-        crate::Feature {
-            geometry: Some(Geometry {
-                value: value(),
-                bbox: None,
-                foreign_members: None,
-            }),
+        Feature {
+            geometry: Some(GeometryValue::new_point([1.1, 2.1]).into()),
             properties: properties(),
             bbox: None,
             id: None,
             foreign_members: None,
         }
-    }
-
-    fn value() -> GeometryValue {
-        GeometryValue::new_point([1.1, 2.1])
-    }
-
-    fn geometry() -> Geometry {
-        Geometry::new(value())
     }
 
     fn encode(feature: &Feature) -> String {
@@ -349,34 +298,6 @@ mod tests {
     }
 
     #[test]
-    fn try_from_value() {
-        use serde_json::json;
-        use std::convert::TryInto;
-
-        let json_value = json!({
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [1.1, 2.1]
-            },
-            "properties": null,
-        });
-        assert!(json_value.is_object());
-
-        let feature: Feature = json_value.try_into().unwrap();
-        assert_eq!(
-            feature,
-            Feature {
-                bbox: None,
-                geometry: Some(geometry()),
-                id: None,
-                properties: None,
-                foreign_members: None,
-            }
-        )
-    }
-
-    #[test]
     fn null_bbox() {
         let geojson_str = r#"{
             "geometry": null,
@@ -423,7 +344,7 @@ mod tests {
         })
         .to_string();
         let err = geojson_str.parse::<GeoJson>().unwrap_err();
-        let Error::MalformedJson(serde_err) = err else {
+        let Error::MalformedGeoJson(serde_err) = err else {
             panic!("expected serde error");
         };
         assert!(serde_err.to_string().contains("expected Geometry object"));
@@ -458,7 +379,7 @@ mod tests {
     #[test]
     fn encode_decode_feature_with_id_string() {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"id":"foo","properties":{}}"#;
-        let feature = crate::Feature {
+        let feature = Feature {
             geometry: Some(Geometry {
                 value: GeometryValue::new_point([1.1, 2.1]),
                 bbox: None,
@@ -491,7 +412,7 @@ mod tests {
         })
         .to_string();
         let err = geojson_str.parse::<GeoJson>().unwrap_err();
-        let Error::MalformedJson(serde_err) = err else {
+        let Error::MalformedGeoJson(serde_err) = err else {
             panic!("expected serde error");
         };
         assert!(serde_err
@@ -527,7 +448,7 @@ mod tests {
             String::from("other_member"),
             serde_json::to_value("some_value").unwrap(),
         );
-        let feature = crate::Feature {
+        let feature = Feature {
             geometry: Some(Geometry {
                 value: GeometryValue::new_point([1.1, 2.1]),
                 bbox: None,
@@ -554,7 +475,7 @@ mod tests {
     fn encode_decode_feature_with_null_properties() {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"properties":null}"#;
 
-        let feature = crate::Feature {
+        let feature = Feature {
             geometry: Some(GeometryValue::new_point([1.1, 2.1]).into()),
             properties: None,
             bbox: None,
@@ -616,24 +537,6 @@ mod tests {
 
         let feature = Feature::from_str(&feature_json).unwrap();
         assert_eq!("Dinagat Islands", feature.property("name").unwrap());
-    }
-
-    #[test]
-    fn test_from_str_with_unexpected_type() {
-        let geometry_json = json!({
-            "type": "Point",
-            "coordinates": [125.6, 10.1]
-        })
-        .to_string();
-
-        let actual_failure = Feature::from_str(&geometry_json).unwrap_err();
-        match actual_failure {
-            Error::ExpectedType { actual, expected } => {
-                assert_eq!(actual, "Geometry");
-                assert_eq!(expected, "Feature");
-            }
-            e => panic!("unexpected error: {}", e),
-        };
     }
 
     #[test]

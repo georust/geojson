@@ -16,7 +16,7 @@ use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
-use crate::{util, Bbox, LineStringType, PointType, PolygonType, Position};
+use crate::{Bbox, LineStringType, PointType, PolygonType, Position};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 
@@ -153,47 +153,6 @@ impl GeometryValue {
     }
 }
 
-impl<'a> From<&'a GeometryValue> for JsonObject {
-    fn from(value: &'a GeometryValue) -> JsonObject {
-        let value = ::serde_json::to_value(value)
-            .expect("GeometryValue contains only JSON-serializable types");
-        let serde_json::Value::Object(object) = value else {
-            unreachable!("GeometryValue always serializes to a JsonObject");
-        };
-        object
-    }
-}
-
-impl GeometryValue {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
-        Self::try_from(object)
-    }
-
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
-        Self::try_from(value)
-    }
-}
-
-impl TryFrom<JsonObject> for GeometryValue {
-    type Error = Error;
-
-    fn try_from(mut object: JsonObject) -> Result<Self> {
-        util::get_value(&mut object)
-    }
-}
-
-impl TryFrom<JsonValue> for GeometryValue {
-    type Error = Error;
-
-    fn try_from(value: JsonValue) -> Result<Self> {
-        if let JsonValue::Object(obj) = value {
-            Self::try_from(obj)
-        } else {
-            Err(Error::GeoJsonExpectedObject(value))
-        }
-    }
-}
-
 impl fmt::Display for GeometryValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         ::serde_json::to_string(self)
@@ -314,64 +273,11 @@ impl Geometry {
     }
 }
 
-impl<'a> From<&'a Geometry> for JsonObject {
-    fn from(geometry: &'a Geometry) -> JsonObject {
-        let mut map = JsonObject::from(&geometry.value);
-        if let Some(ref bbox) = geometry.bbox {
-            map.insert(String::from("bbox"), ::serde_json::to_value(bbox).unwrap());
-        }
-
-        if let Some(ref foreign_members) = geometry.foreign_members {
-            for (key, value) in foreign_members {
-                map.insert(key.to_owned(), value.to_owned());
-            }
-        }
-        map
-    }
-}
-
-impl Geometry {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
-        Self::try_from(object)
-    }
-
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
-        Self::try_from(value)
-    }
-}
-
-impl TryFrom<JsonObject> for Geometry {
-    type Error = Error;
-
-    fn try_from(mut object: JsonObject) -> Result<Self> {
-        let bbox = util::get_bbox(&mut object)?;
-        let value = util::get_value(&mut object)?;
-        let foreign_members = util::get_foreign_members(object)?;
-        Ok(Geometry {
-            bbox,
-            value,
-            foreign_members,
-        })
-    }
-}
-
-impl TryFrom<JsonValue> for Geometry {
-    type Error = Error;
-
-    fn try_from(value: JsonValue) -> Result<Self> {
-        if let JsonValue::Object(obj) = value {
-            Self::try_from(obj)
-        } else {
-            Err(Error::GeoJsonExpectedObject(value))
-        }
-    }
-}
-
 impl FromStr for Geometry {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Self::try_from(crate::GeoJson::from_str(s)?)
+        Ok(serde_json::from_str(s)?)
     }
 }
 
@@ -388,12 +294,12 @@ pub(crate) mod deserialize {
     use super::*;
     use crate::util::normalize_foreign_members;
     use serde::de::{Deserializer, SeqAccess, Visitor};
-    use std::fmt::Formatter;
+    use std::fmt::{Display, Formatter};
     use tinyvec::TinyVec;
 
     /// Internal enum for geometry type discrimination during deserialization.
     #[derive(Debug, Clone, PartialEq, Deserialize)]
-    pub(crate) enum GeometryType {
+    pub enum GeometryType {
         Point,
         LineString,
         Polygon,
@@ -401,6 +307,20 @@ pub(crate) mod deserialize {
         MultiLineString,
         MultiPolygon,
         GeometryCollection,
+    }
+
+    impl Display for GeometryType {
+        fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+            f.write_str(match self {
+                GeometryType::Point => "Point",
+                GeometryType::LineString => "LineString",
+                GeometryType::Polygon => "Polygon",
+                GeometryType::MultiPoint => "MultiPoint",
+                GeometryType::MultiLineString => "MultiLineString",
+                GeometryType::MultiPolygon => "MultiPolygon",
+                GeometryType::GeometryCollection => "GeometryCollection",
+            })
+        }
     }
 
     /// An efficiently deserializable representation for Geometry coordinates
@@ -411,6 +331,16 @@ pub(crate) mod deserialize {
         OneDimensional(Vec<Position>),
         TwoDimensional(Vec<Vec<Position>>),
         ThreeDimensional(Vec<Vec<Vec<Position>>>),
+    }
+    impl Coordinates {
+        fn dimensions(&self) -> u8 {
+            match self {
+                Coordinates::ZeroDimensional(_) => 0,
+                Coordinates::OneDimensional(_) => 1,
+                Coordinates::TwoDimensional(_) => 2,
+                Coordinates::ThreeDimensional(_) => 3,
+            }
+        }
     }
 
     impl<'de> Deserialize<'de> for Coordinates {
@@ -615,15 +545,34 @@ pub(crate) mod deserialize {
                 },
 
                 // GeometryCollection: geometries array, no coordinates
-                (GeometryType::GeometryCollection, None, Some(geometries)) => {
+                (GeometryType::GeometryCollection, _, Some(geometries)) => {
                     GeometryValue::GeometryCollection { geometries }
                 }
 
                 // Invalid combinations
-                _ => {
-                    return Err(Error::GeometryUnknownType(
-                        "invalid geometry: mismatched type and coordinates".to_string(),
-                    ))
+                (GeometryType::GeometryCollection, _, None) => {
+                    return Err(Error::GeometryCollectionWithoutGeometriesKey)
+                }
+
+                (
+                    geometry_type @ (GeometryType::Point
+                    | GeometryType::LineString
+                    | GeometryType::Polygon
+                    | GeometryType::MultiPoint
+                    | GeometryType::MultiLineString
+                    | GeometryType::MultiPolygon),
+                    coords,
+                    _,
+                ) => {
+                    return if let Some(coords) = coords {
+                        let dimensions = coords.dimensions();
+                        Err(Error::InvalidGeometryDimensions {
+                            geometry_type,
+                            dimensions,
+                        })
+                    } else {
+                        Err(Error::GeometryWithoutCoordinatesKey { geometry_type })
+                    }
                 }
             };
 
@@ -638,7 +587,7 @@ pub(crate) mod deserialize {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, FeatureCollection, GeoJson, Geometry, GeometryValue, JsonObject};
+    use crate::{FeatureCollection, GeoJson, Geometry, GeometryValue, JsonObject};
     use serde_json::json;
     use std::str::FromStr;
 
@@ -691,30 +640,6 @@ mod tests {
         assert_eq!(geometry_3, geometry_4);
 
         assert_eq!(geometry_1, geometry_4);
-    }
-
-    #[test]
-    fn test_geometry_from_value() {
-        use serde_json::json;
-        use std::convert::TryInto;
-
-        let json_value = json!({
-            "type": "Point",
-            "coordinates": [
-                0.0, 0.1
-            ],
-        });
-        assert!(json_value.is_object());
-
-        let geometry: Geometry = json_value.try_into().unwrap();
-        assert_eq!(
-            geometry,
-            Geometry {
-                value: GeometryValue::new_point([0.0, 0.1]),
-                bbox: None,
-                foreign_members: None,
-            }
-        )
     }
 
     #[test]
@@ -809,30 +734,6 @@ mod tests {
 
         let geometry = Geometry::from_str(&geometry_json).unwrap();
         assert!(matches!(geometry.value, GeometryValue::Point { .. }));
-    }
-
-    #[test]
-    fn test_from_str_with_unexpected_type() {
-        let feature_json = json!({
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [125.6, 10.1]
-            },
-            "properties": {
-                "name": "Dinagat Islands"
-            }
-        })
-        .to_string();
-
-        let actual_failure = Geometry::from_str(&feature_json).unwrap_err();
-        match actual_failure {
-            Error::ExpectedType { actual, expected } => {
-                assert_eq!(actual, "Feature");
-                assert_eq!(expected, "Geometry");
-            }
-            e => panic!("unexpected error: {}", e),
-        };
     }
 
     #[test]

@@ -14,7 +14,6 @@
 
 use crate::errors::{Error, Result};
 use crate::{Feature, FeatureCollection, Geometry};
-use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
@@ -24,23 +23,57 @@ use std::str::FromStr;
 /// GeoJSON Objects
 ///
 /// ```
+/// use geojson::{Feature, FeatureCollection, GeoJson, Geometry};
 /// use std::convert::TryInto;
-/// use geojson::{Feature, GeoJson, Geometry, GeometryValue};
-/// use serde_json::json;
-/// let json_value = json!({
+///
+/// // Parsing a Geometry
+/// let geometry_str = r#"{
+///    "type": "Point",
+///    "coordinates": [102.0, 0.5]
+/// }"#;
+/// let geometry: Geometry = geometry_str.parse().unwrap();
+///
+/// // Parsing a Feature
+/// let feature_str = r#"{
 ///     "type": "Feature",
 ///     "geometry": {
 ///         "type": "Point",
 ///         "coordinates": [102.0, 0.5]
 ///     },
-///     "properties": null,
-/// });
-/// let feature: Feature = json_value.try_into().unwrap();
+///     "properties": null
+/// }"#;
+/// let feature: Feature = feature_str.parse().unwrap();
 ///
-/// // Easily convert a feature to a GeoJson
+/// // Parsing a FeatureCollection
+/// let feature_collection_str = r#"{
+///     "type": "FeatureCollection",
+///     "features": [{
+///         "type": "Feature",
+///         "geometry": {
+///             "type": "Point",
+///             "coordinates": [102.0, 0.5]
+///         },
+///         "properties": null
+///     }]
+/// }"#;
+/// let feature_collection: FeatureCollection = feature_collection_str.parse().unwrap();
+///
+/// // When you're not sure what you're getting, use `GeoJson`.
+/// for geojson_str in [feature_str, geometry_str, feature_collection_str] {
+///     let geojson: GeoJson = geojson_str.parse().unwrap();
+///     match geojson {
+///         GeoJson::Geometry(geometry) => println!("geometry: {geometry:?}"),
+///         GeoJson::Feature(feature) => println!("feature: {feature:?}"),
+///         GeoJson::FeatureCollection(feature_collection) => {
+///             println!("feature_collection: {feature_collection:?}")
+///         }
+///     }
+/// }
+///
+/// // Easily convert a `Feature`, `FeatureCollection`, or `Geometry` into a `GeoJson`
 /// let geojson: GeoJson = feature.into();
-/// // and back again
-/// let feature2: Feature = geojson.try_into().unwrap();
+/// // Fallibly convert a GeoJson to its inner variant
+/// let feature: Feature = geojson.try_into().expect("expected a Feature");
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -49,26 +82,6 @@ pub enum GeoJson {
     Geometry(Geometry),
     Feature(Feature),
     FeatureCollection(FeatureCollection),
-}
-
-impl<'a> From<&'a GeoJson> for JsonObject {
-    fn from(geojson: &'a GeoJson) -> JsonObject {
-        match *geojson {
-            GeoJson::Geometry(ref geometry) => geometry.into(),
-            GeoJson::Feature(ref feature) => feature.into(),
-            GeoJson::FeatureCollection(ref fc) => fc.into(),
-        }
-    }
-}
-
-impl From<GeoJson> for JsonValue {
-    fn from(geojson: GeoJson) -> JsonValue {
-        match geojson {
-            GeoJson::Geometry(geometry) => JsonValue::Object(JsonObject::from(&geometry)),
-            GeoJson::Feature(feature) => JsonValue::Object(JsonObject::from(&feature)),
-            GeoJson::FeatureCollection(fc) => JsonValue::Object(JsonObject::from(&fc)),
-        }
-    }
 }
 
 impl<G: Into<Geometry>> From<G> for GeoJson {
@@ -155,77 +168,6 @@ impl TryFrom<GeoJson> for FeatureCollection {
 }
 
 impl GeoJson {
-    pub fn from_json_object(object: JsonObject) -> Result<Self> {
-        Self::try_from(object)
-    }
-
-    /// Converts a JSON Value into a GeoJson object.
-    ///
-    /// # Example
-    /// ```
-    /// use std::convert::TryInto;
-    /// use geojson::{Feature, GeoJson, Geometry, Position, GeometryValue};
-    /// use serde_json::json;
-    ///
-    /// let json_value = json!({
-    ///     "type": "Feature",
-    ///     "geometry": {
-    ///         "type": "Point",
-    ///         "coordinates": [102.0, 0.5]
-    ///     },
-    ///     "properties": null,
-    /// });
-    ///
-    /// assert!(json_value.is_object());
-    ///
-    /// let geojson: GeoJson = json_value.try_into().unwrap();
-    ///
-    /// assert_eq!(
-    ///     geojson,
-    ///     GeoJson::Feature(Feature {
-    ///         bbox: None,
-    ///         geometry: Some(GeometryValue::new_point([102.0, 0.5]).into()),
-    ///         id: None,
-    ///         properties: None,
-    ///         foreign_members: None,
-    ///     })
-    /// );
-    /// ```
-    pub fn from_json_value(value: JsonValue) -> Result<Self> {
-        Self::try_from(value)
-    }
-
-    /// Convenience method to convert to a JSON Value. Uses `From`.
-    /// ```
-    /// use std::convert::TryFrom;
-    /// use geojson::GeoJson;
-    /// use serde_json::json;
-    ///
-    /// let geojson = GeoJson::try_from( json!({
-    ///        "type": "Feature",
-    ///        "geometry": {
-    ///            "type": "Point",
-    ///            "coordinates": [102.0, 0.5]
-    ///        },
-    ///        "properties": {},
-    ///     })).unwrap();
-    ///
-    /// let json_value = geojson.to_json_value();
-    /// assert_eq!(json_value,
-    ///     json!({
-    ///        "type": "Feature",
-    ///        "geometry": {
-    ///            "type": "Point",
-    ///            "coordinates": [102.0, 0.5]
-    ///        },
-    ///        "properties": {},
-    ///     })
-    ///    );
-    /// ```
-    pub fn to_json_value(self) -> JsonValue {
-        JsonValue::from(self)
-    }
-
     // Deserialize a GeoJson object from an IO stream of JSON
     pub fn from_reader<R>(rdr: R) -> serde_json::Result<Self>
     where
@@ -237,28 +179,8 @@ impl GeoJson {
     /// Convenience wrapper for [serde_json::to_string_pretty()]
     pub fn to_string_pretty(self) -> Result<String> {
         ::serde_json::to_string_pretty(&self)
-            .map_err(Error::MalformedJson)
+            .map_err(Error::MalformedGeoJson)
             .map(|s| s.to_string())
-    }
-}
-
-// REVIEW NOTE: Previously, we deserialized a `JsonObject`, and then converted that to `GeoJson`.
-// Now that we can deserialize directly to `GeoJson` a lot of conversions to/from JsonObject/JsonValue
-// feel vestigial. Should we remove them? Maybe somebody has a use for them?
-// Unfortunately, you cannot deprecate trait impls.
-impl TryFrom<JsonObject> for GeoJson {
-    type Error = Error;
-
-    fn try_from(object: JsonObject) -> Result<Self> {
-        Self::try_from(JsonValue::Object(object))
-    }
-}
-
-impl TryFrom<JsonValue> for GeoJson {
-    type Error = Error;
-
-    fn try_from(value: JsonValue) -> Result<Self> {
-        serde_json::from_value(value).map_err(Error::MalformedJson)
     }
 }
 
@@ -406,7 +328,7 @@ mod deserialize {
                 GeoJsonType::FeatureCollection => {
                     let features = raw.features.ok_or_else(|| {
                         use serde::de::Error as _;
-                        Error::MalformedJson(serde_json::Error::missing_field("features"))
+                        Error::MalformedGeoJson(serde_json::Error::missing_field("features"))
                     })?;
                     Ok(GeoJson::FeatureCollection(FeatureCollection {
                         bbox: raw.bbox,
@@ -446,7 +368,6 @@ mod deserialize {
 mod tests {
     use crate::{Error, Feature, FeatureCollection, GeoJson, GeometryValue};
     use serde_json::json;
-    use std::convert::TryInto;
     use std::str::FromStr;
 
     #[test]
@@ -454,53 +375,23 @@ mod tests {
         let json_str = r#"{
             "type": "Feature",
             "geometry": {
-                    "type": "Point",
-                    "coordinates": [102.0, 0.5]
+                "type": "Point",
+                "coordinates": [102.0, 0.5]
             },
             "properties": null
         }"#;
 
-        let g1 = GeoJson::from_reader(json_str.as_bytes()).unwrap();
-
-        let json_value = json!({
+        let actual = GeoJson::from_reader(json_str.as_bytes()).unwrap();
+        let actual_as_json = serde_json::to_value(actual).unwrap();
+        let expected = json!({
             "type": "Feature",
             "geometry": {
                 "type": "Point",
                 "coordinates": [102.0, 0.5]
             },
-            "properties": null,
+            "properties": null
         });
-
-        let g2: GeoJson = json_value.try_into().unwrap();
-
-        assert_eq!(g1, g2);
-    }
-
-    #[test]
-    fn test_geojson_from_value() {
-        let json_value = json!({
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [102.0, 0.5]
-            },
-            "properties": null,
-        });
-
-        assert!(json_value.is_object());
-
-        let geojson: GeoJson = json_value.try_into().unwrap();
-
-        assert_eq!(
-            geojson,
-            GeoJson::Feature(Feature {
-                bbox: None,
-                geometry: Some(GeometryValue::new_point([102.0, 0.5]).into()),
-                id: None,
-                properties: None,
-                foreign_members: None,
-            })
-        );
+        assert_eq!(actual_as_json, expected);
     }
 
     #[test]
@@ -538,17 +429,16 @@ mod tests {
 
     #[test]
     fn test_missing_properties_key() {
-        let json_value = json!({
+        let json_str = json!({
             "type": "Feature",
             "geometry": {
                 "type": "Point",
                 "coordinates": [102.0, 0.5]
             },
-        });
+        })
+        .to_string();
 
-        assert!(json_value.is_object());
-
-        let geojson: GeoJson = json_value.try_into().unwrap();
+        let geojson = GeoJson::from_str(&json_str).unwrap();
         assert_eq!(
             geojson,
             GeoJson::Feature(Feature {
@@ -581,7 +471,7 @@ mod tests {
         }"#;
         assert!(matches!(
             GeoJson::from_str(geojson_str),
-            Err(Error::MalformedJson(_))
+            Err(Error::MalformedGeoJson(_))
         ))
     }
 
@@ -594,7 +484,7 @@ mod tests {
         .to_string();
 
         let err = GeoJson::from_str(&geojson_str).unwrap_err();
-        assert!(matches!(err, Error::MalformedJson(_)));
+        assert!(matches!(err, Error::MalformedGeoJson(_)));
     }
 
     #[test]
@@ -605,15 +495,14 @@ mod tests {
         .to_string();
 
         let err = GeoJson::from_str(&geojson_str).unwrap_err();
-        assert!(matches!(err, Error::MalformedJson(_)));
+        assert!(matches!(err, Error::MalformedGeoJson(_)));
     }
 
     #[test]
     fn not_an_object() {
         let geojson_str = "[]";
         let err = GeoJson::from_str(&geojson_str).unwrap_err();
-        assert!(matches!(err, Error::MalformedJson(_)));
-        println!("{err}");
+        assert!(matches!(err, Error::MalformedGeoJson(_)));
         assert!(format!("{err}").contains("expected GeoJson object"));
     }
 }
