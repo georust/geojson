@@ -17,6 +17,7 @@ use std::iter::FromIterator;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
+use crate::util::deserialize_json_object_skipping_known_keys;
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -60,7 +61,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub struct FeatureCollection {
     /// Bounding Box
@@ -72,8 +73,21 @@ pub struct FeatureCollection {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        flatten,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_feature_collection_foreign_members"
+    )]
     pub foreign_members: Option<JsonObject>,
+}
+
+fn deserialize_feature_collection_foreign_members<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_json_object_skipping_known_keys(deserializer, &["type"])
 }
 
 impl IntoIterator for FeatureCollection {
@@ -156,19 +170,6 @@ impl FromStr for FeatureCollection {
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
-
 /// Create a [`FeatureCollection`] using the [`collect`]
 /// method on an iterator of `Feature`s. If every item
 /// contains a bounding-box of the same dimension, then the
@@ -237,7 +238,7 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, FeatureCollection, GeometryValue};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, GeometryValue};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -286,6 +287,27 @@ mod tests {
         },
         ]})
         .to_string()
+    }
+
+    #[test]
+    fn parsing() {
+        let geojson_str = feature_collection_json();
+        let feature_collection_1: FeatureCollection = geojson_str.parse().unwrap();
+        let feature_collection_2: FeatureCollection = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(feature_collection_1, feature_collection_2);
+        let GeoJson::FeatureCollection(feature_collection_3): GeoJson =
+            geojson_str.parse().unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        let GeoJson::FeatureCollection(feature_collection_4): GeoJson =
+            serde_json::from_str(&geojson_str).unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        assert_eq!(feature_collection_3, feature_collection_4);
+
+        assert_eq!(feature_collection_1, feature_collection_4);
     }
 
     #[test]

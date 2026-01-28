@@ -428,7 +428,7 @@ mod tests {
     fn test_from_iter_geo_type_to_geojson() {
         let p1 = point!(x: 1.0, y: 2.0);
         let p2 = point!(x: 3.0, y: 4.0);
-        let points = vec![p1, p2];
+        let points = [p1, p2];
 
         use std::iter::FromIterator;
 

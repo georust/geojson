@@ -15,6 +15,68 @@
 use crate::errors::{Error, Result};
 use crate::{feature, Bbox, Feature, Geometry, GeometryValue, Position};
 use crate::{JsonObject, JsonValue};
+use serde::de::{IgnoredAny, MapAccess, Visitor};
+use serde::Deserializer;
+use std::fmt;
+use std::fmt::Formatter;
+
+// Serializing/Deserializing Geometry/Feature/FeatureCollections in some contexts causes known
+// fields to appear redundantly. This helper skips over the values in `skip_keys`.
+//
+// I don't fully understand why, but it seems related to an interaction with using `flatten` as a catch-all
+// for other fields. In particular, the `type` tag will be duplicated into the foreign_members.
+//
+// See https://github.com/serde-rs/serde/issues/3028
+pub(crate) fn deserialize_json_object_skipping_known_keys<'de, D>(
+    deserializer: D,
+    skip_keys: &'static [&'static str],
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct SkippingVisitor {
+        skip_keys: &'static [&'static str],
+    }
+    impl<'de_v> Visitor<'de_v> for SkippingVisitor {
+        type Value = Option<JsonObject>;
+        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            formatter.write_str("foreign members as Option<JsonObject>")
+        }
+        fn visit_map<A>(self, mut map: A) -> std::result::Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de_v>,
+        {
+            let mut output: Option<JsonObject> = None;
+            while let Some(key) = map.next_key::<String>()? {
+                if self.skip_keys.contains(&key.as_str()) {
+                    _ = map.next_value::<IgnoredAny>()?;
+                    continue;
+                }
+                match &mut output {
+                    Some(output) => {
+                        output.insert(key, map.next_value::<JsonValue>()?);
+                    }
+                    None => {
+                        let mut object = JsonObject::new();
+                        object.insert(key, map.next_value::<JsonValue>()?);
+                        output = Some(object);
+                    }
+                }
+            }
+            Ok(output)
+        }
+    }
+    deserializer.deserialize_map(SkippingVisitor { skip_keys })
+}
+
+// Treat an empty foreign_members map as None
+pub(crate) fn normalize_foreign_members(fm: &mut Option<JsonObject>) {
+    if let Some(some_fm) = fm {
+        if some_fm.is_empty() {
+            fm.take();
+        }
+    }
+}
 
 pub fn expect_type(value: &mut JsonObject) -> Result<String> {
     let prop = expect_property(value, "type")?;

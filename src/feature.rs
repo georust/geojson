@@ -16,6 +16,7 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
+use crate::util::deserialize_json_object_skipping_known_keys;
 use crate::{feature, util, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -23,7 +24,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 /// Feature Objects
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub struct Feature {
     /// Bounding Box
@@ -51,8 +52,21 @@ pub struct Feature {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        flatten,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_feature_foreign_members"
+    )]
     pub foreign_members: Option<JsonObject>,
+}
+
+fn deserialize_feature_foreign_members<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_json_object_skipping_known_keys(deserializer, &["type"])
 }
 
 impl From<Geometry> for Feature {
@@ -194,24 +208,11 @@ impl TryFrom<JsonValue> for Feature {
     }
 }
 
-impl<'de> Deserialize<'de> for Feature {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Feature, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        Feature::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
-
 /// Feature identifier
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-#[derive(Clone, Debug, PartialEq, Serialize)]
-#[serde(untagged)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged, expecting = "Feature 'id' must be a string or a number")]
 pub enum Id {
     String(String),
     Number(serde_json::Number),
@@ -279,6 +280,32 @@ mod tests {
     }
 
     #[test]
+    fn parsing() {
+        let geojson_str = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.1, 2.1]
+            }
+        })
+        .to_string();
+        let feature_1: Feature = geojson_str.parse().unwrap();
+        let feature_2: Feature = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(feature_1, feature_2);
+
+        let GeoJson::Feature(feature_3): GeoJson = geojson_str.parse().unwrap() else {
+            panic!("unexpected GeoJSON type");
+        };
+        let GeoJson::Feature(feature_4): GeoJson = serde_json::from_str(&geojson_str).unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        assert_eq!(feature_3, feature_4);
+
+        assert_eq!(feature_1, feature_4);
+    }
+
+    #[test]
     fn try_from_value() {
         use serde_json::json;
         use std::convert::TryInto;
@@ -330,11 +357,12 @@ mod tests {
 
     #[test]
     fn feature_json_null_geometry() {
-        let geojson_str = r#"{
+        let geojson_str = json!({
+            "type":"Feature",
             "geometry": null,
-            "properties":{},
-            "type":"Feature"
-        }"#;
+            "properties":{}
+        })
+        .to_string();
         let geojson = geojson_str.parse::<GeoJson>().unwrap();
         let feature = match geojson {
             GeoJson::Feature(feature) => feature,
@@ -345,11 +373,17 @@ mod tests {
 
     #[test]
     fn feature_json_invalid_geometry() {
-        let geojson_str = r#"{"geometry":3.14,"properties":{},"type":"Feature"}"#;
-        match geojson_str.parse::<GeoJson>().unwrap_err() {
-            Error::FeatureInvalidGeometryValue(_) => (),
-            _ => unreachable!(),
-        }
+        let geojson_str = json!({
+            "type": "Feature",
+            "geometry": 3.15,
+            "properties": {}
+        })
+        .to_string();
+        let err = geojson_str.parse::<GeoJson>().unwrap_err();
+        let Error::MalformedJson(serde_err) = err else {
+            panic!("expected serde error");
+        };
+        assert!(serde_err.to_string().contains("expected Geometry object"));
     }
 
     #[test]
@@ -406,20 +440,37 @@ mod tests {
 
     #[test]
     fn decode_feature_with_invalid_id_type_object() {
-        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":{},\"properties\":{},\"type\":\"Feature\"}";
-        assert!(matches!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType(_))
-        ));
+        let geojson_str = json!({
+            "type":"Feature",
+            "id":{},
+            "geometry":{"coordinates":[1.1,2.1],"type":"Point"},
+            "properties":{}
+        })
+        .to_string();
+        let err = geojson_str.parse::<GeoJson>().unwrap_err();
+        let Error::MalformedJson(serde_err) = err else {
+            panic!("expected serde error");
+        };
+        assert!(serde_err
+            .to_string()
+            .contains("Feature 'id' must be a string or a number"));
     }
 
     #[test]
-    fn decode_feature_with_invalid_id_type_null() {
-        let feature_json_str = "{\"geometry\":{\"coordinates\":[1.1,2.1],\"type\":\"Point\"},\"id\":null,\"properties\":{},\"type\":\"Feature\"}";
-        assert!(matches!(
-            feature_json_str.parse::<GeoJson>(),
-            Err(Error::FeatureInvalidIdentifierType(_))
-        ));
+    fn decode_feature_with_id_null() {
+        // The spec states that feature id is optional, and that "is either a JSON string or number".
+        // So the spec doesn't explicitly allow "null" but we treat `"id": null` as if no id were set.
+        let geojson_str = json!({
+            "type": "Feature",
+            "id": null,
+            "geometry": { "type": "Point", "coordinates": [1.1,2.1] },
+            "properties":{},
+        })
+        .to_string();
+        let GeoJson::Feature(feature) = geojson_str.parse::<GeoJson>().unwrap() else {
+            panic!("expected Feature");
+        };
+        assert!(feature.id.is_none(), "Expected id to be None for null id");
     }
 
     #[test]
