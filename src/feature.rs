@@ -16,9 +16,10 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
+use crate::util::deserialize_json_object_skipping_known_keys;
 use crate::{feature, util, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// Feature Objects
 ///
@@ -51,8 +52,21 @@ pub struct Feature {
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        flatten,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_feature_foreign_members"
+    )]
     pub foreign_members: Option<JsonObject>,
+}
+
+fn deserialize_feature_foreign_members<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<JsonObject>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_json_object_skipping_known_keys(deserializer, &["type"])
 }
 
 impl From<Geometry> for Feature {
@@ -263,6 +277,32 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn parsing() {
+        let geojson_str = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.1, 2.1]
+            }
+        })
+        .to_string();
+        let feature_1: Feature = geojson_str.parse().unwrap();
+        let feature_2: Feature = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(feature_1, feature_2);
+
+        let GeoJson::Feature(feature_3): GeoJson = geojson_str.parse().unwrap() else {
+            panic!("unexpected GeoJSON type");
+        };
+        let GeoJson::Feature(feature_4): GeoJson = serde_json::from_str(&geojson_str).unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        assert_eq!(feature_3, feature_4);
+
+        assert_eq!(feature_1, feature_4);
     }
 
     #[test]
