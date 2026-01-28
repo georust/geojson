@@ -26,6 +26,19 @@
   let position = Position::from(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
   ```
   * See <https://github.com/georust/geojson/pulls/222>
+* Substantially speed up parsing (Benches show 30% reduction). This was
+  essentially a rewrite of our deserialization logic. Instead of going from
+  input -> serde_json::JsonObject -> geojson types
+  we now go directly from
+  input -> geojson types.
+* Deserialization errors now include line number and column position.
+  Before:
+  > Encountered neither number type nor string type for 'id' field on 'feature' object: `{}`
+  After:
+  > Error while deserializing GeoJSON: Feature 'id' must be a string or a number at line 3 column 11
+* `type` is now the first field when serializing GeoJSON objects.
+* Since `feature.id` is optional, we now accept "id: null", whereas previously
+  you were required to omit the `id` key. Now either is acceptable.
 * Fix: Return `[]` instead of `[[]]` for `POLYGON EMPTY`.
   * See <https://github.com/georust/geojson/pulls/262>
 * Potentially breaking: De/Serializing your custom structs with serde now maps your struct's `id` field to `Feature.id`, rather than to `Feature.properties.id`.
@@ -71,7 +84,7 @@
   // after
   let point = geojson::GeometryValue::Point { coordinates: position };
   let geometry_collection = geojson::GeometryValue::GeometryCollection { geometries: vec![point.into()] };
-  
+
   // or using the new constructor
   let point = geojson::GeometryValue::new_point(position);
   ```
