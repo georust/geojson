@@ -635,7 +635,7 @@ pub(crate) mod deserialize {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, GeoJson, Geometry, GeometryValue, JsonObject};
+    use crate::{Error, FeatureCollection, GeoJson, Geometry, GeometryValue, JsonObject};
     use serde_json::json;
     use std::str::FromStr;
 
@@ -668,6 +668,29 @@ mod tests {
     }
 
     #[test]
+    fn parsing() {
+        let geojson_str = json!({
+            "type": "Point",
+            "coordinates": [1.1, 2.1]
+        })
+        .to_string();
+        let geometry_1: Geometry = geojson_str.parse().unwrap();
+        let geometry_2: Geometry = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(geometry_1, geometry_2);
+
+        let GeoJson::Geometry(geometry_3): GeoJson = geojson_str.parse().unwrap() else {
+            panic!("unexpected GeoJSON type");
+        };
+        let GeoJson::Geometry(geometry_4): GeoJson = serde_json::from_str(&geojson_str).unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        assert_eq!(geometry_3, geometry_4);
+
+        assert_eq!(geometry_1, geometry_4);
+    }
+
+    #[test]
     fn test_geometry_from_value() {
         use serde_json::json;
         use std::convert::TryInto;
@@ -689,6 +712,18 @@ mod tests {
                 foreign_members: None,
             }
         )
+    }
+
+    #[test]
+    fn wrong_type() {
+        let geojson_str = json!({
+            "type": "FeatureCollection",
+            "features": []
+        })
+        .to_string();
+        FeatureCollection::from_str(&geojson_str).unwrap();
+        Geometry::from_str(&geojson_str).unwrap_err();
+        serde_json::from_str::<Geometry>(&geojson_str).unwrap_err();
     }
 
     #[test]

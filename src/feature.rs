@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper")]
 pub struct Feature {
     /// Bounding Box
     ///
@@ -53,6 +53,48 @@ pub struct Feature {
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
+}
+
+mod deserialize {
+    use super::*;
+    use crate::util::normalize_foreign_members;
+
+    /// The purpose of this helper is to verify that `"type": "Feature"` during
+    /// deserialization by explicitly encoding the type as an enum with one member.
+    ///
+    /// It's dumb, but otherwise serde will ignore the `#[serde(tag="type")]`, and happily
+    /// deserialize (e.g.) `"type": "Point"` as a Feature.
+    ///
+    /// See: https://github.com/serde-rs/serde/issues/3028
+    #[derive(Deserialize)]
+    pub(crate) struct DeserializeFeatureHelper {
+        #[allow(unused)]
+        r#type: FeatureType,
+        bbox: Option<Bbox>,
+        geometry: Option<Geometry>,
+        id: Option<feature::Id>,
+        properties: Option<JsonObject>,
+        #[serde(flatten)]
+        foreign_members: Option<JsonObject>,
+    }
+
+    #[derive(Deserialize)]
+    enum FeatureType {
+        Feature,
+    }
+
+    impl From<DeserializeFeatureHelper> for Feature {
+        fn from(mut value: DeserializeFeatureHelper) -> Self {
+            normalize_foreign_members(&mut value.foreign_members);
+            Self {
+                bbox: value.bbox,
+                geometry: value.geometry,
+                id: value.id,
+                properties: value.properties,
+                foreign_members: value.foreign_members,
+            }
+        }
+    }
 }
 
 impl From<Geometry> for Feature {
@@ -263,6 +305,44 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(decoded_feature, feature);
+    }
+
+    #[test]
+    fn parsing() {
+        let geojson_str = json!({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.1, 2.1]
+            }
+        })
+        .to_string();
+        let feature_1: Feature = geojson_str.parse().unwrap();
+        let feature_2: Feature = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(feature_1, feature_2);
+
+        let GeoJson::Feature(feature_3): GeoJson = geojson_str.parse().unwrap() else {
+            panic!("unexpected GeoJSON type");
+        };
+        let GeoJson::Feature(feature_4): GeoJson = serde_json::from_str(&geojson_str).unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        assert_eq!(feature_3, feature_4);
+
+        assert_eq!(feature_1, feature_4);
+    }
+
+    #[test]
+    fn wrong_type() {
+        let geojson_str = json!({
+            "type": "Point",
+            "coordinates": [1.1, 2.1]
+        })
+        .to_string();
+        Geometry::from_str(&geojson_str).unwrap();
+        Feature::from_str(&geojson_str).unwrap_err();
+        serde_json::from_str::<Feature>(&geojson_str).unwrap_err();
     }
 
     #[test]
