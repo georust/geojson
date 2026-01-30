@@ -20,7 +20,7 @@ use crate::JsonObject;
 use crate::{Bbox, Feature};
 use serde::{Deserialize, Serialize};
 
-/// Feature Collection Objects
+/// Feature Collection Object
 ///
 /// [GeoJSON Format Specification § 3.3](https://tools.ietf.org/html/rfc7946#section-3.3)
 ///
@@ -38,12 +38,38 @@ use serde::{Deserialize, Serialize};
 ///     foreign_members: None,
 /// };
 ///
-/// let serialized = GeoJson::from(feature_collection).to_string();
+/// let serialized = feature_collection.to_string();
+/// assert_eq!(serialized, r#"{"type":"FeatureCollection","features":[]}"#);
+/// ```
 ///
-/// assert_eq!(
-///     serialized,
-///     "{\"type\":\"FeatureCollection\",\"features\":[]}"
-/// );
+/// Deserializing a GeoJSON string into a `FeatureCollection`:
+///
+/// ```
+/// use geojson::{FeatureCollection, Feature, Geometry};
+///
+/// let geojson_str = r#"
+/// {
+///   "type": "FeatureCollection",
+///   "features": [
+///     {
+///       "type": "Feature",
+///       "properties": {},
+///       "geometry": {
+///         "type": "Point",
+///         "coordinates": [-1.0, -2.0]
+///       }
+///     }
+///   ]
+/// }"#;
+///
+/// let feature_collection = geojson_str
+///     .parse::<FeatureCollection>()
+///     .expect("valid FeatureCollection GeoJSON");
+///
+/// let expected = FeatureCollection::from_iter(vec![
+///     Feature::from(Geometry::new_point([-1.0, -2.0]))
+/// ]);
+/// assert_eq!(feature_collection, expected);
 /// ```
 ///
 /// Collect from an iterator:

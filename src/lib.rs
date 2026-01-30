@@ -294,7 +294,7 @@
 //! # }
 //! ```
 //!
-//! If you wish to produce a [`FeatureCollection`] from a homogeneous collection of `geo-types`, a
+//! If you wish to produce a [`FeatureCollection`] from a collection of `geo-types`, a
 //! `From` impl is provided for `geo_types::GeometryCollection`:
 //!
 //! ```rust
@@ -384,7 +384,7 @@
 //! #[derive(Serialize, Deserialize)]
 //! struct MyStruct {
 //!     // Serialize as geojson, rather than using the type's default serialization
-//!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
+//!     #[serde(serialize_with = "geojson::ser::serialize_geometry", deserialize_with = "geojson::de::deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     name: String,
 //!     count: u64,

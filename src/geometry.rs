@@ -167,7 +167,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
     }
 }
 
-/// Geometry Objects
+/// Geometry Object
 ///
 /// [GeoJSON Format Specification § 3.1](https://tools.ietf.org/html/rfc7946#section-3.1)
 ///
@@ -191,7 +191,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// Constructors make this more concise.
 /// ```
 /// # use geojson::Geometry;
-/// let geometry = Geometry::new_point([7.428959, 1.513394]);
+/// let geometry = Geometry::new_point([1.23, 3.45]);
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
@@ -199,13 +199,12 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// ```
 /// use geojson::Geometry;
 ///
-/// let geometry = Geometry::new_point([7.428959, 1.513394]);
+/// let geometry = Geometry::new_point([1.23, 3.45]);
 ///
 /// let geojson_string = geometry.to_string();
-///
 /// assert_eq!(
-///     "{\"type\":\"Point\",\"coordinates\":[7.428959,1.513394]}",
 ///     geojson_string,
+///     r#"{"type":"Point","coordinates":[1.23,3.45]}"#
 /// );
 /// ```
 ///

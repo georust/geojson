@@ -19,9 +19,47 @@ use crate::{feature, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 
-/// Feature Objects
+/// Feature Object
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+///
+/// # Examples
+///
+/// Serializing a `Feature` to a GeoJSON string:
+///
+/// ```
+/// use geojson::{Feature, Geometry};
+///
+/// let feature = Feature::from(Geometry::new_point([1.0, 2.0]));
+///
+/// let geojson_string = feature.to_string();
+/// assert_eq!(
+///     geojson_string,
+///     r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":null}"#
+/// );
+/// ```
+///
+/// Deserializing a GeoJSON string into a `Feature`:
+///
+/// ```
+/// use geojson::{Feature, Geometry};
+///
+/// let geojson_str = r#"
+/// {
+///   "type": "Feature",
+///   "geometry": {
+///     "type": "Point",
+///     "coordinates": [1.0, 2.0]
+///   }
+/// }"#;
+///
+/// let feature = geojson_str
+///     .parse::<Feature>()
+///     .expect("valid Feature GeoJSON");
+///
+/// let expected = Feature::from(Geometry::new_point([1.0, 2.0]));
+/// assert_eq!(feature, expected);
+/// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper")]
 pub struct Feature {
