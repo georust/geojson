@@ -49,12 +49,12 @@ use serde::{Deserialize, Serialize};
 /// Collect from an iterator:
 ///
 /// ```rust
-/// use geojson::{Feature, FeatureCollection, GeometryValue, Position};
+/// use geojson::{Feature, FeatureCollection, Geometry};
 ///
 /// let fc: FeatureCollection = (0..10)
 ///     .map(|idx| -> Feature {
 ///         let c = idx as f64;
-///         GeometryValue::new_point([1.0 * c, 2.0 * c, 3.0 * c]).into()
+///         Geometry::new_point([1.0 * c, 2.0 * c, 3.0 * c]).into()
 ///     })
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
@@ -210,7 +210,7 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Feature, FeatureCollection, GeoJson, Geometry, GeometryValue};
+    use crate::{Feature, FeatureCollection, GeoJson, Geometry};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -218,13 +218,13 @@ mod tests {
     fn test_fc_from_iterator() {
         let features: Vec<Feature> = vec![
             {
-                let mut feat: Feature = GeometryValue::new_point([0., 0., 0.]).into();
+                let mut feat: Feature = Geometry::new_point([0., 0., 0.]).into();
                 feat.bbox = Some(vec![-1., -1., -1., 1., 1., 1.]);
                 feat
             },
             {
                 let mut feat: Feature =
-                    GeometryValue::new_multi_point([[10., 10., 10.], [11., 11., 11.]]).into();
+                    Geometry::new_multi_point([[10., 10., 10.], [11., 11., 11.]]).into();
                 feat.bbox = Some(vec![10., 10., 10., 11., 11., 11.]);
                 feat
             },

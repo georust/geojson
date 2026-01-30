@@ -190,11 +190,7 @@ mod tests {
     fn stream_read_test() {
         let mut fi = FeatureIterator::<_, Feature>::new(BufReader::new(fc().as_bytes()));
         assert_eq!(
-            Geometry {
-                bbox: None,
-                value: GeometryValue::new_point([102.0, 0.5]),
-                foreign_members: None,
-            },
+            Geometry::new_point([102.0, 0.5]),
             fi.next().unwrap().unwrap().geometry.unwrap()
         );
         {
@@ -221,17 +217,13 @@ mod tests {
             );
         }
         assert_eq!(
-            Geometry {
-                bbox: None,
-                value: GeometryValue::new_polygon([[
-                    [100.0, 0.0],
-                    [101.0, 0.0],
-                    [101.0, 1.0],
-                    [100.0, 1.0],
-                    [100.0, 0.0]
-                ]]),
-                foreign_members: None,
-            },
+            Geometry::new_polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0]
+            ]]),
             fi.next().unwrap().unwrap().geometry.unwrap()
         );
         assert!(fi.next().is_none());

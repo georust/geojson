@@ -114,10 +114,7 @@ where
     T: CoordFloat,
 {
     fn from(geometry_collection: &geo_types::GeometryCollection<T>) -> Self {
-        let values = geometry_collection
-            .0
-            .iter()
-            .map(|geometry| crate::Geometry::new(GeometryValue::from(geometry)));
+        let values = geometry_collection.0.iter().map(crate::Geometry::from);
         GeometryValue::new_geometry_collection(values)
     }
 }
@@ -131,7 +128,7 @@ where
         let values: Vec<Feature> = geometry_collection
             .0
             .iter()
-            .map(|geometry| crate::Geometry::new(GeometryValue::from(geometry)).into())
+            .map(|geometry| crate::Geometry::from(geometry).into())
             .collect();
 
         FeatureCollection {

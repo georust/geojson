@@ -111,7 +111,7 @@
 //! `GeoJson` can be serialized by calling [`to_string`](geojson/enum.GeoJson.html#impl-ToString):
 //!
 //! ```rust
-//! use geojson::{Feature, GeoJson, Geometry, GeometryValue};
+//! use geojson::{Feature, GeoJson, Geometry};
 //! # fn get_properties() -> ::geojson::JsonObject {
 //! # let mut properties = ::geojson::JsonObject::new();
 //! # properties.insert(
@@ -122,7 +122,7 @@
 //! # }
 //! # fn main() {
 //!
-//! let geometry = Geometry::new(GeometryValue::new_point([-120.66029, 35.2812]));
+//! let geometry = Geometry::new_point([-120.66029, 35.2812]);
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,

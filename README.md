@@ -34,9 +34,9 @@ let geojson = geojson_str.parse::<GeoJson>().unwrap();
 ### Writing
 
 ```rust
-use geojson::{Feature, GeoJson, Geometry, Value, JsonObject, JsonValue};
+use geojson::{Feature, GeoJson, Geometry, JsonObject, JsonValue};
 
-let geometry = Geometry::new(GeometryValue::new_point([-120.66029, 35.2812]));
+let geometry = Geometry::new_point([-120.66029, 35.2812]);
 
 let mut properties = JsonObject::new();
 properties.insert(
