@@ -53,7 +53,6 @@ use serde::{Deserialize, Serialize};
 ///   "features": [
 ///     {
 ///       "type": "Feature",
-///       "properties": {},
 ///       "geometry": {
 ///         "type": "Point",
 ///         "coordinates": [-1.0, -2.0]
@@ -66,7 +65,7 @@ use serde::{Deserialize, Serialize};
 ///     .parse::<FeatureCollection>()
 ///     .expect("valid FeatureCollection GeoJSON");
 ///
-/// let expected = FeatureCollection::from_iter(vec![
+/// let expected = FeatureCollection::new([
 ///     Feature::from(Geometry::new_point([-1.0, -2.0]))
 /// ]);
 /// assert_eq!(feature_collection, expected);
@@ -102,6 +101,13 @@ pub struct FeatureCollection {
     /// including limitations on key names.
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
+}
+
+impl FeatureCollection {
+    /// Construct a `FeatureCollection` from an iterator of Features (or things that can be turned `Into` a Feature)
+    pub fn new(features: impl IntoIterator<Item = Feature>) -> Self {
+        features.into_iter().collect()
+    }
 }
 
 mod deserialize {
@@ -256,7 +262,7 @@ mod tests {
             },
         ];
 
-        let fc: FeatureCollection = features.into_iter().collect();
+        let fc = FeatureCollection::new(features);
         assert_eq!(fc.features.len(), 2);
         assert_eq!(fc.bbox, Some(vec![-1., -1., -1., 11., 11., 11.]));
     }
