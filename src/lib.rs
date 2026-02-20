@@ -38,7 +38,7 @@
 //! and safety of Rust.
 //!
 //! Alternatively, and commonly, if you only need geometry and properties (and not, e.g.
-//! [foreign members](https://www.rfc-editor.org/rfc/rfc7946#section-6.1)), you can bring your own
+//! [foreign members](https://tools.ietf.org/html/rfc7946#section-6.1), you can bring your own
 //! types, and use this crate's [`serde`] integration to serialize and deserialize your custom
 //! types directly to and from a GeoJSON Feature Collection. [See more on using your own types with
 //! serde](#using-your-own-types-with-serde).
@@ -239,6 +239,32 @@
 //!     process_geojson(&geojson);
 //! }
 //! ```
+//! ### Foreign Members
+//!
+//! [Foreign members](https://tools.ietf.org/html/rfc7946#section-6.1) are extra JSON fields
+//! beyond those defined by the GeoJSON specification. This crate captures them in the
+//! `foreign_members` field present on [`Geometry`], [`Feature`], and [`FeatureCollection`].
+//!
+//! ```
+//! use geojson::{GeoJson, Feature};
+//!
+//! let geojson_str = r#"{
+//!   "type": "Feature",
+//!   "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
+//!   "properties": null,
+//!   "title": "my point"
+//! }"#;
+//!
+//! let feature = geojson_str.parse::<GeoJson>().unwrap();
+//! if let GeoJson::Feature(feature) = feature {
+//!     let foreign_members = feature.foreign_members.unwrap();
+//!     assert_eq!(foreign_members["title"], "my point");
+//! }
+//! ```
+//!
+//! **Limitation:** Foreign member keys must not collide with the reserved GeoJSON fields for any
+//! object type, or they will be silently consumed when parsing the reserved field rather than
+//! appearing in `foreign_members`. The reserved fields are: `coordinates`, `geometries`, `id`, `geometry`, `properties`, `features`
 //!
 //! ## Use geojson with other crates by converting to geo-types
 //!

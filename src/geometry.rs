@@ -294,7 +294,10 @@ pub struct Geometry {
 
     /// Foreign Members
     ///
-    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6.1)
+    ///
+    /// See the [crate-level foreign members documentation](crate#foreign-members) for details,
+    /// including limitations on key names.
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
 }

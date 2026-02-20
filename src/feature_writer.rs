@@ -179,7 +179,7 @@ impl<W: Write> FeatureWriter<W> {
         to_feature_writer(&mut self.writer, value)
     }
 
-    /// Write a [foreign member](https://datatracker.ietf.org/doc/html/rfc7946#section-6) to the
+    /// Write a [foreign member](https://datatracker.ietf.org/doc/html/rfc7946#section-6.1) to the
     /// output stream. This must be done before appending any features.
     pub fn write_foreign_member<T: ?Sized + Serialize>(
         &mut self,
