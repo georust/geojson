@@ -19,7 +19,7 @@ use std::str::FromStr;
 use crate::errors::{Error, Result};
 use crate::{util, Bbox, Feature};
 use crate::{JsonObject, JsonValue};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Feature Collection Objects
 ///
@@ -60,8 +60,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
 /// ```
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
-#[serde(tag = "type")]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", from = "deserialize::DeserializeFeatureCollectionHelper")]
 pub struct FeatureCollection {
     /// Bounding Box
     ///
@@ -71,9 +71,50 @@ pub struct FeatureCollection {
     pub features: Vec<Feature>,
     /// Foreign Members
     ///
-    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6)
+    /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6.1)
+    ///
+    /// See the [crate-level foreign members documentation](crate#foreign-members) for details,
+    /// including limitations on key names.
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
+}
+
+mod deserialize {
+    use super::*;
+    use crate::util::normalize_foreign_members;
+
+    /// The purpose of this helper is to verify that "type = FeatureCollection" during
+    /// deserialization by explicitly encoding the type as an enum with one member.
+    ///
+    /// It's dumb, but otherwise serde will ignore the `#[serde(tag="type")]`, and happily
+    /// deserialize (e.g.) `"type": "Point"` as a FeatureCollection.
+    ///
+    /// See: https://github.com/serde-rs/serde/issues/3028
+    #[derive(Deserialize)]
+    pub(crate) struct DeserializeFeatureCollectionHelper {
+        #[allow(unused)]
+        r#type: FeatureCollectionType,
+        bbox: Option<Bbox>,
+        features: Vec<Feature>,
+        #[serde(flatten)]
+        foreign_members: Option<JsonObject>,
+    }
+
+    #[derive(Deserialize)]
+    enum FeatureCollectionType {
+        FeatureCollection,
+    }
+
+    impl From<DeserializeFeatureCollectionHelper> for FeatureCollection {
+        fn from(mut value: DeserializeFeatureCollectionHelper) -> Self {
+            normalize_foreign_members(&mut value.foreign_members);
+            Self {
+                bbox: value.bbox,
+                features: value.features,
+                foreign_members: value.foreign_members,
+            }
+        }
+    }
 }
 
 impl IntoIterator for FeatureCollection {
@@ -156,19 +197,6 @@ impl FromStr for FeatureCollection {
     }
 }
 
-impl<'de> Deserialize<'de> for FeatureCollection {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<FeatureCollection, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error as SerdeError;
-
-        let val = JsonObject::deserialize(deserializer)?;
-
-        FeatureCollection::from_json_object(val).map_err(|e| D::Error::custom(e.to_string()))
-    }
-}
-
 /// Create a [`FeatureCollection`] using the [`collect`]
 /// method on an iterator of `Feature`s. If every item
 /// contains a bounding-box of the same dimension, then the
@@ -237,7 +265,7 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, Feature, FeatureCollection, GeometryValue};
+    use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry, GeometryValue};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -289,9 +317,42 @@ mod tests {
     }
 
     #[test]
+    fn parsing() {
+        let geojson_str = feature_collection_json();
+        let feature_collection_1: FeatureCollection = geojson_str.parse().unwrap();
+        let feature_collection_2: FeatureCollection = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(feature_collection_1, feature_collection_2);
+        let GeoJson::FeatureCollection(feature_collection_3): GeoJson =
+            geojson_str.parse().unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        let GeoJson::FeatureCollection(feature_collection_4): GeoJson =
+            serde_json::from_str(&geojson_str).unwrap()
+        else {
+            panic!("unexpected GeoJSON type");
+        };
+        assert_eq!(feature_collection_3, feature_collection_4);
+
+        assert_eq!(feature_collection_1, feature_collection_4);
+    }
+
+    #[test]
     fn test_from_str_ok() {
         let feature_collection = FeatureCollection::from_str(&feature_collection_json()).unwrap();
         assert_eq!(2, feature_collection.features.len());
+    }
+
+    #[test]
+    fn wrong_type() {
+        let geojson_str = json!({
+            "type": "Point",
+            "coordinates": [1.1, 2.1]
+        })
+        .to_string();
+        Geometry::from_str(&geojson_str).unwrap();
+        FeatureCollection::from_str(&geojson_str).unwrap_err();
+        serde_json::from_str::<FeatureCollection>(&geojson_str).unwrap_err();
     }
 
     #[test]

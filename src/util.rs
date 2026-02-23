@@ -16,6 +16,15 @@ use crate::errors::{Error, Result};
 use crate::{feature, Bbox, Feature, Geometry, GeometryValue, Position};
 use crate::{JsonObject, JsonValue};
 
+// Treat an empty foreign_members map as None
+pub(crate) fn normalize_foreign_members(fm: &mut Option<JsonObject>) {
+    if let Some(some_fm) = fm {
+        if some_fm.is_empty() {
+            fm.take();
+        }
+    }
+}
+
 pub fn expect_type(value: &mut JsonObject) -> Result<String> {
     let prop = expect_property(value, "type")?;
     expect_string(prop)

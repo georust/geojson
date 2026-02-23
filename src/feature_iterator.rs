@@ -132,6 +132,7 @@ mod tests {
     use super::*;
     use crate::{Geometry, GeometryValue};
 
+    use serde_json::json;
     use std::io::BufReader;
 
     fn fc() -> &'static str {
@@ -155,7 +156,9 @@ mod tests {
               "type": "LineString",
               "coordinates": [
                 [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
-              ]
+              ],
+              "foreign_geometry_member": "foo",
+              "foreign_geometry_member2": "foo2"
             },
             "properties": {
               "prop0": "value0",
@@ -176,7 +179,8 @@ mod tests {
             "properties": {
               "prop0": "value0",
               "prop1": { "this": "that" }
-            }
+            },
+            "foreign_feature_member": "bar"
           }
         ]
       }"#
@@ -193,19 +197,29 @@ mod tests {
             },
             fi.next().unwrap().unwrap().geometry.unwrap()
         );
-        assert_eq!(
-            Geometry {
-                bbox: None,
-                value: GeometryValue::new_line_string([
-                    [102.0, 0.0],
-                    [103.0, 1.0],
-                    [104.0, 0.0],
-                    [105.0, 1.0]
-                ]),
-                foreign_members: None,
-            },
-            fi.next().unwrap().unwrap().geometry.unwrap()
-        );
+        {
+            assert_eq!(
+                Geometry {
+                    bbox: None,
+                    value: GeometryValue::new_line_string([
+                        [102.0, 0.0],
+                        [103.0, 1.0],
+                        [104.0, 0.0],
+                        [105.0, 1.0]
+                    ]),
+                    foreign_members: Some(
+                        json!({
+                            "foreign_geometry_member": "foo",
+                            "foreign_geometry_member2": "foo2"
+                        })
+                        .as_object()
+                        .unwrap()
+                        .clone()
+                    )
+                },
+                fi.next().unwrap().unwrap().geometry.unwrap()
+            );
+        }
         assert_eq!(
             Geometry {
                 bbox: None,
