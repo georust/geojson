@@ -167,54 +167,51 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
     }
 }
 
-/// Geometry Objects
+/// Geometry Object
 ///
 /// [GeoJSON Format Specification § 3.1](https://tools.ietf.org/html/rfc7946#section-3.1)
 ///
 /// ## Examples
 ///
-/// Constructing a `Geometry`:
+/// Constructing a `Geometry` (the long way):
 ///
 /// ```
 /// use geojson::{Geometry, GeometryValue, Position};
 ///
-/// let geometry = Geometry::new(GeometryValue::Point {
-///     coordinates: Position::from([7.428959, 1.513394]),
-/// });
+/// let geometry = Geometry {
+///     // `value` corresponds to the 'type' and 'coordinates' field.
+///     value: GeometryValue::Point {
+///         coordinates: Position::from([7.428959, 1.513394]),
+///     },
+///     bbox: None,
+///     foreign_members: None,
+/// };
 /// ```
 ///
 /// Constructors make this more concise.
 /// ```
-/// # use geojson::{Geometry, GeometryValue};
-/// let geometry = Geometry::new(GeometryValue::new_point([7.428959, 1.513394]));
-/// ```
-///
-/// `GeometryValue` can be converted `into` a `Geometry`.
-/// ```
-/// # use geojson::{Geometry, Position, GeometryValue};
-/// let geometry: Geometry = GeometryValue::new_point([7.428959, 1.513394]).into();
+/// # use geojson::Geometry;
+/// let geometry = Geometry::new_point([1.23, 3.45]);
 /// ```
 ///
 /// Serializing a `Geometry` to a GeoJSON string:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, GeometryValue, Position};
-/// use serde_json;
+/// use geojson::Geometry;
 ///
-/// let geometry: Geometry = GeometryValue::new_point([7.428959, 1.513394]).into();
+/// let geometry = Geometry::new_point([1.23, 3.45]);
 ///
 /// let geojson_string = geometry.to_string();
-///
 /// assert_eq!(
-///     "{\"type\":\"Point\",\"coordinates\":[7.428959,1.513394]}",
 ///     geojson_string,
+///     r#"{"type":"Point","coordinates":[1.23,3.45]}"#
 /// );
 /// ```
 ///
 /// Deserializing a GeoJSON string into a `Geometry`:
 ///
 /// ```
-/// use geojson::{GeoJson, Geometry, GeometryValue, Position};
+/// use geojson::Geometry;
 ///
 /// let geojson_str = r#"{"type":"Point", "coordinates":[7.428959,1.513394]}"#;
 ///
@@ -222,22 +219,23 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 ///     .parse::<Geometry>()
 ///     .expect("valid Geometry GeoJSON");
 ///
-/// assert_eq!(
-///     Geometry::new(GeometryValue::new_point([7.428959, 1.513394])),
-///     geometry,
-/// );
+/// assert_eq!(Geometry::new_point([7.428959, 1.513394]), geometry,);
 /// ```
 ///
-/// Transforming a `Geometry` into a `geo_types::Geometry<f64>` (which requires the `geo-types`
+/// Transforming a `Geometry` into a `geo_types::Point<f64>` (which requires the `geo-types`
 /// feature):
 ///
 /// ```
-/// use geojson::{Geometry, GeometryValue, Position};
+/// use geojson::Geometry;
 /// use std::convert::TryInto;
 ///
-/// let geometry = Geometry::new(GeometryValue::new_point([7.428959, 1.513394]));
+/// let geometry = Geometry::new_point([1.23, 4.56]);
 /// # #[cfg(feature = "geo-types")]
-/// let geom: geo_types::Geometry<f64> = geometry.try_into().unwrap();
+/// # {
+/// let geom: geo_types::Point = geometry.try_into().unwrap();
+/// assert_eq!(geom.x(), 1.23);
+/// assert_eq!(geom.y(), 4.56);
+/// # }
 /// ```
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "deserialize::RawGeometry")]
@@ -270,6 +268,44 @@ impl Geometry {
             value,
             foreign_members: None,
         }
+    }
+
+    pub fn new_point(value: impl Into<Position>) -> Geometry {
+        Self::new(GeometryValue::new_point(value))
+    }
+
+    pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position>>) -> Geometry {
+        Self::new(GeometryValue::new_line_string(value))
+    }
+
+    pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position>>) -> Geometry {
+        Self::new(GeometryValue::new_multi_point(value))
+    }
+
+    pub fn new_multi_line_string(
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+    ) -> Geometry {
+        Self::new(GeometryValue::new_multi_line_string(value))
+    }
+
+    pub fn new_polygon(
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+    ) -> Geometry {
+        Self::new(GeometryValue::new_polygon(value))
+    }
+
+    pub fn new_multi_polygon(
+        value: impl IntoIterator<
+            Item = impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+        >,
+    ) -> Geometry {
+        Self::new(GeometryValue::new_multi_polygon(value))
+    }
+
+    pub fn new_geometry_collection(
+        value: impl IntoIterator<Item = impl Into<Geometry>>,
+    ) -> Geometry {
+        Self::new(GeometryValue::new_geometry_collection(value))
     }
 }
 
@@ -601,11 +637,7 @@ mod tests {
     #[test]
     fn encode_decode_geometry() {
         let geometry_json_str = "{\"type\":\"Point\",\"coordinates\":[1.1,2.1]}";
-        let geometry = Geometry {
-            value: GeometryValue::new_point([1.1, 2.1]),
-            bbox: None,
-            foreign_members: None,
-        };
+        let geometry = Geometry::new_point([1.1, 2.1]);
 
         // Test encode
         let json_string = encode(&geometry);
@@ -656,8 +688,7 @@ mod tests {
 
     #[test]
     fn test_geometry_display() {
-        let v = GeometryValue::new_line_string([[0.0, 0.1], [0.1, 0.2], [0.2, 0.3]]);
-        let geometry = Geometry::new(v);
+        let geometry = Geometry::new_line_string([[0.0, 0.1], [0.1, 0.2], [0.2, 0.3]]);
         assert_eq!(
             geometry.to_string(),
             "{\"type\":\"LineString\",\"coordinates\":[[0.0,0.1],[0.1,0.2],[0.2,0.3]]}"
@@ -702,14 +733,10 @@ mod tests {
 
     #[test]
     fn encode_decode_geometry_collection() {
-        let geometry_collection = Geometry {
-            bbox: None,
-            value: GeometryValue::new_geometry_collection([
-                GeometryValue::new_point([100.0, 0.0]),
-                GeometryValue::new_line_string([[101.0, 0.0], [102.0, 1.0]]),
-            ]),
-            foreign_members: None,
-        };
+        let geometry_collection = Geometry::new_geometry_collection([
+            Geometry::new_point([100.0, 0.0]),
+            Geometry::new_line_string([[101.0, 0.0], [102.0, 1.0]]),
+        ]);
 
         let geometry_collection_string = "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Point\",\"coordinates\":[100.0,0.0]},{\"type\":\"LineString\",\"coordinates\":[[101.0,0.0],[102.0,1.0]]}]}";
         // Test encode

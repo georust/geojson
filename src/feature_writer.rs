@@ -270,7 +270,7 @@ impl<W: Write> Drop for FeatureWriter<W> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{GeometryValue, JsonValue};
+    use crate::{Geometry, JsonValue};
 
     use serde_json::json;
 
@@ -328,7 +328,7 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(GeometryValue::new_point([1.1, 1.2]).into()),
+                    geometry: Some(Geometry::new_point([1.1, 1.2])),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,
@@ -342,7 +342,7 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(GeometryValue::new_point([2.1, 2.2]).into()),
+                    geometry: Some(Geometry::new_point([2.1, 2.2])),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,
@@ -384,12 +384,12 @@ mod tests {
         {
             let mut writer = FeatureWriter::from_writer(&mut buffer);
             let record_1 = MyRecord {
-                geometry: GeometryValue::new_point([1.1, 1.2]).into(),
+                geometry: Geometry::new_point([1.1, 1.2]),
                 name: "Mishka".to_string(),
                 age: 12,
             };
             let record_2 = MyRecord {
-                geometry: GeometryValue::new_point([2.1, 2.2]).into(),
+                geometry: Geometry::new_point([2.1, 2.2]),
                 name: "Jane".to_string(),
                 age: 22,
             };
@@ -441,7 +441,7 @@ mod tests {
 
                 Feature {
                     bbox: None,
-                    geometry: Some(GeometryValue::new_point([1.1, 1.2]).into()),
+                    geometry: Some(Geometry::new_point([1.1, 1.2])),
                     id: None,
                     properties: Some(props),
                     foreign_members: None,

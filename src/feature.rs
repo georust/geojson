@@ -19,9 +19,47 @@ use crate::{feature, Bbox, Geometry, GeometryValue};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 
-/// Feature Objects
+/// Feature Object
 ///
 /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
+///
+/// # Examples
+///
+/// Serializing a `Feature` to a GeoJSON string:
+///
+/// ```
+/// use geojson::{Feature, Geometry};
+///
+/// let feature = Feature::from(Geometry::new_point([1.0, 2.0]));
+///
+/// let geojson_string = feature.to_string();
+/// assert_eq!(
+///     geojson_string,
+///     r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.0,2.0]},"properties":null}"#
+/// );
+/// ```
+///
+/// Deserializing a GeoJSON string into a `Feature`:
+///
+/// ```
+/// use geojson::{Feature, Geometry};
+///
+/// let geojson_str = r#"
+/// {
+///   "type": "Feature",
+///   "geometry": {
+///     "type": "Point",
+///     "coordinates": [1.0, 2.0]
+///   }
+/// }"#;
+///
+/// let feature = geojson_str
+///     .parse::<Feature>()
+///     .expect("valid Feature GeoJSON");
+///
+/// let expected = Feature::from(Geometry::new_point([1.0, 2.0]));
+/// assert_eq!(feature, expected);
+/// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper")]
 pub struct Feature {
@@ -212,7 +250,7 @@ pub enum Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, Error, Feature, GeoJson, Geometry, GeometryValue, JsonObject};
+    use crate::{feature, Error, Feature, GeoJson, Geometry, JsonObject};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -227,7 +265,7 @@ mod tests {
 
     fn feature() -> Feature {
         Feature {
-            geometry: Some(GeometryValue::new_point([1.1, 2.1]).into()),
+            geometry: Some(Geometry::new_point([1.1, 2.1])),
             properties: properties(),
             bbox: None,
             id: None,
@@ -354,11 +392,7 @@ mod tests {
     fn encode_decode_feature_with_id_number() {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"id":0,"properties":{}}"#;
         let feature = Feature {
-            geometry: Some(Geometry {
-                value: GeometryValue::new_point([1.1, 2.1]),
-                bbox: None,
-                foreign_members: None,
-            }),
+            geometry: Some(Geometry::new_point([1.1, 2.1])),
             properties: properties(),
             bbox: None,
             id: Some(feature::Id::Number(0.into())),
@@ -380,11 +414,7 @@ mod tests {
     fn encode_decode_feature_with_id_string() {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"id":"foo","properties":{}}"#;
         let feature = Feature {
-            geometry: Some(Geometry {
-                value: GeometryValue::new_point([1.1, 2.1]),
-                bbox: None,
-                foreign_members: None,
-            }),
+            geometry: Some(Geometry::new_point([1.1, 2.1])),
             properties: properties(),
             bbox: None,
             id: Some(feature::Id::String("foo".into())),
@@ -449,11 +479,7 @@ mod tests {
             serde_json::to_value("some_value").unwrap(),
         );
         let feature = Feature {
-            geometry: Some(Geometry {
-                value: GeometryValue::new_point([1.1, 2.1]),
-                bbox: None,
-                foreign_members: None,
-            }),
+            geometry: Some(Geometry::new_point([1.1, 2.1])),
             properties: properties(),
             bbox: None,
             id: None,
@@ -476,7 +502,7 @@ mod tests {
         let feature_json_str = r#"{"type":"Feature","geometry":{"type":"Point","coordinates":[1.1,2.1]},"properties":null}"#;
 
         let feature = Feature {
-            geometry: Some(GeometryValue::new_point([1.1, 2.1]).into()),
+            geometry: Some(Geometry::new_point([1.1, 2.1])),
             properties: None,
             bbox: None,
             id: None,

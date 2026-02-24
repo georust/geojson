@@ -111,7 +111,7 @@
 //! `GeoJson` can be serialized by calling [`to_string`](geojson/enum.GeoJson.html#impl-ToString):
 //!
 //! ```rust
-//! use geojson::{Feature, GeoJson, Geometry, GeometryValue};
+//! use geojson::{Feature, GeoJson, Geometry};
 //! # fn get_properties() -> ::geojson::JsonObject {
 //! # let mut properties = ::geojson::JsonObject::new();
 //! # properties.insert(
@@ -122,7 +122,7 @@
 //! # }
 //! # fn main() {
 //!
-//! let geometry = Geometry::new(GeometryValue::new_point([-120.66029, 35.2812]));
+//! let geometry = Geometry::new_point([-120.66029, 35.2812]);
 //!
 //! let geojson = GeoJson::Feature(Feature {
 //!     bbox: None,
@@ -294,7 +294,7 @@
 //! # }
 //! ```
 //!
-//! If you wish to produce a [`FeatureCollection`] from a homogeneous collection of `geo-types`, a
+//! If you wish to produce a [`FeatureCollection`] from a collection of `geo-types`, a
 //! `From` impl is provided for `geo_types::GeometryCollection`:
 //!
 //! ```rust
@@ -384,7 +384,7 @@
 //! #[derive(Serialize, Deserialize)]
 //! struct MyStruct {
 //!     // Serialize as geojson, rather than using the type's default serialization
-//!     #[serde(serialize_with = "serialize_geometry", deserialize_with = "deserialize_geometry")]
+//!     #[serde(serialize_with = "geojson::ser::serialize_geometry", deserialize_with = "geojson::de::deserialize_geometry")]
 //!     geometry: geo_types::Point<f64>,
 //!     name: String,
 //!     count: u64,

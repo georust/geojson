@@ -212,7 +212,7 @@ where
 #[cfg_attr(feature = "geo-types", doc = "```")]
 #[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
 /// use serde::Serialize;
-/// use geojson::{Feature, GeometryValue, Geometry};
+/// use geojson::{Feature, Geometry};
 /// use geojson::ser::{to_feature, serialize_geometry};
 ///
 /// #[derive(Serialize)]
@@ -230,7 +230,7 @@ where
 ///
 /// let feature: Feature = to_feature(&my_struct).unwrap();
 /// assert_eq!("My Name", feature.property("name").unwrap());
-/// assert_eq!(feature.geometry.unwrap(), Geometry::new(GeometryValue::new_point([1.0, 2.0])));
+/// assert_eq!(feature.geometry.unwrap(), Geometry::new_point([1.0, 2.0]));
 /// ```
 ///
 /// # Errors
@@ -493,7 +493,7 @@ mod tests {
         }
 
         let my_feature = {
-            let geometry = crate::GeometryValue::new_point([0.0, 1.0]).into();
+            let geometry = crate::Geometry::new_point([0.0, 1.0]);
             let name = "burbs".to_string();
             MyStruct { geometry, name }
         };
@@ -525,7 +525,7 @@ mod tests {
         #[test]
         fn with_some_geom() {
             let my_feature = {
-                let geometry = Some(crate::GeometryValue::new_point([0.0, 1.0]).into());
+                let geometry = Some(crate::Geometry::new_point([0.0, 1.0]));
                 let name = "burbs".to_string();
                 MyStruct { geometry, name }
             };
@@ -824,7 +824,7 @@ mod tests {
             let actual = to_feature(&my_struct).unwrap();
             let expected = Feature {
                 bbox: None,
-                geometry: Some(crate::GeometryValue::new_point([125.6, 10.1]).into()),
+                geometry: Some(crate::Geometry::new_point([125.6, 10.1])),
                 id: None,
                 properties: Some(
                     json!({

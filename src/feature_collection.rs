@@ -20,7 +20,7 @@ use crate::JsonObject;
 use crate::{Bbox, Feature};
 use serde::{Deserialize, Serialize};
 
-/// Feature Collection Objects
+/// Feature Collection Object
 ///
 /// [GeoJSON Format Specification § 3.3](https://tools.ietf.org/html/rfc7946#section-3.3)
 ///
@@ -38,23 +38,48 @@ use serde::{Deserialize, Serialize};
 ///     foreign_members: None,
 /// };
 ///
-/// let serialized = GeoJson::from(feature_collection).to_string();
+/// let serialized = feature_collection.to_string();
+/// assert_eq!(serialized, r#"{"type":"FeatureCollection","features":[]}"#);
+/// ```
 ///
-/// assert_eq!(
-///     serialized,
-///     "{\"type\":\"FeatureCollection\",\"features\":[]}"
-/// );
+/// Deserializing a GeoJSON string into a `FeatureCollection`:
+///
+/// ```
+/// use geojson::{FeatureCollection, Feature, Geometry};
+///
+/// let geojson_str = r#"
+/// {
+///   "type": "FeatureCollection",
+///   "features": [
+///     {
+///       "type": "Feature",
+///       "geometry": {
+///         "type": "Point",
+///         "coordinates": [-1.0, -2.0]
+///       }
+///     }
+///   ]
+/// }"#;
+///
+/// let feature_collection = geojson_str
+///     .parse::<FeatureCollection>()
+///     .expect("valid FeatureCollection GeoJSON");
+///
+/// let expected = FeatureCollection::new([
+///     Feature::from(Geometry::new_point([-1.0, -2.0]))
+/// ]);
+/// assert_eq!(feature_collection, expected);
 /// ```
 ///
 /// Collect from an iterator:
 ///
 /// ```rust
-/// use geojson::{Feature, FeatureCollection, GeometryValue, Position};
+/// use geojson::{Feature, FeatureCollection, Geometry};
 ///
 /// let fc: FeatureCollection = (0..10)
 ///     .map(|idx| -> Feature {
 ///         let c = idx as f64;
-///         GeometryValue::new_point([1.0 * c, 2.0 * c, 3.0 * c]).into()
+///         Geometry::new_point([1.0 * c, 2.0 * c, 3.0 * c]).into()
 ///     })
 ///     .collect();
 /// assert_eq!(fc.features.len(), 10);
@@ -76,6 +101,13 @@ pub struct FeatureCollection {
     /// including limitations on key names.
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub foreign_members: Option<JsonObject>,
+}
+
+impl FeatureCollection {
+    /// Construct a `FeatureCollection` from an iterator of Features (or things that can be turned `Into` a Feature)
+    pub fn new(features: impl IntoIterator<Item = Feature>) -> Self {
+        features.into_iter().collect()
+    }
 }
 
 mod deserialize {
@@ -210,7 +242,7 @@ impl FromIterator<Feature> for FeatureCollection {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Feature, FeatureCollection, GeoJson, Geometry, GeometryValue};
+    use crate::{Feature, FeatureCollection, GeoJson, Geometry};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -218,19 +250,19 @@ mod tests {
     fn test_fc_from_iterator() {
         let features: Vec<Feature> = vec![
             {
-                let mut feat: Feature = GeometryValue::new_point([0., 0., 0.]).into();
+                let mut feat: Feature = Geometry::new_point([0., 0., 0.]).into();
                 feat.bbox = Some(vec![-1., -1., -1., 1., 1., 1.]);
                 feat
             },
             {
                 let mut feat: Feature =
-                    GeometryValue::new_multi_point([[10., 10., 10.], [11., 11., 11.]]).into();
+                    Geometry::new_multi_point([[10., 10., 10.], [11., 11., 11.]]).into();
                 feat.bbox = Some(vec![10., 10., 10., 11., 11., 11.]);
                 feat
             },
         ];
 
-        let fc: FeatureCollection = features.into_iter().collect();
+        let fc = FeatureCollection::new(features);
         assert_eq!(fc.features.len(), 2);
         assert_eq!(fc.bbox, Some(vec![-1., -1., -1., 11., 11., 11.]));
     }
