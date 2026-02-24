@@ -100,8 +100,7 @@ use crate::{Feature, JsonObject, JsonValue, Result};
 
 use serde::{ser::Error, Serialize, Serializer};
 
-use crate::util::expect_owned_object;
-use std::convert::TryFrom;
+use serde::de::IntoDeserializer;
 use std::{convert::TryInto, io};
 
 /// Serialize a single data structure to a GeoJSON Feature string.
@@ -229,8 +228,8 @@ where
 ///     name: "My Name".to_string()
 /// };
 ///
-/// let feature: Feature = to_feature(my_struct).unwrap();
-/// assert_eq!("My Name", feature.properties.unwrap()["name"]);
+/// let feature: Feature = to_feature(&my_struct).unwrap();
+/// assert_eq!("My Name", feature.property("name").unwrap());
 /// assert_eq!(feature.geometry.unwrap(), Geometry::new(GeometryValue::new_point([1.0, 2.0])));
 /// ```
 ///
@@ -238,26 +237,14 @@ where
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// fail, or if `T` contains a map with non-string keys.
-pub fn to_feature<T>(value: T) -> Result<Feature>
+pub fn to_feature<T>(value: &T) -> Result<Feature>
 where
     T: Serialize,
 {
-    let js_value = serde_json::to_value(value)?;
-    let mut js_object = expect_owned_object(js_value)?;
-
-    let geometry = if let Some(geometry_value) = js_object.remove("geometry") {
-        Some(crate::Geometry::try_from(geometry_value)?)
-    } else {
-        None
-    };
-
-    Ok(Feature {
-        bbox: None,
-        geometry,
-        id: None,
-        properties: Some(js_object),
-        foreign_members: None,
-    })
+    let feature_wrapper = FeatureWrapper::new(value);
+    let js_value = serde_json::to_value(feature_wrapper)?;
+    use serde::Deserialize;
+    Ok(Feature::deserialize(js_value.into_deserializer())?)
 }
 
 /// Serialize elements as a GeoJSON FeatureCollection into the IO stream.

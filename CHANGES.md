@@ -36,12 +36,19 @@
   > Encountered neither number type nor string type for 'id' field on 'feature' object: `{}`
   After:
   > Error while deserializing GeoJSON: Feature 'id' must be a string or a number at line 3 column 11
+* BREAKING: `geojson::Error` has had many cases removed and some new cases
+  added, reflecting the deserialization rewrite.
+* BREAKING: TryInto/From implementations for `serde_json::Value` and
+  `serde_json::Object` have been removed now that they are not used for
+  deserialization.
 * `type` is now the first field when serializing GeoJSON objects.
 * Since `feature.id` is optional, we now accept "id: null", whereas previously
   you were required to omit the `id` key. Now either is acceptable.
 * Fix: Return `[]` instead of `[[]]` for `POLYGON EMPTY`.
   * See <https://github.com/georust/geojson/pulls/262>
-* Potentially breaking: De/Serializing your custom structs with serde now maps your struct's `id` field to `Feature.id`, rather than to `Feature.properties.id`.
+* Potentially breaking: De/Serializing your custom structs with serde now maps
+  your struct's `id` field to `Feature.id`, rather than to
+  `Feature.properties.id`.
 * Fix `geo_rect_conversion_test` to conform to the correctly-wound `Polygon` output from `geo_types::geometry::Rect.to_polygon`
   * See <https://github.com/georust/geojson/issues/257>
 * Decreased the size of the `Error` enum from 200 to 48.
