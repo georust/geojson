@@ -257,16 +257,16 @@ impl<T: CoordFloat> TryFrom<&GeoJson> for geo_types::GeometryCollection<T> {
             )),
             GeoJson::Feature(feature) => {
                 if let Some(geometry) = &feature.geometry {
-                    Ok(geo_types::GeometryCollection(vec![geometry
-                        .clone()
-                        .try_into()?]))
+                    Ok(geo_types::GeometryCollection(vec![
+                        geometry.clone().try_into()?,
+                    ]))
                 } else {
                     Ok(geo_types::GeometryCollection(vec![]))
                 }
             }
-            GeoJson::Geometry(geometry) => Ok(geo_types::GeometryCollection(vec![geometry
-                .clone()
-                .try_into()?])),
+            GeoJson::Geometry(geometry) => Ok(geo_types::GeometryCollection(vec![
+                geometry.clone().try_into()?,
+            ])),
         }
     }
 }

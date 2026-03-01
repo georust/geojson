@@ -465,7 +465,7 @@ pub(crate) mod deserialize {
                                     Coordinates::ThreeDimensional(_) => {
                                         return Err(serde::de::Error::custom(
                                             "coordinate nesting too deep",
-                                        ))
+                                        ));
                                     }
                                 },
                             };
@@ -587,7 +587,7 @@ pub(crate) mod deserialize {
 
                 // Invalid combinations
                 (GeometryType::GeometryCollection, _, None) => {
-                    return Err(Error::GeometryCollectionWithoutGeometriesKey)
+                    return Err(Error::GeometryCollectionWithoutGeometriesKey);
                 }
 
                 (
@@ -608,7 +608,7 @@ pub(crate) mod deserialize {
                         })
                     } else {
                         Err(Error::GeometryWithoutCoordinatesKey { geometry_type })
-                    }
+                    };
                 }
             };
 
@@ -766,13 +766,15 @@ mod tests {
     #[test]
     fn test_reject_too_few_coordinates() {
         let err = Geometry::from_str(r#"{"type": "Point", "coordinates": []}"#).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("A position must contain two or more elements, but got `0`"));
+        assert!(
+            err.to_string()
+                .contains("A position must contain two or more elements, but got `0`")
+        );
 
         let err = Geometry::from_str(r#"{"type": "Point", "coordinates": [23.42]}"#).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("A position must contain two or more elements, but got `1`"));
+        assert!(
+            err.to_string()
+                .contains("A position must contain two or more elements, but got `1`")
+        );
     }
 }

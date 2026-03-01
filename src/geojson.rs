@@ -255,7 +255,7 @@ impl fmt::Display for FeatureCollection {
 mod deserialize {
     use crate::geometry::deserialize::{Coordinates, GeometryType, RawGeometry};
     use crate::util::normalize_foreign_members;
-    use crate::{feature, Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject};
+    use crate::{Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject, feature};
     use serde::Deserialize;
     use std::convert::TryFrom;
 

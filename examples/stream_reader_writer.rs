@@ -1,4 +1,4 @@
-use geojson::{de::deserialize_geometry, ser::serialize_geometry, FeatureReader, FeatureWriter};
+use geojson::{FeatureReader, FeatureWriter, de::deserialize_geometry, ser::serialize_geometry};
 
 use serde::{Deserialize, Serialize};
 use std::error::Error;

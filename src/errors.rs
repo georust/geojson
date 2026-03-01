@@ -1,6 +1,6 @@
 //! Module for all GeoJSON-related errors
-use crate::geometry::deserialize::GeometryType;
 use crate::Feature;
+use crate::geometry::deserialize::GeometryType;
 use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
@@ -19,7 +19,9 @@ pub enum Error {
         "Attempted to a convert a feature without a geometry into a geo_types::Geometry: `{0}`"
     )]
     FeatureHasNoGeometry(Box<Feature>),
-    #[error("Encountered geometry type: `{geometry_type}` with unexpected coordinates dimensions: {dimensions}")]
+    #[error(
+        "Encountered geometry type: `{geometry_type}` with unexpected coordinates dimensions: {dimensions}"
+    )]
     InvalidGeometryDimensions {
         geometry_type: GeometryType,
         dimensions: u8,
