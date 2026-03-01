@@ -41,7 +41,7 @@ impl<W: Write> FeatureWriter<W> {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
                     "cannot write another Feature when writer has already finished",
-                ))
+                ));
             }
             State::New => {
                 self.write_prefix()?;
@@ -162,7 +162,7 @@ impl<W: Write> FeatureWriter<W> {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
                     "cannot serialize another record when writer has already finished",
-                ))
+                ));
             }
             State::New => {
                 self.write_prefix()?;
@@ -220,7 +220,7 @@ impl<W: Write> FeatureWriter<W> {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
                     "cannot finish writer - it's already finished",
-                ))
+                ));
             }
             State::New => {
                 self.state = State::Finished;

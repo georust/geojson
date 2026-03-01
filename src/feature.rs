@@ -15,7 +15,7 @@
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
-use crate::{feature, Bbox, Geometry, GeometryValue};
+use crate::{Bbox, Geometry, GeometryValue, feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 
@@ -250,7 +250,7 @@ pub enum Id {
 
 #[cfg(test)]
 mod tests {
-    use crate::{feature, Error, Feature, GeoJson, Geometry, JsonObject};
+    use crate::{Error, Feature, GeoJson, Geometry, JsonObject, feature};
     use serde_json::json;
 
     use std::str::FromStr;
@@ -354,7 +354,10 @@ mod tests {
     #[test]
     fn test_display_feature() {
         let f = feature().to_string();
-        assert_eq!(f, "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{}}");
+        assert_eq!(
+            f,
+            "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{}}"
+        );
     }
 
     #[test]
@@ -445,9 +448,11 @@ mod tests {
         let Error::MalformedGeoJson(serde_err) = err else {
             panic!("expected serde error");
         };
-        assert!(serde_err
-            .to_string()
-            .contains("Feature 'id' must be a string or a number"));
+        assert!(
+            serde_err
+                .to_string()
+                .contains("Feature 'id' must be a string or a number")
+        );
     }
 
     #[test]

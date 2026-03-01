@@ -1,7 +1,7 @@
-use geojson::de::deserialize_geometry;
 use geojson::GeoJson;
+use geojson::de::deserialize_geometry;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 use std::io::BufReader;
 

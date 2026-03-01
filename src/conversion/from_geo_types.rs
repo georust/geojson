@@ -261,7 +261,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{GeoJson, Geometry, GeometryValue};
-    use geo_types::{point, wkt, Point, Polygon};
+    use geo_types::{Point, Polygon, point, wkt};
 
     #[test]
     fn geo_point_conversion_test() {

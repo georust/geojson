@@ -15,8 +15,8 @@
 use std::iter::FromIterator;
 use std::str::FromStr;
 
-use crate::errors::{Error, Result};
 use crate::JsonObject;
+use crate::errors::{Error, Result};
 use crate::{Bbox, Feature};
 use serde::{Deserialize, Serialize};
 

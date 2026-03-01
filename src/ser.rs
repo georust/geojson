@@ -98,7 +98,7 @@
 //! ```
 use crate::{Feature, JsonObject, JsonValue, Result};
 
-use serde::{ser::Error, Serialize, Serializer};
+use serde::{Serialize, Serializer, ser::Error};
 
 use serde::de::IntoDeserializer;
 use std::{convert::TryInto, io};
@@ -435,19 +435,19 @@ where
             match value {
                 JsonValue::Object(object) => object,
                 JsonValue::Null => {
-                    return Err(S::Error::custom("expected JSON object but found `null`"))
+                    return Err(S::Error::custom("expected JSON object but found `null`"));
                 }
                 JsonValue::Bool(_) => {
-                    return Err(S::Error::custom("expected JSON object but found `bool`"))
+                    return Err(S::Error::custom("expected JSON object but found `bool`"));
                 }
                 JsonValue::Number(_) => {
-                    return Err(S::Error::custom("expected JSON object but found `number`"))
+                    return Err(S::Error::custom("expected JSON object but found `number`"));
                 }
                 JsonValue::String(_) => {
-                    return Err(S::Error::custom("expected JSON object but found `string`"))
+                    return Err(S::Error::custom("expected JSON object but found `string`"));
                 }
                 JsonValue::Array(_) => {
-                    return Err(S::Error::custom("expected JSON object but found `array`"))
+                    return Err(S::Error::custom("expected JSON object but found `array`"));
                 }
             }
         };
