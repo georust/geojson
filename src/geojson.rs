@@ -500,7 +500,7 @@ mod tests {
     #[test]
     fn not_an_object() {
         let geojson_str = "[]";
-        let err = GeoJson::from_str(&geojson_str).unwrap_err();
+        let err = GeoJson::from_str(geojson_str).unwrap_err();
         assert!(matches!(err, Error::MalformedGeoJson(_)));
         assert!(format!("{err}").contains("expected GeoJson object"));
     }

@@ -16,9 +16,7 @@ use crate::JsonObject;
 
 // Treat an empty foreign_members map as None
 pub(crate) fn normalize_foreign_members(fm: &mut Option<JsonObject>) {
-    if let Some(some_fm) = fm {
-        if some_fm.is_empty() {
-            fm.take();
-        }
+    if let Some(some_fm) = fm && some_fm.is_empty() {
+        fm.take();
     }
 }
