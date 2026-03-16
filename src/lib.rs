@@ -52,7 +52,7 @@
 //! A GeoJSON object can be one of three top-level objects, reflected in this crate as the
 //! [`GeoJson`] enum members of the same name.
 //!
-//! 1. A [`Geometry`] represents points, curves, and surfaces in coordinate space.
+//! 1. A [`Geometry`] represents points, lines, and surfaces in coordinate space.
 //! 2. A [`Feature`] usually contains a `Geometry` and some associated data, for example a "name"
 //!    field or any other properties you'd like associated with the `Geometry`.
 //! 3. A [`FeatureCollection`] is a list of `Feature`s.
@@ -89,8 +89,7 @@
 //! }
 //! "#;
 //!
-//! let geojson: GeoJson = geojson_str.parse::<GeoJson>().unwrap();
-//! let feature: Feature = Feature::try_from(geojson).unwrap();
+//! let feature: Feature = geojson_str.parse().unwrap();
 //!
 //! // read property data
 //! assert_eq!("donuts", feature.property("food").unwrap());
@@ -124,16 +123,16 @@
 //!
 //! let geometry = Geometry::new_point([-120.66029, 35.2812]);
 //!
-//! let geojson = GeoJson::Feature(Feature {
+//! let feature = Feature {
 //!     bbox: None,
 //!     geometry: Some(geometry),
 //!     id: None,
 //!     // See the next section about Feature properties
 //!     properties: Some(get_properties()),
 //!     foreign_members: None,
-//! });
+//! };
 //!
-//! let geojson_string = geojson.to_string();
+//! let geojson_string = feature.to_string();
 //! # }
 //! ```
 //!
@@ -264,7 +263,7 @@
 //!
 //! **Limitation:** Foreign member keys must not collide with the reserved GeoJSON fields for any
 //! object type, or they will be silently consumed when parsing the reserved field rather than
-//! appearing in `foreign_members`. The reserved fields are: `coordinates`, `geometries`, `id`, `geometry`, `properties`, `features`
+//! appearing in `foreign_members`. The reserved fields are: `coordinates`, `geometries`, `id`, `geometry`, `properties`, `features`.
 //!
 //! ## Use geojson with other crates by converting to geo-types
 //!
@@ -273,7 +272,7 @@
 //!
 //! ### Convert `geo-types` to `geojson`
 //!
-//! [`From`] is implemented on the [`GeometryValue`] enum variants to allow conversion _from_ [`geo-types`
+//! [`From`] is implemented on the [`Geometry`] and [`GeometryValue`] enum variants to allow conversion _from_ [`geo-types`
 //! Geometries](../geo_types/index.html#structs).
 //!
 //! ```
@@ -290,6 +289,10 @@
 //! assert_eq!(
 //!     geojson::GeometryValue::from(&geo_geometry),
 //!     geojson::GeometryValue::new_point([2., 9.]),
+//! );
+//! assert_eq!(
+//!     geojson::Geometry::from(&geo_geometry),
+//!     geojson::Geometry::new_point([2., 9.]),
 //! );
 //! # }
 //! ```
@@ -344,10 +347,7 @@
 //!  "properties": {},
 //!  "geometry": {
 //!    "type": "Point",
-//!    "coordinates": [
-//!      -0.13583511114120483,
-//!      51.5218870403801
-//!    ]
+//!    "coordinates": [1.0, 2.0]
 //!  }
 //! }
 //! "#;
