@@ -1,6 +1,6 @@
 # Changes
 
-## v1.0.0
+## v1.0.0 - 2025-03-16
 
 * BREAKING: `Position` is now a struct, rather than a type alias for `Vec`.
   The new struct uses the [tinyvec crate](https://crates.io/crates/tinyvec),
