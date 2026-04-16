@@ -29,15 +29,15 @@ use tinyvec::TinyVec;
 /// let z = position_3d[2];
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct Position(TinyVec<[f64; 2]>);
+pub struct Position<const INLINE_SIZE: usize = 2>(tinyvec::TinyVec<[f64; INLINE_SIZE]>);
 
-impl Position {
+impl<const INLINE_SIZE: usize> Position<INLINE_SIZE> {
     pub fn as_slice(&self) -> &[f64] {
-        &self.0
+        self.0.as_slice()
     }
 
     pub fn as_slice_mut(&mut self) -> &mut [f64] {
-        &mut self.0
+        self.0.as_mut_slice()
     }
 
     pub fn len(&self) -> usize {
@@ -47,9 +47,13 @@ impl Position {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    pub(crate) fn from_values(floats: tinyvec::TinyVec<[f64; INLINE_SIZE]>) -> Self {
+        Self(floats)
+    }
 }
 
-impl<I: SliceIndex<[f64]>> Index<I> for Position {
+impl<I: SliceIndex<[f64]>, const INLINE_SIZE: usize> Index<I> for Position<INLINE_SIZE> {
     type Output = <I as SliceIndex<[f64]>>::Output;
     #[inline(always)]
     fn index(&self, index: I) -> &Self::Output {
@@ -57,7 +61,7 @@ impl<I: SliceIndex<[f64]>> Index<I> for Position {
     }
 }
 
-impl<I: SliceIndex<[f64]>> IndexMut<I> for Position {
+impl<I: SliceIndex<[f64]>, const INLINE_SIZE: usize> IndexMut<I> for Position<INLINE_SIZE> {
     #[inline(always)]
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
         &mut self.0[index]

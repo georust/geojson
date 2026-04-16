@@ -61,8 +61,11 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(feature, expected);
 /// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper")]
-pub struct Feature {
+#[serde(
+    tag = "type",
+    from = "deserialize::DeserializeFeatureHelper<INLINE_SIZE>"
+)]
+pub struct Feature<const INLINE_SIZE: usize = 2> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -71,7 +74,7 @@ pub struct Feature {
     /// Geometry
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-    pub geometry: Option<Geometry>,
+    pub geometry: Option<Geometry<INLINE_SIZE>>,
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -107,11 +110,11 @@ mod deserialize {
     ///
     /// See: https://github.com/serde-rs/serde/issues/3028
     #[derive(Deserialize)]
-    pub(crate) struct DeserializeFeatureHelper {
+    pub(crate) struct DeserializeFeatureHelper<const INLINE_SIZE: usize = 2> {
         #[allow(unused)]
         r#type: FeatureType,
         bbox: Option<Bbox>,
-        geometry: Option<Geometry>,
+        geometry: Option<Geometry<INLINE_SIZE>>,
         id: Option<feature::Id>,
         properties: Option<JsonObject>,
         #[serde(flatten)]
@@ -123,8 +126,10 @@ mod deserialize {
         Feature,
     }
 
-    impl From<DeserializeFeatureHelper> for Feature {
-        fn from(mut value: DeserializeFeatureHelper) -> Self {
+    impl<const INLINE_SIZE: usize> From<DeserializeFeatureHelper<INLINE_SIZE>>
+        for Feature<INLINE_SIZE>
+    {
+        fn from(mut value: DeserializeFeatureHelper<INLINE_SIZE>) -> Self {
             normalize_foreign_members(&mut value.foreign_members);
             Self {
                 bbox: value.bbox,
@@ -137,8 +142,8 @@ mod deserialize {
     }
 }
 
-impl From<Geometry> for Feature {
-    fn from(geom: Geometry) -> Feature {
+impl<const INLINE_SIZE: usize> From<Geometry<INLINE_SIZE>> for Feature<INLINE_SIZE> {
+    fn from(geom: Geometry<INLINE_SIZE>) -> Feature<INLINE_SIZE> {
         Feature {
             bbox: geom.bbox.clone(),
             foreign_members: geom.foreign_members.clone(),
@@ -149,8 +154,8 @@ impl From<Geometry> for Feature {
     }
 }
 
-impl From<GeometryValue> for Feature {
-    fn from(val: GeometryValue) -> Feature {
+impl<const INLINE_SIZE: usize> From<GeometryValue<INLINE_SIZE>> for Feature<INLINE_SIZE> {
+    fn from(val: GeometryValue<INLINE_SIZE>) -> Feature<INLINE_SIZE> {
         Feature {
             bbox: None,
             foreign_members: None,
@@ -161,6 +166,8 @@ impl From<GeometryValue> for Feature {
     }
 }
 
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for Feature {
     type Err = Error;
 
@@ -169,8 +176,8 @@ impl FromStr for Feature {
     }
 }
 
-impl<'a> From<&'a Feature> for JsonObject {
-    fn from(feature: &'a Feature) -> JsonObject {
+impl<'a, const INLINE_SIZE: usize> From<&'a Feature<INLINE_SIZE>> for JsonObject {
+    fn from(feature: &'a Feature<INLINE_SIZE>) -> JsonObject {
         // The unwrap() should never panic, because Feature contains only JSON-serializable types
         match serde_json::to_value(feature).unwrap() {
             serde_json::Value::Object(obj) => obj,
@@ -186,7 +193,7 @@ impl<'a> From<&'a Feature> for JsonObject {
     }
 }
 
-impl Feature {
+impl<const INLINE_SIZE: usize> Feature<INLINE_SIZE> {
     /// Return the value of this property, if it's set
     pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
         self.properties

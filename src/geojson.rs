@@ -77,47 +77,53 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged, try_from = "deserialize::RawGeoJson")]
-pub enum GeoJson {
-    Geometry(Geometry),
-    Feature(Feature),
-    FeatureCollection(FeatureCollection),
+#[serde(untagged, try_from = "deserialize::RawGeoJson<INLINE_SIZE>")]
+pub enum GeoJson<const INLINE_SIZE: usize = 2> {
+    Geometry(Geometry<INLINE_SIZE>),
+    Feature(Feature<INLINE_SIZE>),
+    FeatureCollection(FeatureCollection<INLINE_SIZE>),
 }
 
-impl<G: Into<Geometry>> From<G> for GeoJson {
+impl<G: Into<Geometry<INLINE_SIZE>>, const INLINE_SIZE: usize> From<G> for GeoJson<INLINE_SIZE> {
     fn from(geometry: G) -> Self {
         GeoJson::Geometry(geometry.into())
     }
 }
 
-impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
+impl<G: Into<Geometry<INLINE_SIZE>>, const INLINE_SIZE: usize> FromIterator<G>
+    for GeoJson<INLINE_SIZE>
+{
     fn from_iter<I: IntoIterator<Item = G>>(iter: I) -> Self {
         let geometry_collection = Geometry::new_geometry_collection(iter);
         GeoJson::Geometry(geometry_collection)
     }
 }
 
-impl From<Feature> for GeoJson {
-    fn from(feature: Feature) -> Self {
+impl<const INLINE_SIZE: usize> From<Feature<INLINE_SIZE>> for GeoJson<INLINE_SIZE> {
+    fn from(feature: Feature<INLINE_SIZE>) -> Self {
         GeoJson::Feature(feature)
     }
 }
 
-impl From<FeatureCollection> for GeoJson {
-    fn from(feature_collection: FeatureCollection) -> GeoJson {
+impl<const INLINE_SIZE: usize> From<FeatureCollection<INLINE_SIZE>> for GeoJson<INLINE_SIZE> {
+    fn from(feature_collection: FeatureCollection<INLINE_SIZE>) -> GeoJson<INLINE_SIZE> {
         GeoJson::FeatureCollection(feature_collection)
     }
 }
 
-impl From<Vec<Feature>> for GeoJson {
-    fn from(features: Vec<Feature>) -> GeoJson {
-        GeoJson::from(features.into_iter().collect::<FeatureCollection>())
+impl<const INLINE_SIZE: usize> From<Vec<Feature<INLINE_SIZE>>> for GeoJson<INLINE_SIZE> {
+    fn from(features: Vec<Feature<INLINE_SIZE>>) -> GeoJson<INLINE_SIZE> {
+        GeoJson::from(
+            features
+                .into_iter()
+                .collect::<FeatureCollection<INLINE_SIZE>>(),
+        )
     }
 }
 
-impl TryFrom<GeoJson> for Geometry {
+impl<const INLINE_SIZE: usize> TryFrom<GeoJson<INLINE_SIZE>> for Geometry<INLINE_SIZE> {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+    fn try_from(value: GeoJson<INLINE_SIZE>) -> Result<Self> {
         match value {
             GeoJson::Geometry(g) => Ok(g),
             GeoJson::Feature(_) => Err(Error::ExpectedType {
@@ -132,9 +138,9 @@ impl TryFrom<GeoJson> for Geometry {
     }
 }
 
-impl TryFrom<GeoJson> for Feature {
+impl<const INLINE_SIZE: usize> TryFrom<GeoJson<INLINE_SIZE>> for Feature<INLINE_SIZE> {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+    fn try_from(value: GeoJson<INLINE_SIZE>) -> Result<Self> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "Feature".to_string(),
@@ -149,9 +155,9 @@ impl TryFrom<GeoJson> for Feature {
     }
 }
 
-impl TryFrom<GeoJson> for FeatureCollection {
+impl<const INLINE_SIZE: usize> TryFrom<GeoJson<INLINE_SIZE>> for FeatureCollection<INLINE_SIZE> {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+    fn try_from(value: GeoJson<INLINE_SIZE>) -> Result<Self> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "FeatureCollection".to_string(),
@@ -169,6 +175,16 @@ impl TryFrom<GeoJson> for FeatureCollection {
 impl GeoJson {
     // Deserialize a GeoJson object from an IO stream of JSON
     pub fn from_reader<R>(rdr: R) -> serde_json::Result<Self>
+    where
+        R: std::io::Read,
+    {
+        serde_json::from_reader(rdr)
+    }
+}
+
+impl<const INLINE_SIZE: usize> GeoJson<INLINE_SIZE> {
+    // Deserialize a GeoJson object from an IO stream of JSON
+    pub fn from_reader_with_dimensions<R>(rdr: R) -> serde_json::Result<Self>
     where
         R: std::io::Read,
     {
@@ -211,7 +227,9 @@ impl GeoJson {
 /// } else {
 ///     panic!("expected feature collection");
 /// }
-/// ```
+///```
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for GeoJson {
     type Err = Error;
 
@@ -220,7 +238,7 @@ impl FromStr for GeoJson {
     }
 }
 
-impl fmt::Display for GeoJson {
+impl<const INLINE_SIZE: usize> fmt::Display for GeoJson<INLINE_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -228,7 +246,7 @@ impl fmt::Display for GeoJson {
     }
 }
 
-impl fmt::Display for Feature {
+impl<const INLINE_SIZE: usize> fmt::Display for Feature<INLINE_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -236,7 +254,7 @@ impl fmt::Display for Feature {
     }
 }
 
-impl fmt::Display for Geometry {
+impl<const INLINE_SIZE: usize> fmt::Display for Geometry<INLINE_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -244,7 +262,7 @@ impl fmt::Display for Geometry {
     }
 }
 
-impl fmt::Display for FeatureCollection {
+impl<const INLINE_SIZE: usize> fmt::Display for FeatureCollection<INLINE_SIZE> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -295,24 +313,24 @@ mod deserialize {
     /// This captures all possible fields that can appear in any GeoJSON object type.
     #[derive(Debug, Clone, Deserialize)]
     #[serde(expecting = "GeoJson object")]
-    pub(crate) struct RawGeoJson {
+    pub(crate) struct RawGeoJson<const INLINE_SIZE: usize = 2> {
         r#type: GeoJsonType,
 
         // Common field
         bbox: Option<Bbox>,
 
         // Geometry field (except GeometryCollection)
-        coordinates: Option<Coordinates>,
+        coordinates: Option<Coordinates<INLINE_SIZE>>,
 
         // GeometryCollection field
-        geometries: Option<Vec<Geometry>>,
+        geometries: Option<Vec<Geometry<INLINE_SIZE>>>,
 
         // FeatureCollection field
-        features: Option<Vec<Feature>>,
+        features: Option<Vec<Feature<INLINE_SIZE>>>,
 
         // Feature fields
         id: Option<feature::Id>,
-        geometry: Option<Geometry>,
+        geometry: Option<Geometry<INLINE_SIZE>>,
         properties: Option<JsonObject>,
 
         // Foreign members (captures all other fields)
@@ -320,10 +338,10 @@ mod deserialize {
         foreign_members: Option<JsonObject>,
     }
 
-    impl TryFrom<RawGeoJson> for GeoJson {
+    impl<const INLINE_SIZE: usize> TryFrom<RawGeoJson<INLINE_SIZE>> for GeoJson<INLINE_SIZE> {
         type Error = Error;
 
-        fn try_from(mut raw: RawGeoJson) -> crate::Result<Self> {
+        fn try_from(mut raw: RawGeoJson<INLINE_SIZE>) -> crate::Result<Self> {
             normalize_foreign_members(&mut raw.foreign_members);
 
             match raw.r#type {

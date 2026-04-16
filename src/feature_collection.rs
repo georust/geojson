@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 /// use geojson::FeatureCollection;
 /// use geojson::GeoJson;
 ///
-/// let feature_collection = FeatureCollection {
+/// let feature_collection: FeatureCollection = FeatureCollection {
 ///     bbox: None,
 ///     features: vec![],
 ///     foreign_members: None,
@@ -85,14 +85,17 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(fc.features.len(), 10);
 /// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", from = "deserialize::DeserializeFeatureCollectionHelper")]
-pub struct FeatureCollection {
+#[serde(
+    tag = "type",
+    from = "deserialize::DeserializeFeatureCollectionHelper<INLINE_SIZE>"
+)]
+pub struct FeatureCollection<const INLINE_SIZE: usize = 2> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Bbox>,
-    pub features: Vec<Feature>,
+    pub features: Vec<Feature<INLINE_SIZE>>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6.1)
@@ -103,9 +106,9 @@ pub struct FeatureCollection {
     pub foreign_members: Option<JsonObject>,
 }
 
-impl FeatureCollection {
+impl<const INLINE_SIZE: usize> FeatureCollection<INLINE_SIZE> {
     /// Construct a `FeatureCollection` from an iterator of Features (or things that can be turned `Into` a Feature)
-    pub fn new(features: impl IntoIterator<Item = Feature>) -> Self {
+    pub fn new(features: impl IntoIterator<Item = Feature<INLINE_SIZE>>) -> Self {
         features.into_iter().collect()
     }
 }
@@ -122,11 +125,11 @@ mod deserialize {
     ///
     /// See: https://github.com/serde-rs/serde/issues/3028
     #[derive(Deserialize)]
-    pub(crate) struct DeserializeFeatureCollectionHelper {
+    pub(crate) struct DeserializeFeatureCollectionHelper<const INLINE_SIZE: usize = 2> {
         #[allow(unused)]
         r#type: FeatureCollectionType,
         bbox: Option<Bbox>,
-        features: Vec<Feature>,
+        features: Vec<Feature<INLINE_SIZE>>,
         #[serde(flatten)]
         foreign_members: Option<JsonObject>,
     }
@@ -136,8 +139,10 @@ mod deserialize {
         FeatureCollection,
     }
 
-    impl From<DeserializeFeatureCollectionHelper> for FeatureCollection {
-        fn from(mut value: DeserializeFeatureCollectionHelper) -> Self {
+    impl<const INLINE_SIZE: usize> From<DeserializeFeatureCollectionHelper<INLINE_SIZE>>
+        for FeatureCollection<INLINE_SIZE>
+    {
+        fn from(mut value: DeserializeFeatureCollectionHelper<INLINE_SIZE>) -> Self {
             normalize_foreign_members(&mut value.foreign_members);
             Self {
                 bbox: value.bbox,
@@ -148,24 +153,26 @@ mod deserialize {
     }
 }
 
-impl IntoIterator for FeatureCollection {
-    type Item = Feature;
-    type IntoIter = std::vec::IntoIter<Feature>;
+impl<const INLINE_SIZE: usize> IntoIterator for FeatureCollection<INLINE_SIZE> {
+    type Item = Feature<INLINE_SIZE>;
+    type IntoIter = std::vec::IntoIter<Feature<INLINE_SIZE>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.into_iter()
     }
 }
 
-impl<'a> IntoIterator for &'a FeatureCollection {
-    type Item = &'a Feature;
-    type IntoIter = std::slice::Iter<'a, Feature>;
+impl<'a, const INLINE_SIZE: usize> IntoIterator for &'a FeatureCollection<INLINE_SIZE> {
+    type Item = &'a Feature<INLINE_SIZE>;
+    type IntoIter = std::slice::Iter<'a, Feature<INLINE_SIZE>>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIterator::into_iter(&self.features)
     }
 }
 
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for FeatureCollection {
     type Err = Error;
 
@@ -181,8 +188,10 @@ impl FromStr for FeatureCollection {
 /// Otherwise, the output will not have a bounding-box.
 ///
 /// [`collect`]: std::iter::Iterator::collect
-impl FromIterator<Feature> for FeatureCollection {
-    fn from_iter<T: IntoIterator<Item = Feature>>(iter: T) -> Self {
+impl<const INLINE_SIZE: usize> FromIterator<Feature<INLINE_SIZE>>
+    for FeatureCollection<INLINE_SIZE>
+{
+    fn from_iter<T: IntoIterator<Item = Feature<INLINE_SIZE>>>(iter: T) -> Self {
         let mut bbox = Some(vec![]);
 
         let features = iter

@@ -404,9 +404,9 @@ pub type Bbox = Vec<f64>;
 mod position;
 pub use position::Position;
 
-pub type PointType = Position;
-pub type LineStringType = Vec<Position>;
-pub type PolygonType = Vec<Vec<Position>>;
+pub type PointType<const INLINE_SIZE: usize = 2> = Position<INLINE_SIZE>;
+pub type LineStringType<const INLINE_SIZE: usize = 2> = Vec<Position<INLINE_SIZE>>;
+pub type PolygonType<const INLINE_SIZE: usize = 2> = Vec<Vec<Position<INLINE_SIZE>>>;
 
 mod util;
 
