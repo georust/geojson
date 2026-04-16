@@ -7,6 +7,7 @@ use std::io::BufReader;
 
 fn parse_feature_collection_benchmark(c: &mut Criterion) {
     let geojson_str = include_str!("../tests/fixtures/countries.geojson");
+    let test_3d = include_str!("../tests/fixtures/3d_testdata.geojson");
 
     c.bench_function("parse (countries.geojson)", |b| {
         b.iter(|| match geojson_str.parse::<geojson::GeoJson>() {
@@ -16,6 +17,18 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
             }
             _ => panic!("unexpected result"),
         })
+    });
+
+    c.bench_function("parse 2d array (countries.geojson)", |b| {
+        b.iter(
+            || match serde_json::from_str::<geojson::GeoJson<2, [f64; 2]>>(geojson_str) {
+                Ok(GeoJson::FeatureCollection(fc)) => {
+                    assert_eq!(fc.features.len(), 180);
+                    black_box(fc)
+                }
+                _ => panic!("unexpected result"),
+            },
+        )
     });
 
     c.bench_function("FeatureReader::features (countries.geojson)", |b| {
@@ -51,6 +64,42 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
             }
             assert_eq!(count, 180);
         });
+    });
+
+    c.bench_function("parse 3d data as 2d (3d_testdata.geojson)", |b| {
+        b.iter(
+            || match serde_json::from_str::<geojson::GeoJson<2>>(test_3d) {
+                Ok(GeoJson::FeatureCollection(fc)) => {
+                    assert_eq!(fc.features.len(), 1);
+                    black_box(fc)
+                }
+                _ => panic!("unexpected result"),
+            },
+        )
+    });
+
+    c.bench_function("parse 3d data as 3d (3d_testdata.geojson)", |b| {
+        b.iter(
+            || match serde_json::from_str::<geojson::GeoJson<3>>(test_3d) {
+                Ok(GeoJson::FeatureCollection(fc)) => {
+                    assert_eq!(fc.features.len(), 1);
+                    black_box(fc)
+                }
+                _ => panic!("unexpected result"),
+            },
+        )
+    });
+
+    c.bench_function("parse 3d data as 3d array (3d_testdata.geojson)", |b| {
+        b.iter(
+            || match serde_json::from_str::<geojson::GeoJson<3, [f64; 3]>>(test_3d) {
+                Ok(GeoJson::FeatureCollection(fc)) => {
+                    assert_eq!(fc.features.len(), 1);
+                    black_box(fc)
+                }
+                e => panic!("unexpected result: {e:?}"),
+            },
+        )
     });
 
     #[cfg(feature = "geo-types")]

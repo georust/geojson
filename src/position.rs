@@ -189,13 +189,17 @@ impl<const INLINE_SIZE: usize> PositionBuffer<INLINE_SIZE> for [f64; INLINE_SIZE
         out[0] = first;
         let mut counter = 1;
         while let Some(next) = seq.next_element::<f64>()? {
-            out[counter] = next;
-            counter += 1;
             if counter >= out.len() {
+                let mut additional_count = 0;
+                while seq.next_element::<f64>()?.is_some() {
+                    additional_count += 1;
+                }
                 return Err(S::Error::custom(format!(
-                    "Received more than {INLINE_SIZE} elements"
+                    "Received more than {INLINE_SIZE} elements, got {additional_count} additional elements"
                 )));
             }
+            out[counter] = next;
+            counter += 1;
         }
         Ok(out)
     }
