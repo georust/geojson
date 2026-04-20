@@ -15,9 +15,9 @@
 use std::iter::FromIterator;
 use std::str::FromStr;
 
-use crate::JsonObject;
 use crate::errors::{Error, Result};
 use crate::{Bbox, Feature};
+use crate::{JsonObject, PositionBuffer};
 use serde::{Deserialize, Serialize};
 
 /// Feature Collection Object
@@ -87,15 +87,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(
     tag = "type",
-    from = "deserialize::DeserializeFeatureCollectionHelper<INLINE_SIZE>"
+    from = "deserialize::DeserializeFeatureCollectionHelper<INLINE_SIZE, PB>"
 )]
-pub struct FeatureCollection<const INLINE_SIZE: usize = 2> {
+pub struct FeatureCollection<
+    const INLINE_SIZE: usize = 2,
+    PB: PositionBuffer<INLINE_SIZE> = tinyvec::TinyVec<[f64; INLINE_SIZE]>,
+> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Bbox>,
-    pub features: Vec<Feature<INLINE_SIZE>>,
+    pub features: Vec<Feature<INLINE_SIZE, PB>>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6.1)
@@ -106,9 +109,9 @@ pub struct FeatureCollection<const INLINE_SIZE: usize = 2> {
     pub foreign_members: Option<JsonObject>,
 }
 
-impl<const INLINE_SIZE: usize> FeatureCollection<INLINE_SIZE> {
+impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> FeatureCollection<INLINE_SIZE, PB> {
     /// Construct a `FeatureCollection` from an iterator of Features (or things that can be turned `Into` a Feature)
-    pub fn new(features: impl IntoIterator<Item = Feature<INLINE_SIZE>>) -> Self {
+    pub fn new(features: impl IntoIterator<Item = Feature<INLINE_SIZE, PB>>) -> Self {
         features.into_iter().collect()
     }
 }
@@ -125,11 +128,14 @@ mod deserialize {
     ///
     /// See: https://github.com/serde-rs/serde/issues/3028
     #[derive(Deserialize)]
-    pub(crate) struct DeserializeFeatureCollectionHelper<const INLINE_SIZE: usize = 2> {
+    pub(crate) struct DeserializeFeatureCollectionHelper<
+        const INLINE_SIZE: usize,
+        PB: PositionBuffer<INLINE_SIZE>,
+    > {
         #[allow(unused)]
         r#type: FeatureCollectionType,
         bbox: Option<Bbox>,
-        features: Vec<Feature<INLINE_SIZE>>,
+        features: Vec<Feature<INLINE_SIZE, PB>>,
         #[serde(flatten)]
         foreign_members: Option<JsonObject>,
     }
@@ -139,10 +145,11 @@ mod deserialize {
         FeatureCollection,
     }
 
-    impl<const INLINE_SIZE: usize> From<DeserializeFeatureCollectionHelper<INLINE_SIZE>>
-        for FeatureCollection<INLINE_SIZE>
+    impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>>
+        From<DeserializeFeatureCollectionHelper<INLINE_SIZE, PB>>
+        for FeatureCollection<INLINE_SIZE, PB>
     {
-        fn from(mut value: DeserializeFeatureCollectionHelper<INLINE_SIZE>) -> Self {
+        fn from(mut value: DeserializeFeatureCollectionHelper<INLINE_SIZE, PB>) -> Self {
             normalize_foreign_members(&mut value.foreign_members);
             Self {
                 bbox: value.bbox,
@@ -153,18 +160,22 @@ mod deserialize {
     }
 }
 
-impl<const INLINE_SIZE: usize> IntoIterator for FeatureCollection<INLINE_SIZE> {
-    type Item = Feature<INLINE_SIZE>;
-    type IntoIter = std::vec::IntoIter<Feature<INLINE_SIZE>>;
+impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> IntoIterator
+    for FeatureCollection<INLINE_SIZE, PB>
+{
+    type Item = Feature<INLINE_SIZE, PB>;
+    type IntoIter = std::vec::IntoIter<Feature<INLINE_SIZE, PB>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.into_iter()
     }
 }
 
-impl<'a, const INLINE_SIZE: usize> IntoIterator for &'a FeatureCollection<INLINE_SIZE> {
-    type Item = &'a Feature<INLINE_SIZE>;
-    type IntoIter = std::slice::Iter<'a, Feature<INLINE_SIZE>>;
+impl<'a, const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> IntoIterator
+    for &'a FeatureCollection<INLINE_SIZE, PB>
+{
+    type Item = &'a Feature<INLINE_SIZE, PB>;
+    type IntoIter = std::slice::Iter<'a, Feature<INLINE_SIZE, PB>>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIterator::into_iter(&self.features)
@@ -188,10 +199,10 @@ impl FromStr for FeatureCollection {
 /// Otherwise, the output will not have a bounding-box.
 ///
 /// [`collect`]: std::iter::Iterator::collect
-impl<const INLINE_SIZE: usize> FromIterator<Feature<INLINE_SIZE>>
-    for FeatureCollection<INLINE_SIZE>
+impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>>
+    FromIterator<Feature<INLINE_SIZE, PB>> for FeatureCollection<INLINE_SIZE, PB>
 {
-    fn from_iter<T: IntoIterator<Item = Feature<INLINE_SIZE>>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = Feature<INLINE_SIZE, PB>>>(iter: T) -> Self {
         let mut bbox = Some(vec![]);
 
         let features = iter
