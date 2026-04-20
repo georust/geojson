@@ -36,12 +36,9 @@ impl<W: Write> FeatureWriter<W> {
 
     /// Write a [`crate::Feature`] struct to the output stream. If you'd like to
     /// serialize your own custom structs, see [`FeatureWriter::serialize`] instead.
-    pub fn write_feature<const INLINE_SIZE: usize, PB>(
-        &mut self,
-        feature: &Feature<INLINE_SIZE, PB>,
-    ) -> Result<()>
+    pub fn write_feature<PB>(&mut self, feature: &Feature<PB>) -> Result<()>
     where
-        PB: PositionBuffer<INLINE_SIZE> + Serialize,
+        PB: PositionBuffer + Serialize,
     {
         match self.state {
             State::Finished => {

@@ -18,6 +18,7 @@ use crate::errors::{Error, Result};
 use crate::{Bbox, Geometry, GeometryValue, PositionBuffer, feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
+use tinyvec::TinyVec;
 
 /// Feature Object
 ///
@@ -61,14 +62,8 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(feature, expected);
 /// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(
-    tag = "type",
-    from = "deserialize::DeserializeFeatureHelper<INLINE_SIZE, PB>"
-)]
-pub struct Feature<
-    const INLINE_SIZE: usize = 2,
-    PB: PositionBuffer<INLINE_SIZE> = tinyvec::TinyVec<[f64; INLINE_SIZE]>,
-> {
+#[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper<PB>")]
+pub struct Feature<PB: PositionBuffer = TinyVec<[f64; 2]>> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -77,7 +72,7 @@ pub struct Feature<
     /// Geometry
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-    pub geometry: Option<Geometry<INLINE_SIZE, PB>>,
+    pub geometry: Option<Geometry<PB>>,
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -114,14 +109,11 @@ mod deserialize {
     ///
     /// See: https://github.com/serde-rs/serde/issues/3028
     #[derive(Deserialize)]
-    pub(crate) struct DeserializeFeatureHelper<
-        const INLINE_SIZE: usize = 2,
-        PB: PositionBuffer<INLINE_SIZE> = tinyvec::TinyVec<[f64; INLINE_SIZE]>,
-    > {
+    pub(crate) struct DeserializeFeatureHelper<PB: PositionBuffer = TinyVec<[f64; 2]>> {
         #[allow(unused)]
         r#type: FeatureType,
         bbox: Option<Bbox>,
-        geometry: Option<Geometry<INLINE_SIZE, PB>>,
+        geometry: Option<Geometry<PB>>,
         id: Option<feature::Id>,
         properties: Option<JsonObject>,
         #[serde(flatten)]
@@ -133,10 +125,8 @@ mod deserialize {
         Feature,
     }
 
-    impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>>
-        From<DeserializeFeatureHelper<INLINE_SIZE, PB>> for Feature<INLINE_SIZE, PB>
-    {
-        fn from(mut value: DeserializeFeatureHelper<INLINE_SIZE, PB>) -> Self {
+    impl<PB: PositionBuffer> From<DeserializeFeatureHelper<PB>> for Feature<PB> {
+        fn from(mut value: DeserializeFeatureHelper<PB>) -> Self {
             normalize_foreign_members(&mut value.foreign_members);
             Self {
                 bbox: value.bbox,
@@ -149,10 +139,8 @@ mod deserialize {
     }
 }
 
-impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> From<Geometry<INLINE_SIZE, PB>>
-    for Feature<INLINE_SIZE, PB>
-{
-    fn from(geom: Geometry<INLINE_SIZE, PB>) -> Feature<INLINE_SIZE, PB> {
+impl<PB: PositionBuffer> From<Geometry<PB>> for Feature<PB> {
+    fn from(geom: Geometry<PB>) -> Feature<PB> {
         Feature {
             bbox: geom.bbox.clone(),
             foreign_members: geom.foreign_members.clone(),
@@ -163,10 +151,8 @@ impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> From<Geometry<IN
     }
 }
 
-impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> From<GeometryValue<INLINE_SIZE, PB>>
-    for Feature<INLINE_SIZE, PB>
-{
-    fn from(val: GeometryValue<INLINE_SIZE, PB>) -> Feature<INLINE_SIZE, PB> {
+impl<PB: PositionBuffer> From<GeometryValue<PB>> for Feature<PB> {
+    fn from(val: GeometryValue<PB>) -> Feature<PB> {
         Feature {
             bbox: None,
             foreign_members: None,
@@ -187,11 +173,11 @@ impl FromStr for Feature {
     }
 }
 
-impl<'a, const INLINE_SIZE: usize, PB> From<&'a Feature<INLINE_SIZE, PB>> for JsonObject
+impl<'a, PB> From<&'a Feature<PB>> for JsonObject
 where
-    PB: PositionBuffer<INLINE_SIZE> + Serialize,
+    PB: PositionBuffer + Serialize,
 {
-    fn from(feature: &'a Feature<INLINE_SIZE, PB>) -> JsonObject {
+    fn from(feature: &'a Feature<PB>) -> JsonObject {
         // The unwrap() should never panic, because Feature contains only JSON-serializable types
         match serde_json::to_value(feature).unwrap() {
             serde_json::Value::Object(obj) => obj,
@@ -207,7 +193,7 @@ where
     }
 }
 
-impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> Feature<INLINE_SIZE, PB> {
+impl<PB: PositionBuffer> Feature<PB> {
     /// Return the value of this property, if it's set
     pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
         self.properties

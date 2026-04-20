@@ -30,12 +30,9 @@ use tinyvec::TinyVec;
 /// let z = position_3d[2];
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct Position<
-    const INLINE_SIZE: usize = 2,
-    PB: PositionBuffer<INLINE_SIZE> = tinyvec::TinyVec<[f64; INLINE_SIZE]>,
->(PB);
+pub struct Position<PB: PositionBuffer = TinyVec<[f64; 2]>>(PB);
 
-impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> Position<INLINE_SIZE, PB> {
+impl<PB: PositionBuffer> Position<PB> {
     pub fn as_slice(&self) -> &[f64] {
         self.0.as_slice()
     }
@@ -57,9 +54,7 @@ impl<const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> Position<INLINE_
     }
 }
 
-impl<I: SliceIndex<[f64]>, const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> Index<I>
-    for Position<INLINE_SIZE, PB>
-{
+impl<I: SliceIndex<[f64]>, PB: PositionBuffer> Index<I> for Position<PB> {
     type Output = <I as SliceIndex<[f64]>>::Output;
     #[inline(always)]
     fn index(&self, index: I) -> &Self::Output {
@@ -67,9 +62,7 @@ impl<I: SliceIndex<[f64]>, const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_S
     }
 }
 
-impl<I: SliceIndex<[f64]>, const INLINE_SIZE: usize, PB: PositionBuffer<INLINE_SIZE>> IndexMut<I>
-    for Position<INLINE_SIZE, PB>
-{
+impl<I: SliceIndex<[f64]>, PB: PositionBuffer> IndexMut<I> for Position<PB> {
     #[inline(always)]
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
         &mut self.0.as_slice_mut()[index]
@@ -124,7 +117,7 @@ impl From<(f64, f64, f64, f64)> for Position {
     }
 }
 
-pub trait PositionBuffer<const INLINE_SIZE: usize>: self::private::Sealed {
+pub trait PositionBuffer: private::Sealed {
     fn as_slice(&self) -> &[f64];
     fn as_slice_mut(&mut self) -> &mut [f64];
 
@@ -142,11 +135,7 @@ pub trait PositionBuffer<const INLINE_SIZE: usize>: self::private::Sealed {
         S: SeqAccess<'de>;
 }
 
-impl<const INLINE_SIZE: usize> self::private::Sealed for tinyvec::TinyVec<[f64; INLINE_SIZE]> {}
-
-impl<const INLINE_SIZE: usize> PositionBuffer<INLINE_SIZE>
-    for tinyvec::TinyVec<[f64; INLINE_SIZE]>
-{
+impl<const INLINE_SIZE: usize> PositionBuffer for TinyVec<[f64; INLINE_SIZE]> {
     fn as_slice(&self) -> &[f64] {
         TinyVec::as_slice(self)
     }
@@ -169,7 +158,9 @@ impl<const INLINE_SIZE: usize> PositionBuffer<INLINE_SIZE>
     }
 }
 
-impl<const INLINE_SIZE: usize> PositionBuffer<INLINE_SIZE> for [f64; INLINE_SIZE] {
+impl<const INLINE_SIZE: usize> private::Sealed for TinyVec<[f64; INLINE_SIZE]> {}
+
+impl<const N: usize> PositionBuffer for [f64; N] {
     fn as_slice(&self) -> &[f64] {
         self
     }
@@ -185,7 +176,7 @@ impl<const INLINE_SIZE: usize> PositionBuffer<INLINE_SIZE> for [f64; INLINE_SIZE
     {
         use serde::de::Error;
 
-        let mut out = [0.; INLINE_SIZE];
+        let mut out = [0.; N];
         out[0] = first;
         let mut counter = 1;
         while let Some(next) = seq.next_element::<f64>()? {
@@ -195,17 +186,20 @@ impl<const INLINE_SIZE: usize> PositionBuffer<INLINE_SIZE> for [f64; INLINE_SIZE
                     additional_count += 1;
                 }
                 return Err(S::Error::custom(format!(
-                    "Received more than {INLINE_SIZE} elements, got {additional_count} additional elements"
+                    "Received more than {N} elements, got {additional_count} additional elements"
                 )));
             }
             out[counter] = next;
             counter += 1;
         }
+        if counter < out.len() {
+            return Err(S::Error::custom(format!("Received less than {N} elements, got {counter} elements only")));
+        }
         Ok(out)
     }
 }
 
-impl<const INLINE_SIZE: usize> self::private::Sealed for [f64; INLINE_SIZE] {}
+impl<const N: usize> private::Sealed for [f64; N] {}
 
 mod private {
     pub trait Sealed {}

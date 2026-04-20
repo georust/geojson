@@ -302,15 +302,12 @@ where
 ///
 /// assert!(geojson_string.contains(r#""geometry":{"coordinates":[11.1,22.2],"type":"Point"}"#));
 /// ```
-pub fn serialize_geometry<IG, S, const INLINE_SIZE: usize, PB>(
-    geometry: IG,
-    ser: S,
-) -> std::result::Result<S::Ok, S::Error>
+pub fn serialize_geometry<IG, S, PB>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
 where
-    IG: TryInto<crate::Geometry<INLINE_SIZE, PB>>,
+    IG: TryInto<crate::Geometry<PB>>,
     S: serde::Serializer,
-    <IG as TryInto<crate::Geometry<INLINE_SIZE, PB>>>::Error: std::fmt::Display,
-    PB: PositionBuffer<INLINE_SIZE> + serde::Serialize,
+    <IG as TryInto<crate::Geometry<PB>>>::Error: std::fmt::Display,
+    PB: PositionBuffer + serde::Serialize,
 {
     geometry
         .try_into()
@@ -360,15 +357,15 @@ where
 /// }};
 /// assert_eq!(json, to_value(my_struct).unwrap());
 /// ```
-pub fn serialize_optional_geometry<'a, IG, S, const INLINE_SIZE: usize, PB>(
+pub fn serialize_optional_geometry<'a, IG, S, PB>(
     geometry: &'a Option<IG>,
     ser: S,
 ) -> std::result::Result<S::Ok, S::Error>
 where
-    &'a IG: std::convert::TryInto<crate::Geometry<INLINE_SIZE, PB>>,
+    &'a IG: std::convert::TryInto<crate::Geometry<PB>>,
     S: serde::Serializer,
-    <&'a IG as TryInto<crate::Geometry<INLINE_SIZE, PB>>>::Error: std::fmt::Display,
-    PB: PositionBuffer<INLINE_SIZE> + serde::Serialize,
+    <&'a IG as TryInto<crate::Geometry<PB>>>::Error: std::fmt::Display,
+    PB: PositionBuffer + serde::Serialize,
 {
     geometry
         .as_ref()

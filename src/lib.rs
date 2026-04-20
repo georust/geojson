@@ -402,14 +402,13 @@
 pub type Bbox = Vec<f64>;
 
 mod position;
-pub use position::{Position, PositionBuffer};
 
-pub type PointType<const INLINE_SIZE: usize = 2, PB = tinyvec::TinyVec<[f64; INLINE_SIZE]>> =
-    Position<INLINE_SIZE, PB>;
-pub type LineStringType<const INLINE_SIZE: usize = 2, PB = tinyvec::TinyVec<[f64; INLINE_SIZE]>> =
-    Vec<Position<INLINE_SIZE, PB>>;
-pub type PolygonType<const INLINE_SIZE: usize = 2, PB = tinyvec::TinyVec<[f64; INLINE_SIZE]>> =
-    Vec<Vec<Position<INLINE_SIZE, PB>>>;
+pub use position::{Position, PositionBuffer};
+use tinyvec::TinyVec;
+
+pub type PointType<PB = TinyVec<[f64; 2]>> = Position<PB>;
+pub type LineStringType<PB = TinyVec<[f64; 2]>> = Vec<Position<PB>>;
+pub type PolygonType<PB = TinyVec<[f64; 2]>> = Vec<Vec<Position<PB>>>;
 
 mod util;
 

@@ -4,13 +4,14 @@ use geojson::de::deserialize_geometry;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 use std::io::BufReader;
+use tinyvec::TinyVec;
 
 fn parse_feature_collection_benchmark(c: &mut Criterion) {
     let geojson_str = include_str!("../tests/fixtures/countries.geojson");
     let test_3d = include_str!("../tests/fixtures/3d_testdata.geojson");
 
     c.bench_function("parse (countries.geojson)", |b| {
-        b.iter(|| match geojson_str.parse::<geojson::GeoJson>() {
+        b.iter(|| match geojson_str.parse::<GeoJson>() {
             Ok(GeoJson::FeatureCollection(fc)) => {
                 assert_eq!(fc.features.len(), 180);
                 black_box(fc)
@@ -21,7 +22,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse 2d array (countries.geojson)", |b| {
         b.iter(
-            || match serde_json::from_str::<geojson::GeoJson<2, [f64; 2]>>(geojson_str) {
+            || match serde_json::from_str::<GeoJson<[f64; 2]>>(geojson_str) {
                 Ok(GeoJson::FeatureCollection(fc)) => {
                     assert_eq!(fc.features.len(), 180);
                     black_box(fc)
@@ -68,7 +69,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse 3d data as 2d (3d_testdata.geojson)", |b| {
         b.iter(
-            || match serde_json::from_str::<geojson::GeoJson<2>>(test_3d) {
+            || match serde_json::from_str::<GeoJson<TinyVec<[f64; 2]>>>(test_3d) {
                 Ok(GeoJson::FeatureCollection(fc)) => {
                     assert_eq!(fc.features.len(), 1);
                     black_box(fc)
@@ -80,7 +81,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse 3d data as 3d (3d_testdata.geojson)", |b| {
         b.iter(
-            || match serde_json::from_str::<geojson::GeoJson<3>>(test_3d) {
+            || match serde_json::from_str::<GeoJson<TinyVec<[f64; 3]>>>(test_3d) {
                 Ok(GeoJson::FeatureCollection(fc)) => {
                     assert_eq!(fc.features.len(), 1);
                     black_box(fc)
@@ -92,7 +93,7 @@ fn parse_feature_collection_benchmark(c: &mut Criterion) {
 
     c.bench_function("parse 3d data as 3d array (3d_testdata.geojson)", |b| {
         b.iter(
-            || match serde_json::from_str::<geojson::GeoJson<3, [f64; 3]>>(test_3d) {
+            || match serde_json::from_str::<GeoJson<[f64; 3]>>(test_3d) {
                 Ok(GeoJson::FeatureCollection(fc)) => {
                     assert_eq!(fc.features.len(), 1);
                     black_box(fc)
