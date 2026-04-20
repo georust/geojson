@@ -1,6 +1,6 @@
 //! Module for all GeoJSON-related errors
-use crate::Feature;
 use crate::geometry::deserialize::GeometryType;
+use crate::{Feature, MalformedGeoJsonError};
 use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
@@ -31,7 +31,7 @@ pub enum Error {
     #[error("Encountered GeometryCollection with no `geometries` key")]
     GeometryCollectionWithoutGeometriesKey,
     #[error("Error while deserializing GeoJSON: {0}")]
-    MalformedGeoJson(serde_json::Error),
+    MalformedGeoJson(MalformedGeoJsonError),
     #[error("Expected GeoJSON type `{expected}`, found `{actual}`")]
     ExpectedType { expected: String, actual: String },
     #[error("A position must contain two or more elements, but got `{0}`")]
@@ -40,8 +40,8 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-impl From<serde_json::Error> for Error {
-    fn from(error: serde_json::Error) -> Self {
+impl From<MalformedGeoJsonError> for Error {
+    fn from(error: MalformedGeoJsonError) -> Self {
         Self::MalformedGeoJson(error)
     }
 }

@@ -255,7 +255,10 @@ impl fmt::Display for FeatureCollection {
 mod deserialize {
     use crate::geometry::deserialize::{Coordinates, GeometryType, RawGeometry};
     use crate::util::normalize_foreign_members;
-    use crate::{Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject, feature};
+    use crate::{
+        Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject,
+        MalformedGeoJsonError, feature,
+    };
     use serde::Deserialize;
     use std::convert::TryFrom;
 
@@ -327,7 +330,7 @@ mod deserialize {
                 GeoJsonType::FeatureCollection => {
                     let features = raw.features.ok_or_else(|| {
                         use serde::de::Error as _;
-                        Error::MalformedGeoJson(serde_json::Error::missing_field("features"))
+                        Error::MalformedGeoJson(MalformedGeoJsonError::missing_field("features"))
                     })?;
                     Ok(GeoJson::FeatureCollection(FeatureCollection {
                         bbox: raw.bbox,

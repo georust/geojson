@@ -1,5 +1,10 @@
 # Changes
 
+## UNRELEASED
+
+* re-export `serde_json::Error` as `MalformedGeoJsonError`
+  * <https://github.com/georust/geojson/pull/276>
+
 ## v1.0.0 - 2025-03-16
 
 * BREAKING: `Position` is now a struct, rather than a type alias for `Vec`.
