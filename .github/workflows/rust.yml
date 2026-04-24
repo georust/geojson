@@ -42,10 +42,19 @@ jobs:
         run: cargo fmt --check
       - name: Lint using Clippy
         run: cargo clippy --tests
+  semver_checks:
+    name: Semver checks
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
   all_checks_complete:
     needs:
       - build_and_test
       - check
+      - semver_checks
     if: always()
     runs-on: ubuntu-latest
     steps:
