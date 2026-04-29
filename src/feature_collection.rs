@@ -15,10 +15,11 @@
 use std::iter::FromIterator;
 use std::str::FromStr;
 
-use crate::JsonObject;
 use crate::errors::{Error, Result};
 use crate::{Bbox, Feature};
+use crate::{JsonObject, PositionBuffer};
 use serde::{Deserialize, Serialize};
+use tinyvec::TinyVec;
 
 /// Feature Collection Object
 ///
@@ -32,7 +33,7 @@ use serde::{Deserialize, Serialize};
 /// use geojson::FeatureCollection;
 /// use geojson::GeoJson;
 ///
-/// let feature_collection = FeatureCollection {
+/// let feature_collection: FeatureCollection = FeatureCollection {
 ///     bbox: None,
 ///     features: vec![],
 ///     foreign_members: None,
@@ -85,14 +86,17 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(fc.features.len(), 10);
 /// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", from = "deserialize::DeserializeFeatureCollectionHelper")]
-pub struct FeatureCollection {
+#[serde(
+    tag = "type",
+    from = "deserialize::DeserializeFeatureCollectionHelper<PB>"
+)]
+pub struct FeatureCollection<PB: PositionBuffer = TinyVec<[f64; 2]>> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<Bbox>,
-    pub features: Vec<Feature>,
+    pub features: Vec<Feature<PB>>,
     /// Foreign Members
     ///
     /// [GeoJSON Format Specification § 6](https://tools.ietf.org/html/rfc7946#section-6.1)
@@ -103,9 +107,9 @@ pub struct FeatureCollection {
     pub foreign_members: Option<JsonObject>,
 }
 
-impl FeatureCollection {
+impl<PB: PositionBuffer> FeatureCollection<PB> {
     /// Construct a `FeatureCollection` from an iterator of Features (or things that can be turned `Into` a Feature)
-    pub fn new(features: impl IntoIterator<Item = Feature>) -> Self {
+    pub fn new(features: impl IntoIterator<Item = Feature<PB>>) -> Self {
         features.into_iter().collect()
     }
 }
@@ -122,11 +126,11 @@ mod deserialize {
     ///
     /// See: https://github.com/serde-rs/serde/issues/3028
     #[derive(Deserialize)]
-    pub(crate) struct DeserializeFeatureCollectionHelper {
+    pub(crate) struct DeserializeFeatureCollectionHelper<PB: PositionBuffer> {
         #[allow(unused)]
         r#type: FeatureCollectionType,
         bbox: Option<Bbox>,
-        features: Vec<Feature>,
+        features: Vec<Feature<PB>>,
         #[serde(flatten)]
         foreign_members: Option<JsonObject>,
     }
@@ -136,8 +140,8 @@ mod deserialize {
         FeatureCollection,
     }
 
-    impl From<DeserializeFeatureCollectionHelper> for FeatureCollection {
-        fn from(mut value: DeserializeFeatureCollectionHelper) -> Self {
+    impl<PB: PositionBuffer> From<DeserializeFeatureCollectionHelper<PB>> for FeatureCollection<PB> {
+        fn from(mut value: DeserializeFeatureCollectionHelper<PB>) -> Self {
             normalize_foreign_members(&mut value.foreign_members);
             Self {
                 bbox: value.bbox,
@@ -148,24 +152,26 @@ mod deserialize {
     }
 }
 
-impl IntoIterator for FeatureCollection {
-    type Item = Feature;
-    type IntoIter = std::vec::IntoIter<Feature>;
+impl<PB: PositionBuffer> IntoIterator for FeatureCollection<PB> {
+    type Item = Feature<PB>;
+    type IntoIter = std::vec::IntoIter<Feature<PB>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.into_iter()
     }
 }
 
-impl<'a> IntoIterator for &'a FeatureCollection {
-    type Item = &'a Feature;
-    type IntoIter = std::slice::Iter<'a, Feature>;
+impl<'a, PB: PositionBuffer> IntoIterator for &'a FeatureCollection<PB> {
+    type Item = &'a Feature<PB>;
+    type IntoIter = std::slice::Iter<'a, Feature<PB>>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIterator::into_iter(&self.features)
     }
 }
 
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for FeatureCollection {
     type Err = Error;
 
@@ -181,8 +187,8 @@ impl FromStr for FeatureCollection {
 /// Otherwise, the output will not have a bounding-box.
 ///
 /// [`collect`]: std::iter::Iterator::collect
-impl FromIterator<Feature> for FeatureCollection {
-    fn from_iter<T: IntoIterator<Item = Feature>>(iter: T) -> Self {
+impl<PB: PositionBuffer> FromIterator<Feature<PB>> for FeatureCollection<PB> {
+    fn from_iter<T: IntoIterator<Item = Feature<PB>>>(iter: T) -> Self {
         let mut bbox = Some(vec![]);
 
         let features = iter

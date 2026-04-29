@@ -13,12 +13,13 @@
 // limitations under the License.
 
 use crate::errors::{Error, Result};
-use crate::{Feature, FeatureCollection, Geometry};
+use crate::{Feature, FeatureCollection, Geometry, PositionBuffer};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::FromIterator;
 use std::str::FromStr;
+use tinyvec::TinyVec;
 
 /// GeoJSON Objects
 ///
@@ -77,47 +78,47 @@ use std::str::FromStr;
 /// ```
 /// [GeoJSON Format Specification § 3](https://tools.ietf.org/html/rfc7946#section-3)
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged, try_from = "deserialize::RawGeoJson")]
-pub enum GeoJson {
-    Geometry(Geometry),
-    Feature(Feature),
-    FeatureCollection(FeatureCollection),
+#[serde(untagged, try_from = "deserialize::RawGeoJson<PB>")]
+pub enum GeoJson<PB: PositionBuffer = TinyVec<[f64; 2]>> {
+    Geometry(Geometry<PB>),
+    Feature(Feature<PB>),
+    FeatureCollection(FeatureCollection<PB>),
 }
 
-impl<G: Into<Geometry>> From<G> for GeoJson {
+impl<G: Into<Geometry<PB>>, PB: PositionBuffer> From<G> for GeoJson<PB> {
     fn from(geometry: G) -> Self {
         GeoJson::Geometry(geometry.into())
     }
 }
 
-impl<G: Into<Geometry>> FromIterator<G> for GeoJson {
+impl<G: Into<Geometry<PB>>, PB: PositionBuffer> FromIterator<G> for GeoJson<PB> {
     fn from_iter<I: IntoIterator<Item = G>>(iter: I) -> Self {
         let geometry_collection = Geometry::new_geometry_collection(iter);
         GeoJson::Geometry(geometry_collection)
     }
 }
 
-impl From<Feature> for GeoJson {
-    fn from(feature: Feature) -> Self {
+impl<PB: PositionBuffer> From<Feature<PB>> for GeoJson<PB> {
+    fn from(feature: Feature<PB>) -> Self {
         GeoJson::Feature(feature)
     }
 }
 
-impl From<FeatureCollection> for GeoJson {
-    fn from(feature_collection: FeatureCollection) -> GeoJson {
+impl<PB: PositionBuffer> From<FeatureCollection<PB>> for GeoJson<PB> {
+    fn from(feature_collection: FeatureCollection<PB>) -> GeoJson<PB> {
         GeoJson::FeatureCollection(feature_collection)
     }
 }
 
-impl From<Vec<Feature>> for GeoJson {
-    fn from(features: Vec<Feature>) -> GeoJson {
-        GeoJson::from(features.into_iter().collect::<FeatureCollection>())
+impl<PB: PositionBuffer> From<Vec<Feature<PB>>> for GeoJson<PB> {
+    fn from(features: Vec<Feature<PB>>) -> GeoJson<PB> {
+        GeoJson::from(features.into_iter().collect::<FeatureCollection<PB>>())
     }
 }
 
-impl TryFrom<GeoJson> for Geometry {
+impl<PB: PositionBuffer> TryFrom<GeoJson<PB>> for Geometry<PB> {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+    fn try_from(value: GeoJson<PB>) -> Result<Self> {
         match value {
             GeoJson::Geometry(g) => Ok(g),
             GeoJson::Feature(_) => Err(Error::ExpectedType {
@@ -132,9 +133,9 @@ impl TryFrom<GeoJson> for Geometry {
     }
 }
 
-impl TryFrom<GeoJson> for Feature {
+impl<PB: PositionBuffer> TryFrom<GeoJson<PB>> for Feature<PB> {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+    fn try_from(value: GeoJson<PB>) -> Result<Self> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "Feature".to_string(),
@@ -149,9 +150,9 @@ impl TryFrom<GeoJson> for Feature {
     }
 }
 
-impl TryFrom<GeoJson> for FeatureCollection {
+impl<PB: PositionBuffer> TryFrom<GeoJson<PB>> for FeatureCollection<PB> {
     type Error = Error;
-    fn try_from(value: GeoJson) -> Result<Self> {
+    fn try_from(value: GeoJson<PB>) -> Result<Self> {
         match value {
             GeoJson::Geometry(_) => Err(Error::ExpectedType {
                 expected: "FeatureCollection".to_string(),
@@ -174,9 +175,23 @@ impl GeoJson {
     {
         serde_json::from_reader(rdr)
     }
+}
+
+impl<PB: PositionBuffer> GeoJson<PB> {
+    // Deserialize a GeoJson object from an IO stream of JSON
+    pub fn from_reader_with_dimensions<R>(rdr: R) -> serde_json::Result<Self>
+    where
+        R: std::io::Read,
+        for<'de> PB: Deserialize<'de>,
+    {
+        serde_json::from_reader(rdr)
+    }
 
     /// Convenience wrapper for [serde_json::to_string_pretty()]
-    pub fn to_string_pretty(self) -> Result<String> {
+    pub fn to_string_pretty(self) -> Result<String>
+    where
+        PB: Serialize,
+    {
         ::serde_json::to_string_pretty(&self)
             .map_err(Error::MalformedGeoJson)
             .map(|s| s.to_string())
@@ -211,7 +226,9 @@ impl GeoJson {
 /// } else {
 ///     panic!("expected feature collection");
 /// }
-/// ```
+///```
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for GeoJson {
     type Err = Error;
 
@@ -220,7 +237,10 @@ impl FromStr for GeoJson {
     }
 }
 
-impl fmt::Display for GeoJson {
+impl<PB> fmt::Display for GeoJson<PB>
+where
+    PB: PositionBuffer + Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -228,7 +248,10 @@ impl fmt::Display for GeoJson {
     }
 }
 
-impl fmt::Display for Feature {
+impl<PB> fmt::Display for Feature<PB>
+where
+    PB: PositionBuffer + Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -236,7 +259,10 @@ impl fmt::Display for Feature {
     }
 }
 
-impl fmt::Display for Geometry {
+impl<PB> fmt::Display for Geometry<PB>
+where
+    PB: PositionBuffer + Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -244,7 +270,10 @@ impl fmt::Display for Geometry {
     }
 }
 
-impl fmt::Display for FeatureCollection {
+impl<PB> fmt::Display for FeatureCollection<PB>
+where
+    PB: PositionBuffer + Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -256,8 +285,8 @@ mod deserialize {
     use crate::geometry::deserialize::{Coordinates, GeometryType, RawGeometry};
     use crate::util::normalize_foreign_members;
     use crate::{
-        Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject,
-        MalformedGeoJsonError, feature,
+        Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject, MalformedGeoJsonError, PositionBuffer,
+        feature,
     };
     use serde::Deserialize;
     use std::convert::TryFrom;
@@ -295,24 +324,24 @@ mod deserialize {
     /// This captures all possible fields that can appear in any GeoJSON object type.
     #[derive(Debug, Clone, Deserialize)]
     #[serde(expecting = "GeoJson object")]
-    pub(crate) struct RawGeoJson {
+    pub(crate) struct RawGeoJson<PB: PositionBuffer> {
         r#type: GeoJsonType,
 
         // Common field
         bbox: Option<Bbox>,
 
         // Geometry field (except GeometryCollection)
-        coordinates: Option<Coordinates>,
+        coordinates: Option<Coordinates<PB>>,
 
         // GeometryCollection field
-        geometries: Option<Vec<Geometry>>,
+        geometries: Option<Vec<Geometry<PB>>>,
 
         // FeatureCollection field
-        features: Option<Vec<Feature>>,
+        features: Option<Vec<Feature<PB>>>,
 
         // Feature fields
         id: Option<feature::Id>,
-        geometry: Option<Geometry>,
+        geometry: Option<Geometry<PB>>,
         properties: Option<JsonObject>,
 
         // Foreign members (captures all other fields)
@@ -320,10 +349,10 @@ mod deserialize {
         foreign_members: Option<JsonObject>,
     }
 
-    impl TryFrom<RawGeoJson> for GeoJson {
+    impl<PB: PositionBuffer> TryFrom<RawGeoJson<PB>> for GeoJson<PB> {
         type Error = Error;
 
-        fn try_from(mut raw: RawGeoJson) -> crate::Result<Self> {
+        fn try_from(mut raw: RawGeoJson<PB>) -> crate::Result<Self> {
             normalize_foreign_members(&mut raw.foreign_members);
 
             match raw.r#type {

@@ -1,3 +1,4 @@
+use serde::de::SeqAccess;
 use serde::{Deserialize, Serialize};
 use std::ops::{Index, IndexMut};
 use std::slice::SliceIndex;
@@ -29,15 +30,15 @@ use tinyvec::TinyVec;
 /// let z = position_3d[2];
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct Position(TinyVec<[f64; 2]>);
+pub struct Position<PB: PositionBuffer = TinyVec<[f64; 2]>>(PB);
 
-impl Position {
+impl<PB: PositionBuffer> Position<PB> {
     pub fn as_slice(&self) -> &[f64] {
-        &self.0
+        self.0.as_slice()
     }
 
     pub fn as_slice_mut(&mut self) -> &mut [f64] {
-        &mut self.0
+        self.0.as_slice_mut()
     }
 
     pub fn len(&self) -> usize {
@@ -47,20 +48,24 @@ impl Position {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
-}
 
-impl<I: SliceIndex<[f64]>> Index<I> for Position {
-    type Output = <I as SliceIndex<[f64]>>::Output;
-    #[inline(always)]
-    fn index(&self, index: I) -> &Self::Output {
-        &self.0[index]
+    pub(crate) fn from_values(floats: PB) -> Self {
+        Self(floats)
     }
 }
 
-impl<I: SliceIndex<[f64]>> IndexMut<I> for Position {
+impl<I: SliceIndex<[f64]>, PB: PositionBuffer> Index<I> for Position<PB> {
+    type Output = <I as SliceIndex<[f64]>>::Output;
+    #[inline(always)]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.0.as_slice()[index]
+    }
+}
+
+impl<I: SliceIndex<[f64]>, PB: PositionBuffer> IndexMut<I> for Position<PB> {
     #[inline(always)]
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
-        &mut self.0[index]
+        &mut self.0.as_slice_mut()[index]
     }
 }
 
@@ -110,4 +115,92 @@ impl From<(f64, f64, f64, f64)> for Position {
     fn from(value: (f64, f64, f64, f64)) -> Self {
         Self::from([value.0, value.1, value.2, value.3])
     }
+}
+
+pub trait PositionBuffer: private::Sealed {
+    fn as_slice(&self) -> &[f64];
+    fn as_slice_mut(&mut self) -> &mut [f64];
+
+    fn len(&self) -> usize {
+        self.as_slice().len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    fn from_seq<'de, S>(first: f64, seq: S) -> Result<Self, S::Error>
+    where
+        Self: Sized,
+        S: SeqAccess<'de>;
+}
+
+impl<const INLINE_SIZE: usize> PositionBuffer for TinyVec<[f64; INLINE_SIZE]> {
+    fn as_slice(&self) -> &[f64] {
+        TinyVec::as_slice(self)
+    }
+
+    fn as_slice_mut(&mut self) -> &mut [f64] {
+        TinyVec::as_mut_slice(self)
+    }
+
+    fn from_seq<'de, S>(first: f64, mut seq: S) -> Result<Self, S::Error>
+    where
+        Self: Sized,
+        S: SeqAccess<'de>,
+    {
+        let mut floats = TinyVec::<[f64; INLINE_SIZE]>::new();
+        floats.push(first);
+        while let Some(next) = seq.next_element::<f64>()? {
+            floats.push(next);
+        }
+        Ok(floats)
+    }
+}
+
+impl<const INLINE_SIZE: usize> private::Sealed for TinyVec<[f64; INLINE_SIZE]> {}
+
+impl<const N: usize> PositionBuffer for [f64; N] {
+    fn as_slice(&self) -> &[f64] {
+        self
+    }
+
+    fn as_slice_mut(&mut self) -> &mut [f64] {
+        self
+    }
+
+    fn from_seq<'de, S>(first: f64, mut seq: S) -> Result<Self, S::Error>
+    where
+        Self: Sized,
+        S: SeqAccess<'de>,
+    {
+        use serde::de::Error;
+
+        let mut out = [0.; N];
+        out[0] = first;
+        let mut counter = 1;
+        while let Some(next) = seq.next_element::<f64>()? {
+            if counter >= out.len() {
+                let mut additional_count = 0;
+                while seq.next_element::<f64>()?.is_some() {
+                    additional_count += 1;
+                }
+                return Err(S::Error::custom(format!(
+                    "Received more than {N} elements, got {additional_count} additional elements"
+                )));
+            }
+            out[counter] = next;
+            counter += 1;
+        }
+        if counter < out.len() {
+            return Err(S::Error::custom(format!("Received less than {N} elements, got {counter} elements only")));
+        }
+        Ok(out)
+    }
+}
+
+impl<const N: usize> private::Sealed for [f64; N] {}
+
+mod private {
+    pub trait Sealed {}
 }

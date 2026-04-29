@@ -1,5 +1,5 @@
 use crate::ser::to_feature_writer;
-use crate::{Error, Feature, Result};
+use crate::{Error, Feature, PositionBuffer, Result};
 
 use serde::Serialize;
 use std::io::Write;
@@ -36,7 +36,10 @@ impl<W: Write> FeatureWriter<W> {
 
     /// Write a [`crate::Feature`] struct to the output stream. If you'd like to
     /// serialize your own custom structs, see [`FeatureWriter::serialize`] instead.
-    pub fn write_feature(&mut self, feature: &Feature) -> Result<()> {
+    pub fn write_feature<PB>(&mut self, feature: &Feature<PB>) -> Result<()>
+    where
+        PB: PositionBuffer + Serialize,
+    {
         match self.state {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
