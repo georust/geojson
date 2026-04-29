@@ -285,8 +285,8 @@ mod deserialize {
     use crate::geometry::deserialize::{Coordinates, GeometryType, RawGeometry};
     use crate::util::normalize_foreign_members;
     use crate::{
-        Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject, MalformedGeoJsonError, PositionBuffer,
-        feature,
+        Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject,
+        MalformedGeoJsonError, PositionBuffer, feature,
     };
     use serde::Deserialize;
     use std::convert::TryFrom;

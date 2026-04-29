@@ -193,7 +193,9 @@ impl<const N: usize> PositionBuffer for [f64; N] {
             counter += 1;
         }
         if counter < out.len() {
-            return Err(S::Error::custom(format!("Received less than {N} elements, got {counter} elements only")));
+            return Err(S::Error::custom(format!(
+                "Received less than {N} elements, got {counter} elements only"
+            )));
         }
         Ok(out)
     }
