@@ -117,7 +117,7 @@ impl From<(f64, f64, f64, f64)> for Position {
     }
 }
 
-pub trait PositionBuffer: private::Sealed {
+pub trait PositionBuffer: Serialize + private::Sealed {
     fn as_slice(&self) -> &[f64];
     fn as_slice_mut(&mut self) -> &mut [f64];
 
@@ -160,7 +160,10 @@ impl<const INLINE_SIZE: usize> PositionBuffer for TinyVec<[f64; INLINE_SIZE]> {
 
 impl<const INLINE_SIZE: usize> private::Sealed for TinyVec<[f64; INLINE_SIZE]> {}
 
-impl<const N: usize> PositionBuffer for [f64; N] {
+impl<const N: usize> PositionBuffer for [f64; N]
+where
+    [f64; N]: Serialize,
+{
     fn as_slice(&self) -> &[f64] {
         self
     }

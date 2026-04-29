@@ -302,17 +302,13 @@ where
 ///
 /// assert!(geojson_string.contains(r#""geometry":{"coordinates":[11.1,22.2],"type":"Point"}"#));
 /// ```
-pub fn serialize_geometry<IG, S, PB>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
+pub fn serialize_geometry<IG, S>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
 where
-    IG: TryInto<crate::Geometry<PB>>,
+    IG: TryInto<crate::Geometry>,
     S: serde::Serializer,
-    <IG as TryInto<crate::Geometry<PB>>>::Error: std::fmt::Display,
-    PB: PositionBuffer + serde::Serialize,
+    <IG as TryInto<crate::Geometry>>::Error: std::fmt::Display,
 {
-    geometry
-        .try_into()
-        .map_err(serialize_error_msg::<S>)?
-        .serialize(ser)
+    multi_dim::serialize_geometry(geometry, ser)
 }
 
 /// [`serde::serialize_with`](https://serde.rs/field-attrs.html#serialize_with) helper to serialize an optional type like a
@@ -357,26 +353,70 @@ where
 /// }};
 /// assert_eq!(json, to_value(my_struct).unwrap());
 /// ```
-pub fn serialize_optional_geometry<'a, IG, S, PB>(
+pub fn serialize_optional_geometry<'a, IG, S>(
     geometry: &'a Option<IG>,
     ser: S,
 ) -> std::result::Result<S::Ok, S::Error>
 where
-    &'a IG: std::convert::TryInto<crate::Geometry<PB>>,
+    &'a IG: std::convert::TryInto<crate::Geometry>,
     S: serde::Serializer,
-    <&'a IG as TryInto<crate::Geometry<PB>>>::Error: std::fmt::Display,
-    PB: PositionBuffer + serde::Serialize,
+    <&'a IG as TryInto<crate::Geometry>>::Error: std::fmt::Display,
 {
-    geometry
-        .as_ref()
-        .map(TryInto::try_into)
-        .transpose()
-        .map_err(serialize_error_msg::<S>)?
-        .serialize(ser)
+    multi_dim::serialize_optional_geometry(geometry, ser)
 }
 
 fn serialize_error_msg<S: Serializer>(error: impl std::fmt::Display) -> S::Error {
     Error::custom(format!("failed to convert geometry to GeoJSON: {}", error))
+}
+
+pub mod multi_dim {
+    use super::*;
+
+    /// Like [`super::serialize_geometry`] but generic over the position buffer type `PB`.
+    ///
+    /// Use this as a `#[serde(serialize_with = "...")]` helper when your geometry field uses a
+    /// non-default position buffer — for example `Geometry<TinyVec<[f64; 3]>>` for 3D points.
+    ///
+    /// Note that [`super::serialize_geometry`] can also hold 3-D points, but less efficiently.
+    pub fn serialize_geometry<IG, S, PB>(
+        geometry: IG,
+        ser: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        IG: TryInto<crate::Geometry<PB>>,
+        S: serde::Serializer,
+        <IG as TryInto<crate::Geometry<PB>>>::Error: std::fmt::Display,
+        PB: PositionBuffer,
+    {
+        geometry
+            .try_into()
+            .map_err(serialize_error_msg::<S>)?
+            .serialize(ser)
+    }
+
+    /// Like [`super::serialize_optional_geometry`] but generic over the position buffer type `PB`.
+    ///
+    /// Use this as a `#[serde(serialize_with = "...")]` helper when your optional geometry field
+    /// uses a non-default position buffer — for example `Option<Geometry<TinyVec<[f64; 3]>>>`.
+    ///
+    /// Note that [`super::serialize_geometry`] can also hold 3-D points, but less efficiently.
+    pub fn serialize_optional_geometry<'a, IG, S, PB>(
+        geometry: &'a Option<IG>,
+        ser: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        &'a IG: std::convert::TryInto<crate::Geometry<PB>>,
+        S: serde::Serializer,
+        <&'a IG as TryInto<crate::Geometry<PB>>>::Error: std::fmt::Display,
+        PB: PositionBuffer,
+    {
+        geometry
+            .as_ref()
+            .map(TryInto::try_into)
+            .transpose()
+            .map_err(serialize_error_msg::<S>)?
+            .serialize(ser)
+    }
 }
 
 struct Features<'a, T>
@@ -874,6 +914,56 @@ mod tests {
             let actual_output = JsonValue::from_str(&output_string).unwrap();
 
             assert_eq!(actual_output, expected_output);
+        }
+    }
+
+    mod multi_dim_tests {
+        use super::*;
+        use crate::{Feature, Geometry, GeometryValue, Position};
+        use tinyvec::TinyVec;
+
+        fn pos3d(x: f64, y: f64, z: f64) -> Position<TinyVec<[f64; 3]>> {
+            Position::from_values(TinyVec::from([x, y, z]))
+        }
+
+        fn pos4d(x: f64, y: f64, z: f64, m: f64) -> Position<TinyVec<[f64; 4]>> {
+            Position::from_values(TinyVec::from([x, y, z, m]))
+        }
+
+        #[test]
+        fn serialize_3d_point() {
+            let geom = Geometry::new_point(pos3d(1.0, 2.0, 3.0));
+
+            let json = serde_json::to_value(&geom).unwrap();
+            assert_eq!(json["type"], "Point");
+            assert_eq!(json["coordinates"], json!([1.0, 2.0, 3.0]));
+        }
+
+        #[test]
+        fn serialize_4d_point() {
+            let geom = Geometry::new_point(pos4d(1.0, 2.0, 3.0, 4.0));
+            let json = serde_json::to_value(&geom).unwrap();
+            assert_eq!(json["coordinates"], json!([1.0, 2.0, 3.0, 4.0]));
+        }
+
+        #[test]
+        fn serialize_3d_linestring() {
+            let geom =
+                Geometry::new_line_string(vec![pos3d(0.0, 0.0, 10.0), pos3d(1.0, 1.0, 20.0)]);
+
+            let json = serde_json::to_value(&geom).unwrap();
+            assert_eq!(
+                json["coordinates"],
+                json!([[0.0, 0.0, 10.0], [1.0, 1.0, 20.0]])
+            );
+        }
+
+        #[test]
+        fn serialize_3d_feature() {
+            let feature: Feature<TinyVec<[f64; 3]>> =
+                Feature::from(Geometry::new_point(pos3d(1.0, 2.0, 3.0)));
+            let json = serde_json::to_value(&feature).unwrap();
+            assert_eq!(json["geometry"]["coordinates"], json!([1.0, 2.0, 3.0]));
         }
     }
 }

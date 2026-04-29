@@ -36,10 +36,22 @@ impl<W: Write> FeatureWriter<W> {
 
     /// Write a [`crate::Feature`] struct to the output stream. If you'd like to
     /// serialize your own custom structs, see [`FeatureWriter::serialize`] instead.
-    pub fn write_feature<PB>(&mut self, feature: &Feature<PB>) -> Result<()>
-    where
-        PB: PositionBuffer + Serialize,
-    {
+    ///
+    /// For features with non-2D positions, use [`FeatureWriter::write_multi_dim_feature`] instead.
+    pub fn write_feature(&mut self, feature: &Feature) -> Result<()> {
+        self.write_multi_dim_feature(feature)
+    }
+
+    /// Write a [`Feature<PB>`](Feature) with a generic position buffer (potentially 3D or 4D) to
+    /// the output stream.
+    ///
+    /// Use this instead of [`write_feature`](Self::write_feature) when your feature's geometry
+    /// uses a non-default position buffer — for example `Feature<TinyVec<[f64; 3]>>` for 3D
+    /// points stored without heap allocation.
+    pub fn write_multi_dim_feature<PB: PositionBuffer>(
+        &mut self,
+        feature: &Feature<PB>,
+    ) -> Result<()> {
         match self.state {
             State::Finished => {
                 return Err(Error::InvalidWriterState(
@@ -474,6 +486,131 @@ mod tests {
 
         let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");
         assert_eq!(actual_json, expected)
+    }
+
+    mod test_multi_dim {
+        use super::*;
+        use tinyvec::TinyVec;
+
+        #[test]
+        fn write_3d_feature() {
+            type Pos3D = TinyVec<[f64; 3]>;
+
+            let feature: Feature<Pos3D> = serde_json::from_str(
+                r#"{
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [1.0, 2.0, 3.0] },
+                    "properties": { "name": "Mount Whitney" }
+                }"#,
+            )
+            .unwrap();
+
+            let mut buffer: Vec<u8> = vec![];
+            {
+                let mut writer = FeatureWriter::from_writer(&mut buffer);
+                writer.write_multi_dim_feature(&feature).unwrap();
+            }
+
+            let result: JsonValue = serde_json::from_slice(&buffer).unwrap();
+            assert_eq!(
+                result["features"][0]["geometry"]["coordinates"],
+                json!([1.0, 2.0, 3.0])
+            );
+            assert_eq!(result["features"][0]["properties"]["name"], "Mount Whitney");
+        }
+
+        #[test]
+        fn write_4d_feature() {
+            type Pos4D = TinyVec<[f64; 4]>;
+
+            let feature: Feature<Pos4D> = serde_json::from_str(
+                r#"{
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [1.0, 2.0, 3.0, 4.0] },
+                    "properties": null
+                }"#,
+            )
+            .unwrap();
+
+            let mut buffer: Vec<u8> = vec![];
+            {
+                let mut writer = FeatureWriter::from_writer(&mut buffer);
+                writer.write_multi_dim_feature(&feature).unwrap();
+            }
+
+            let result: JsonValue = serde_json::from_slice(&buffer).unwrap();
+            assert_eq!(
+                result["features"][0]["geometry"]["coordinates"],
+                json!([1.0, 2.0, 3.0, 4.0])
+            );
+        }
+
+        #[test]
+        fn write_3d_linestring_feature() {
+            type Pos3D = TinyVec<[f64; 3]>;
+
+            let feature: Feature<Pos3D> = serde_json::from_str(
+                r#"{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [[0.0, 0.0, 10.0], [1.0, 1.0, 20.0]]
+                    },
+                    "properties": null
+                }"#,
+            )
+            .unwrap();
+
+            let mut buffer: Vec<u8> = vec![];
+            {
+                let mut writer = FeatureWriter::from_writer(&mut buffer);
+                writer.write_multi_dim_feature(&feature).unwrap();
+            }
+
+            let result: JsonValue = serde_json::from_slice(&buffer).unwrap();
+            assert_eq!(
+                result["features"][0]["geometry"]["coordinates"],
+                json!([[0.0, 0.0, 10.0], [1.0, 1.0, 20.0]])
+            );
+        }
+
+        #[test]
+        fn mix_2d_and_multi_dim_features() {
+            let feature_2d: Feature<TinyVec<[f64; 2]>> = serde_json::from_str(
+                r#"{
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [1.0, 2.0] },
+                    "properties": null
+                }"#,
+            )
+            .unwrap();
+            let feature_3d: Feature<TinyVec<[f64; 3]>> = serde_json::from_str(
+                r#"{
+                    "type": "Feature",
+                    "geometry": { "type": "Point", "coordinates": [3.0, 4.0, 5.0] },
+                    "properties": null
+                }"#,
+            )
+            .unwrap();
+
+            let mut buffer: Vec<u8> = vec![];
+            {
+                let mut writer = FeatureWriter::from_writer(&mut buffer);
+                writer.write_feature(&feature_2d).unwrap();
+                writer.write_multi_dim_feature(&feature_3d).unwrap();
+            }
+
+            let result: JsonValue = serde_json::from_slice(&buffer).unwrap();
+            assert_eq!(result["features"].as_array().unwrap().len(), 2);
+            assert_eq!(
+                result["features"][0]["geometry"]["coordinates"],
+                json!([1.0, 2.0])
+            );
+            assert_eq!(
+                result["features"][1]["geometry"]["coordinates"],
+                json!([3.0, 4.0, 5.0])
+            );
+        }
     }
 
     #[cfg(feature = "geo-types")]
