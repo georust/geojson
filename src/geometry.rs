@@ -16,9 +16,10 @@ use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
-use crate::{Bbox, LineStringType, PointType, PolygonType, Position};
+use crate::{Bbox, LineStringType, PointType, PolygonType, Position, PositionBuffer};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
+use tinyvec::TinyVec;
 
 #[deprecated(note = "Renamed to GeometryValue")]
 pub type Value = GeometryValue;
@@ -49,44 +50,46 @@ pub type Value = GeometryValue;
 /// ```
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
-pub enum GeometryValue {
+pub enum GeometryValue<PB: PositionBuffer = TinyVec<[f64; 2]>> {
     /// Point
     ///
     /// [GeoJSON Format Specification § 3.1.2](https://tools.ietf.org/html/rfc7946#section-3.1.2)
-    Point { coordinates: PointType },
+    Point { coordinates: PointType<PB> },
 
     /// MultiPoint
     ///
     /// [GeoJSON Format Specification § 3.1.3](https://tools.ietf.org/html/rfc7946#section-3.1.3)
-    MultiPoint { coordinates: Vec<PointType> },
+    MultiPoint { coordinates: Vec<PointType<PB>> },
 
     /// LineString
     ///
     /// [GeoJSON Format Specification § 3.1.4](https://tools.ietf.org/html/rfc7946#section-3.1.4)
-    LineString { coordinates: LineStringType },
+    LineString { coordinates: LineStringType<PB> },
 
     /// MultiLineString
     ///
     /// [GeoJSON Format Specification § 3.1.5](https://tools.ietf.org/html/rfc7946#section-3.1.5)
-    MultiLineString { coordinates: Vec<LineStringType> },
+    MultiLineString {
+        coordinates: Vec<LineStringType<PB>>,
+    },
 
     /// Polygon
     ///
     /// [GeoJSON Format Specification § 3.1.6](https://tools.ietf.org/html/rfc7946#section-3.1.6)
-    Polygon { coordinates: PolygonType },
+    Polygon { coordinates: PolygonType<PB> },
 
     /// MultiPolygon
     ///
     /// [GeoJSON Format Specification § 3.1.7](https://tools.ietf.org/html/rfc7946#section-3.1.7)
-    MultiPolygon { coordinates: Vec<PolygonType> },
+    MultiPolygon { coordinates: Vec<PolygonType<PB>> },
 
     /// GeometryCollection
     ///
     /// [GeoJSON Format Specification § 3.1.8](https://tools.ietf.org/html/rfc7946#section-3.1.8)
-    GeometryCollection { geometries: Vec<Geometry> },
+    GeometryCollection { geometries: Vec<Geometry<PB>> },
 }
 
-impl GeometryValue {
+impl<PB: PositionBuffer> GeometryValue<PB> {
     pub fn type_name(&self) -> &'static str {
         match self {
             GeometryValue::Point { .. } => "Point",
@@ -98,43 +101,47 @@ impl GeometryValue {
             GeometryValue::GeometryCollection { .. } => "GeometryCollection",
         }
     }
-    pub fn new_point(value: impl Into<Position>) -> GeometryValue {
+    pub fn new_point(value: impl Into<Position<PB>>) -> Self {
         GeometryValue::Point {
             coordinates: value.into(),
         }
     }
-    pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position>>) -> GeometryValue {
-        let coordinates: Vec<Position> = value.into_iter().map(Into::into).collect();
+    pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position<PB>>>) -> Self {
+        let coordinates: Vec<Position<PB>> = value.into_iter().map(Into::into).collect();
         GeometryValue::LineString { coordinates }
     }
-    pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position>>) -> GeometryValue {
-        let coordinates: Vec<Position> = value.into_iter().map(Into::into).collect();
+
+    pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position<PB>>>) -> Self {
+        let coordinates: Vec<Position<PB>> = value.into_iter().map(Into::into).collect();
         GeometryValue::MultiPoint { coordinates }
     }
+
     pub fn new_multi_line_string(
-        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
-    ) -> GeometryValue {
-        let coordinates: Vec<Vec<Position>> = value
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position<PB>>>>,
+    ) -> Self {
+        let coordinates: Vec<Vec<Position<PB>>> = value
             .into_iter()
             .map(|line_string| line_string.into_iter().map(Into::into).collect())
             .collect();
         GeometryValue::MultiLineString { coordinates }
     }
+
     pub fn new_polygon(
-        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
-    ) -> GeometryValue {
-        let coordinates: Vec<Vec<Position>> = value
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position<PB>>>>,
+    ) -> Self {
+        let coordinates: Vec<Vec<Position<PB>>> = value
             .into_iter()
             .map(|ring| ring.into_iter().map(Into::into).collect())
             .collect();
         GeometryValue::Polygon { coordinates }
     }
+
     pub fn new_multi_polygon(
         value: impl IntoIterator<
-            Item = impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+            Item = impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position<PB>>>>,
         >,
-    ) -> GeometryValue {
-        let coordinates: Vec<Vec<Vec<Position>>> = value
+    ) -> Self {
+        let coordinates: Vec<Vec<Vec<Position<PB>>>> = value
             .into_iter()
             .map(|polygon| {
                 polygon
@@ -145,15 +152,19 @@ impl GeometryValue {
             .collect();
         GeometryValue::MultiPolygon { coordinates }
     }
+
     pub fn new_geometry_collection(
-        value: impl IntoIterator<Item = impl Into<Geometry>>,
-    ) -> GeometryValue {
-        let geometries: Vec<Geometry> = value.into_iter().map(Into::into).collect();
+        value: impl IntoIterator<Item = impl Into<Geometry<PB>>>,
+    ) -> Self {
+        let geometries: Vec<Geometry<PB>> = value.into_iter().map(Into::into).collect();
         GeometryValue::GeometryCollection { geometries }
     }
 }
 
-impl fmt::Display for GeometryValue {
+impl<PB> fmt::Display for GeometryValue<PB>
+where
+    PB: PositionBuffer + Serialize,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         ::serde_json::to_string(self)
             .map_err(|_| fmt::Error)
@@ -161,8 +172,11 @@ impl fmt::Display for GeometryValue {
     }
 }
 
-impl<'a> From<&'a GeometryValue> for JsonValue {
-    fn from(value: &'a GeometryValue) -> JsonValue {
+impl<'a, PB> From<&'a GeometryValue<PB>> for JsonValue
+where
+    PB: PositionBuffer + Serialize,
+{
+    fn from(value: &'a GeometryValue<PB>) -> JsonValue {
         ::serde_json::to_value(value).unwrap()
     }
 }
@@ -238,8 +252,8 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 /// # }
 /// ```
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(try_from = "deserialize::RawGeometry")]
-pub struct Geometry {
+#[serde(try_from = "deserialize::RawGeometry<PB>")]
+pub struct Geometry<PB: PositionBuffer = TinyVec<[f64; 2]>> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -247,7 +261,7 @@ pub struct Geometry {
     pub bbox: Option<Bbox>,
 
     #[serde(flatten)]
-    pub value: GeometryValue,
+    pub value: GeometryValue<PB>,
 
     /// Foreign Members
     ///
@@ -259,10 +273,10 @@ pub struct Geometry {
     pub foreign_members: Option<JsonObject>,
 }
 
-impl Geometry {
+impl<PB: PositionBuffer> Geometry<PB> {
     /// Returns a new `Geometry` with the specified `value`. `bbox` and `foreign_members` will be
     /// set to `None`.
-    pub fn new(value: GeometryValue) -> Self {
+    pub fn new(value: GeometryValue<PB>) -> Self {
         Geometry {
             bbox: None,
             value,
@@ -270,45 +284,47 @@ impl Geometry {
         }
     }
 
-    pub fn new_point(value: impl Into<Position>) -> Geometry {
+    pub fn new_point(value: impl Into<Position<PB>>) -> Self {
         Self::new(GeometryValue::new_point(value))
     }
 
-    pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position>>) -> Geometry {
+    pub fn new_line_string(value: impl IntoIterator<Item = impl Into<Position<PB>>>) -> Self {
         Self::new(GeometryValue::new_line_string(value))
     }
 
-    pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position>>) -> Geometry {
+    pub fn new_multi_point(value: impl IntoIterator<Item = impl Into<Position<PB>>>) -> Self {
         Self::new(GeometryValue::new_multi_point(value))
     }
 
     pub fn new_multi_line_string(
-        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
-    ) -> Geometry {
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position<PB>>>>,
+    ) -> Self {
         Self::new(GeometryValue::new_multi_line_string(value))
     }
 
     pub fn new_polygon(
-        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
-    ) -> Geometry {
+        value: impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position<PB>>>>,
+    ) -> Self {
         Self::new(GeometryValue::new_polygon(value))
     }
 
     pub fn new_multi_polygon(
         value: impl IntoIterator<
-            Item = impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position>>>,
+            Item = impl IntoIterator<Item = impl IntoIterator<Item = impl Into<Position<PB>>>>,
         >,
-    ) -> Geometry {
+    ) -> Self {
         Self::new(GeometryValue::new_multi_polygon(value))
     }
 
     pub fn new_geometry_collection(
-        value: impl IntoIterator<Item = impl Into<Geometry>>,
-    ) -> Geometry {
+        value: impl IntoIterator<Item = impl Into<Geometry<PB>>>,
+    ) -> Self {
         Self::new(GeometryValue::new_geometry_collection(value))
     }
 }
 
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for Geometry {
     type Err = Error;
 
@@ -317,11 +333,11 @@ impl FromStr for Geometry {
     }
 }
 
-impl<V> From<V> for Geometry
+impl<V, PB: PositionBuffer> From<V> for Geometry<PB>
 where
-    V: Into<GeometryValue>,
+    V: Into<GeometryValue<PB>>,
 {
-    fn from(v: V) -> Geometry {
+    fn from(v: V) -> Geometry<PB> {
         Geometry::new(v.into())
     }
 }
@@ -331,7 +347,6 @@ pub(crate) mod deserialize {
     use crate::util::normalize_foreign_members;
     use serde::de::{Deserializer, SeqAccess, Visitor};
     use std::fmt::{Display, Formatter};
-    use tinyvec::TinyVec;
 
     /// Internal enum for geometry type discrimination during deserialization.
     #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -362,13 +377,14 @@ pub(crate) mod deserialize {
     /// An efficiently deserializable representation for Geometry coordinates
     #[derive(Debug, Clone, PartialEq)]
     #[allow(clippy::enum_variant_names)]
-    pub(crate) enum Coordinates {
-        ZeroDimensional(Position),
-        OneDimensional(Vec<Position>),
-        TwoDimensional(Vec<Vec<Position>>),
-        ThreeDimensional(Vec<Vec<Vec<Position>>>),
+    pub(crate) enum Coordinates<PB: PositionBuffer = TinyVec<[f64; 2]>> {
+        ZeroDimensional(Position<PB>),
+        OneDimensional(Vec<Position<PB>>),
+        TwoDimensional(Vec<Vec<Position<PB>>>),
+        ThreeDimensional(Vec<Vec<Vec<Position<PB>>>>),
     }
-    impl Coordinates {
+
+    impl<PB: PositionBuffer> Coordinates<PB> {
         fn dimensions(&self) -> u8 {
             match self {
                 Coordinates::ZeroDimensional(_) => 0,
@@ -379,40 +395,61 @@ pub(crate) mod deserialize {
         }
     }
 
-    impl<'de> Deserialize<'de> for Coordinates {
+    impl<'de, PB> Deserialize<'de> for Coordinates<PB>
+    where
+        PB: PositionBuffer + Deserialize<'de>,
+    {
         fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
         where
             D: Deserializer<'de>,
         {
             /// While parsing the coordinates field, the next element will be either an individual Float
             /// or a (potentially nested) sequence of floats.
-            enum CoordsElement {
+            enum CoordsElement<PB: PositionBuffer> {
                 Float(f64),
-                Coords(Coordinates),
+                Coords(Coordinates<PB>),
             }
 
-            impl<'de> Deserialize<'de> for CoordsElement {
+            impl<'de, PB> Deserialize<'de> for CoordsElement<PB>
+            where
+                PB: PositionBuffer + Deserialize<'de>,
+            {
                 fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
                 where
                     D: Deserializer<'de>,
                 {
-                    struct CoordsElementVisitor;
-                    impl<'de> Visitor<'de> for CoordsElementVisitor {
-                        type Value = CoordsElement;
+                    struct CoordsElementVisitor<PB: PositionBuffer = TinyVec<[f64; 2]>>(
+                        std::marker::PhantomData<PB>,
+                    );
+
+                    impl<'de, PB> Visitor<'de> for CoordsElementVisitor<PB>
+                    where
+                        PB: PositionBuffer + Deserialize<'de>,
+                    {
+                        type Value = CoordsElement<PB>;
 
                         fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
                             formatter.write_str("a coordinate element (number or array)")
                         }
 
-                        fn visit_i64<E>(self, value: i64) -> std::result::Result<CoordsElement, E> {
+                        fn visit_i64<E>(
+                            self,
+                            value: i64,
+                        ) -> std::result::Result<CoordsElement<PB>, E> {
                             Ok(CoordsElement::Float(value as f64))
                         }
 
-                        fn visit_u64<E>(self, value: u64) -> std::result::Result<CoordsElement, E> {
+                        fn visit_u64<E>(
+                            self,
+                            value: u64,
+                        ) -> std::result::Result<CoordsElement<PB>, E> {
                             Ok(CoordsElement::Float(value as f64))
                         }
 
-                        fn visit_f64<E>(self, value: f64) -> std::result::Result<CoordsElement, E> {
+                        fn visit_f64<E>(
+                            self,
+                            value: f64,
+                        ) -> std::result::Result<CoordsElement<PB>, E> {
                             Ok(CoordsElement::Float(value))
                         }
 
@@ -423,23 +460,19 @@ pub(crate) mod deserialize {
                         where
                             A: SeqAccess<'de>,
                         {
-                            let coords = match seq.next_element::<CoordsElement>()? {
+                            let coords = match seq.next_element::<CoordsElement<PB>>()? {
                                 // Empty array [] - treat as OneDimensional([])
                                 None => Coordinates::OneDimensional(vec![]),
                                 // First element is a float -> this is a position [x, y, ...]
                                 Some(CoordsElement::Float(first)) => {
-                                    let mut floats = TinyVec::<[f64; 2]>::new();
-                                    floats.push(first);
-                                    while let Some(next) = seq.next_element::<f64>()? {
-                                        floats.push(next);
-                                    }
-                                    Coordinates::ZeroDimensional(Position::from(floats))
+                                    let floats = PB::from_seq(first, seq)?;
+                                    Coordinates::ZeroDimensional(Position::from_values(floats))
                                 }
                                 // First element is a sequence, collect the rest of the elements.
                                 Some(CoordsElement::Coords(coords)) => match coords {
                                     Coordinates::ZeroDimensional(first) => {
                                         let mut positions_1d = vec![first];
-                                        while let Some(next) = seq.next_element::<Position>()? {
+                                        while let Some(next) = seq.next_element::<Position<PB>>()? {
                                             positions_1d.push(next);
                                         }
                                         Coordinates::OneDimensional(positions_1d)
@@ -447,7 +480,7 @@ pub(crate) mod deserialize {
                                     Coordinates::OneDimensional(positions_1d) => {
                                         let mut positions_2d = vec![positions_1d];
                                         while let Some(next) =
-                                            seq.next_element::<Vec<Position>>()?
+                                            seq.next_element::<Vec<Position<PB>>>()?
                                         {
                                             positions_2d.push(next);
                                         }
@@ -456,7 +489,7 @@ pub(crate) mod deserialize {
                                     Coordinates::TwoDimensional(positions_2d) => {
                                         let mut positions_3d = vec![positions_2d];
                                         while let Some(next) =
-                                            seq.next_element::<Vec<Vec<Position>>>()?
+                                            seq.next_element::<Vec<Vec<Position<PB>>>>()?
                                         {
                                             positions_3d.push(next);
                                         }
@@ -472,7 +505,8 @@ pub(crate) mod deserialize {
                             Ok(CoordsElement::Coords(coords))
                         }
                     }
-                    deserializer.deserialize_any(CoordsElementVisitor)
+                    deserializer
+                        .deserialize_any(CoordsElementVisitor::<PB>(std::marker::PhantomData))
                 }
             }
 
@@ -489,12 +523,12 @@ pub(crate) mod deserialize {
     /// This captures all possible geometry fields, allowing validation during TryFrom conversion.
     #[derive(Debug, Clone, Deserialize)]
     #[serde(expecting = "Geometry object")]
-    pub(crate) struct RawGeometry {
+    pub(crate) struct RawGeometry<PB: PositionBuffer = TinyVec<[f64; 2]>> {
         pub(crate) r#type: GeometryType,
-        #[serde(default)]
-        pub(crate) coordinates: Option<Coordinates>,
-        #[serde(default)]
-        pub(crate) geometries: Option<Vec<Geometry>>,
+        #[serde(default = "none")]
+        pub(crate) coordinates: Option<Coordinates<PB>>,
+        #[serde(default = "none")]
+        pub(crate) geometries: Option<Vec<Geometry<PB>>>,
         #[serde(default)]
         pub(crate) bbox: Option<Bbox>,
         /// Captures all other fields as foreign members
@@ -502,10 +536,14 @@ pub(crate) mod deserialize {
         pub(crate) foreign_members: Option<JsonObject>,
     }
 
-    impl TryFrom<RawGeometry> for Geometry {
+    fn none<T>() -> Option<T> {
+        None
+    }
+
+    impl<PB: PositionBuffer> TryFrom<RawGeometry<PB>> for Geometry<PB> {
         type Error = Error;
 
-        fn try_from(mut raw: RawGeometry) -> Result<Self> {
+        fn try_from(mut raw: RawGeometry<PB>) -> Result<Self> {
             normalize_foreign_members(&mut raw.foreign_members);
 
             let value = match (raw.r#type, raw.coordinates, raw.geometries) {

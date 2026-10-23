@@ -1,18 +1,76 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use geojson::{de::deserialize_geometry, ser::serialize_geometry};
+use geojson::{GeoJson, de::deserialize_geometry, ser::serialize_geometry};
+use tinyvec::TinyVec;
 
 fn serialize_feature_collection_benchmark(c: &mut Criterion) {
     let geojson_str = include_str!("../tests/fixtures/countries.geojson");
+    let test_3d = include_str!("../tests/fixtures/3d_testdata.geojson");
 
     c.bench_function(
         "serialize geojson::FeatureCollection struct (countries.geojson)",
         |b| {
-            let geojson = geojson_str.parse::<geojson::GeoJson>().unwrap();
+            let geojson = geojson_str.parse::<GeoJson>().unwrap();
 
             b.iter(|| {
                 let geojson_string = serde_json::to_string(&geojson).unwrap();
                 // Sanity check that we serialized a long string of some kind.
                 assert_eq!(geojson_string.len(), 256890);
+                black_box(geojson_string);
+            });
+        },
+    );
+
+    c.bench_function(
+        "serialize geojson::FeatureCollection struct 2d array (countries.geojson)",
+        |b| {
+            let geojson = serde_json::from_str::<GeoJson<[f64; 2]>>(geojson_str).unwrap();
+
+            b.iter(|| {
+                let geojson_string = serde_json::to_string(&geojson).unwrap();
+                // Sanity check that we serialized a long string of some kind.
+                assert_eq!(geojson_string.len(), 256890);
+                black_box(geojson_string);
+            });
+        },
+    );
+
+    c.bench_function(
+        "serialize geojson::FeatureCollection struct 2d (3d_testdata.geojson)",
+        |b| {
+            let geojson = serde_json::from_str::<GeoJson<TinyVec<[f64; 2]>>>(test_3d).unwrap();
+
+            b.iter(|| {
+                let geojson_string = serde_json::to_string(&geojson).unwrap();
+                // Sanity check that we serialized a long string of some kind.
+                assert_eq!(geojson_string.len(), 2718304);
+                black_box(geojson_string);
+            });
+        },
+    );
+
+    c.bench_function(
+        "serialize geojson::FeatureCollection struct 3d (3d_testdata.geojson)",
+        |b| {
+            let geojson = serde_json::from_str::<GeoJson<TinyVec<[f64; 3]>>>(test_3d).unwrap();
+
+            b.iter(|| {
+                let geojson_string = serde_json::to_string(&geojson).unwrap();
+                // Sanity check that we serialized a long string of some kind.
+                assert_eq!(geojson_string.len(), 2718304);
+                black_box(geojson_string);
+            });
+        },
+    );
+
+    c.bench_function(
+        "serialize geojson::FeatureCollection struct 3d array storage (3d_testdata.geojson)",
+        |b| {
+            let geojson = serde_json::from_str::<GeoJson<[f64; 3]>>(test_3d).unwrap();
+
+            b.iter(|| {
+                let geojson_string = serde_json::to_string(&geojson).unwrap();
+                // Sanity check that we serialized a long string of some kind.
+                assert_eq!(geojson_string.len(), 2718304);
                 black_box(geojson_string);
             });
         },

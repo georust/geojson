@@ -15,9 +15,10 @@
 use std::str::FromStr;
 
 use crate::errors::{Error, Result};
-use crate::{Bbox, Geometry, GeometryValue, feature};
+use crate::{Bbox, Geometry, GeometryValue, PositionBuffer, feature};
 use crate::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
+use tinyvec::TinyVec;
 
 /// Feature Object
 ///
@@ -61,8 +62,8 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(feature, expected);
 /// ```
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper")]
-pub struct Feature {
+#[serde(tag = "type", from = "deserialize::DeserializeFeatureHelper<PB>")]
+pub struct Feature<PB: PositionBuffer = TinyVec<[f64; 2]>> {
     /// Bounding Box
     ///
     /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -71,7 +72,7 @@ pub struct Feature {
     /// Geometry
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
-    pub geometry: Option<Geometry>,
+    pub geometry: Option<Geometry<PB>>,
     /// Identifier
     ///
     /// [GeoJSON Format Specification § 3.2](https://tools.ietf.org/html/rfc7946#section-3.2)
@@ -97,6 +98,7 @@ pub struct Feature {
 
 mod deserialize {
     use super::*;
+    use crate::position::PositionBuffer;
     use crate::util::normalize_foreign_members;
 
     /// The purpose of this helper is to verify that `"type": "Feature"` during
@@ -107,11 +109,11 @@ mod deserialize {
     ///
     /// See: https://github.com/serde-rs/serde/issues/3028
     #[derive(Deserialize)]
-    pub(crate) struct DeserializeFeatureHelper {
+    pub(crate) struct DeserializeFeatureHelper<PB: PositionBuffer = TinyVec<[f64; 2]>> {
         #[allow(unused)]
         r#type: FeatureType,
         bbox: Option<Bbox>,
-        geometry: Option<Geometry>,
+        geometry: Option<Geometry<PB>>,
         id: Option<feature::Id>,
         properties: Option<JsonObject>,
         #[serde(flatten)]
@@ -123,8 +125,8 @@ mod deserialize {
         Feature,
     }
 
-    impl From<DeserializeFeatureHelper> for Feature {
-        fn from(mut value: DeserializeFeatureHelper) -> Self {
+    impl<PB: PositionBuffer> From<DeserializeFeatureHelper<PB>> for Feature<PB> {
+        fn from(mut value: DeserializeFeatureHelper<PB>) -> Self {
             normalize_foreign_members(&mut value.foreign_members);
             Self {
                 bbox: value.bbox,
@@ -137,8 +139,8 @@ mod deserialize {
     }
 }
 
-impl From<Geometry> for Feature {
-    fn from(geom: Geometry) -> Feature {
+impl<PB: PositionBuffer> From<Geometry<PB>> for Feature<PB> {
+    fn from(geom: Geometry<PB>) -> Feature<PB> {
         Feature {
             bbox: geom.bbox.clone(),
             foreign_members: geom.foreign_members.clone(),
@@ -149,8 +151,8 @@ impl From<Geometry> for Feature {
     }
 }
 
-impl From<GeometryValue> for Feature {
-    fn from(val: GeometryValue) -> Feature {
+impl<PB: PositionBuffer> From<GeometryValue<PB>> for Feature<PB> {
+    fn from(val: GeometryValue<PB>) -> Feature<PB> {
         Feature {
             bbox: None,
             foreign_members: None,
@@ -161,6 +163,8 @@ impl From<GeometryValue> for Feature {
     }
 }
 
+// This is purposefully not generic to
+// stay backward compatible with the old default values
 impl FromStr for Feature {
     type Err = Error;
 
@@ -169,8 +173,11 @@ impl FromStr for Feature {
     }
 }
 
-impl<'a> From<&'a Feature> for JsonObject {
-    fn from(feature: &'a Feature) -> JsonObject {
+impl<'a, PB> From<&'a Feature<PB>> for JsonObject
+where
+    PB: PositionBuffer + Serialize,
+{
+    fn from(feature: &'a Feature<PB>) -> JsonObject {
         // The unwrap() should never panic, because Feature contains only JSON-serializable types
         match serde_json::to_value(feature).unwrap() {
             serde_json::Value::Object(obj) => obj,
@@ -186,7 +193,7 @@ impl<'a> From<&'a Feature> for JsonObject {
     }
 }
 
-impl Feature {
+impl<PB: PositionBuffer> Feature<PB> {
     /// Return the value of this property, if it's set
     pub fn property(&self, key: impl AsRef<str>) -> Option<&JsonValue> {
         self.properties
