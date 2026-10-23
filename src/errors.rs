@@ -1,6 +1,7 @@
 //! Module for all GeoJSON-related errors
 use crate::geometry::deserialize::GeometryType;
 use crate::{Feature, MalformedGeoJsonError};
+use alloc::{boxed::Box, string::String};
 use thiserror::Error;
 
 /// Errors which can occur when encoding, decoding, and converting GeoJSON
@@ -8,6 +9,7 @@ use thiserror::Error;
 pub enum Error {
     #[error("invalid writer state: {0}")]
     InvalidWriterState(&'static str),
+    #[cfg(feature = "std")]
     #[error("IO Error: {0}")]
     Io(std::io::Error),
     #[error("Expected type: `{expected_type}`, but found `{found_type}`")]
@@ -38,7 +40,7 @@ pub enum Error {
     PositionTooShort(usize),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 impl From<MalformedGeoJsonError> for Error {
     fn from(error: MalformedGeoJsonError) -> Self {
@@ -46,6 +48,7 @@ impl From<MalformedGeoJsonError> for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
         Self::Io(error)

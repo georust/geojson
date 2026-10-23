@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::str::FromStr;
-use std::{convert::TryFrom, fmt};
+use alloc::vec::Vec;
+use core::str::FromStr;
+use core::{convert::TryFrom, fmt};
 
 use crate::errors::{Error, Result};
 use crate::{Bbox, LineStringType, PointType, PolygonType, Position};
@@ -227,7 +228,7 @@ impl<'a> From<&'a GeometryValue> for JsonValue {
 ///
 /// ```
 /// use geojson::Geometry;
-/// use std::convert::TryInto;
+/// use core::convert::TryInto;
 ///
 /// let geometry = Geometry::new_point([1.23, 4.56]);
 /// # #[cfg(feature = "geo-types")]
@@ -329,8 +330,9 @@ where
 pub(crate) mod deserialize {
     use super::*;
     use crate::util::normalize_foreign_members;
+    use alloc::{vec, vec::Vec};
+    use core::fmt::{Display, Formatter};
     use serde::de::{Deserializer, SeqAccess, Visitor};
-    use std::fmt::{Display, Formatter};
     use tinyvec::TinyVec;
 
     /// Internal enum for geometry type discrimination during deserialization.
@@ -380,7 +382,7 @@ pub(crate) mod deserialize {
     }
 
     impl<'de> Deserialize<'de> for Coordinates {
-        fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+        fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
         where
             D: Deserializer<'de>,
         {
@@ -392,7 +394,7 @@ pub(crate) mod deserialize {
             }
 
             impl<'de> Deserialize<'de> for CoordsElement {
-                fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+                fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
                 where
                     D: Deserializer<'de>,
                 {
@@ -404,22 +406,31 @@ pub(crate) mod deserialize {
                             formatter.write_str("a coordinate element (number or array)")
                         }
 
-                        fn visit_i64<E>(self, value: i64) -> std::result::Result<CoordsElement, E> {
+                        fn visit_i64<E>(
+                            self,
+                            value: i64,
+                        ) -> core::result::Result<CoordsElement, E> {
                             Ok(CoordsElement::Float(value as f64))
                         }
 
-                        fn visit_u64<E>(self, value: u64) -> std::result::Result<CoordsElement, E> {
+                        fn visit_u64<E>(
+                            self,
+                            value: u64,
+                        ) -> core::result::Result<CoordsElement, E> {
                             Ok(CoordsElement::Float(value as f64))
                         }
 
-                        fn visit_f64<E>(self, value: f64) -> std::result::Result<CoordsElement, E> {
+                        fn visit_f64<E>(
+                            self,
+                            value: f64,
+                        ) -> core::result::Result<CoordsElement, E> {
                             Ok(CoordsElement::Float(value))
                         }
 
                         fn visit_seq<A>(
                             self,
                             mut seq: A,
-                        ) -> std::result::Result<Self::Value, A::Error>
+                        ) -> core::result::Result<Self::Value, A::Error>
                         where
                             A: SeqAccess<'de>,
                         {
@@ -624,8 +635,8 @@ pub(crate) mod deserialize {
 #[cfg(test)]
 mod tests {
     use crate::{FeatureCollection, GeoJson, Geometry, GeometryValue, JsonObject};
+    use core::str::FromStr;
     use serde_json::json;
-    use std::str::FromStr;
 
     fn encode(geometry: &Geometry) -> String {
         serde_json::to_string(&geometry).unwrap()

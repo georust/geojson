@@ -15,9 +15,9 @@
 
 use crate::{Feature, Result};
 
+use core::marker::PhantomData;
 use serde::Deserialize;
 use std::io;
-use std::marker::PhantomData;
 
 // TODO: Eventually make this private - and expose only FeatureReader.
 #[deprecated(

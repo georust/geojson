@@ -17,7 +17,7 @@ use geo_types::CoordFloat;
 use crate::geojson::GeoJson;
 
 use crate::Result;
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 macro_rules! try_from_owned_value {
     ($to:ty) => {
