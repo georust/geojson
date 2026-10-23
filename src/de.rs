@@ -23,8 +23,8 @@
 //! GeoJSON Feature.
 //!
 //! # Examples
-#![cfg_attr(feature = "geo-types", doc = "```")]
-#![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+#![cfg_attr(all(feature = "std", feature = "geo-types"), doc = "```")]
+#![cfg_attr(not(all(feature = "std", feature = "geo-types")), doc = "```ignore")]
 //! use serde::Deserialize;
 //! use geojson::de::deserialize_geometry;
 //!
@@ -82,12 +82,21 @@
 //!     ...
 //! }
 //! ```
-use crate::{Feature, FeatureReader, JsonValue, Result};
+#[cfg(feature = "std")]
+use crate::FeatureReader;
+use crate::{Feature, JsonValue, Result};
+#[cfg(feature = "std")]
+use alloc::vec::Vec;
+use alloc::{
+    format,
+    string::{String, ToString},
+};
 
-use std::convert::{TryFrom, TryInto};
-use std::fmt::Formatter;
+use core::convert::{TryFrom, TryInto};
+use core::fmt::Formatter;
+use core::marker::PhantomData;
+#[cfg(feature = "std")]
 use std::io::Read;
-use std::marker::PhantomData;
 
 use serde::de::{Deserialize, Deserializer, Error, IntoDeserializer};
 
@@ -144,6 +153,7 @@ use serde::de::{Deserialize, Deserializer, Error, IntoDeserializer};
 ///     }
 /// }
 /// ```
+#[cfg(feature = "std")]
 pub fn deserialize_feature_collection<'de, T>(
     feature_collection_reader: impl Read,
 ) -> Result<impl Iterator<Item = Result<T>>>
@@ -166,6 +176,7 @@ where
 /// Build a `Vec` of structs from a GeoJson `&str`.
 ///
 /// See [`deserialize_feature_collection`] for more.
+#[cfg(feature = "std")]
 pub fn deserialize_feature_collection_str_to_vec<'de, T>(
     feature_collection_str: &str,
 ) -> Result<Vec<T>>
@@ -179,6 +190,7 @@ where
 /// Build a `Vec` of structs from a GeoJson reader.
 ///
 /// See [`deserialize_feature_collection`] for more.
+#[cfg(feature = "std")]
 pub fn deserialize_feature_collection_to_vec<'de, T>(
     feature_collection_reader: impl Read,
 ) -> Result<Vec<T>>
@@ -192,8 +204,8 @@ where
 /// [`geo_types`] Geometry.
 ///
 /// # Examples
-#[cfg_attr(feature = "geo-types", doc = "```")]
-#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+#[cfg_attr(all(feature = "std", feature = "geo-types"), doc = "```")]
+#[cfg_attr(not(all(feature = "std", feature = "geo-types")), doc = "```ignore")]
 /// use serde::Deserialize;
 /// use geojson::de::deserialize_geometry;
 ///
@@ -225,11 +237,11 @@ where
 /// assert_eq!(features[0].name, "Downtown");
 /// assert_eq!(features[0].geometry.x(), 11.1);
 /// ```
-pub fn deserialize_geometry<'de, D, G>(deserializer: D) -> std::result::Result<G, D::Error>
+pub fn deserialize_geometry<'de, D, G>(deserializer: D) -> core::result::Result<G, D::Error>
 where
     D: Deserializer<'de>,
     G: TryFrom<crate::Geometry>,
-    G::Error: std::fmt::Display,
+    G::Error: core::fmt::Display,
 {
     let geojson_geometry = crate::Geometry::deserialize(deserializer)?;
     geojson_geometry
@@ -273,11 +285,11 @@ where
 /// ```
 pub fn deserialize_optional_geometry<'de, D, G>(
     deserializer: D,
-) -> std::result::Result<Option<G>, D::Error>
+) -> core::result::Result<Option<G>, D::Error>
 where
     D: Deserializer<'de>,
     G: TryFrom<crate::Geometry>,
-    G::Error: std::fmt::Display,
+    G::Error: core::fmt::Display,
 {
     Option::<crate::Geometry>::deserialize(deserializer)?
         .map(TryInto::try_into)
@@ -286,7 +298,7 @@ where
 }
 
 fn deserialize_error_msg<'de, D: Deserializer<'de>>(
-    error: impl std::fmt::Display,
+    error: impl core::fmt::Display,
 ) -> <D as serde::Deserializer<'de>>::Error {
     Error::custom(format!(
         "unable to convert from geojson Geometry: {}",
@@ -297,6 +309,7 @@ fn deserialize_error_msg<'de, D: Deserializer<'de>>(
 /// Deserialize a GeoJSON FeatureCollection into [`Feature`] structs.
 ///
 /// If instead you'd like to deserialize your own structs from GeoJSON, see [`deserialize_feature_collection`].
+#[cfg(feature = "std")]
 pub fn deserialize_features_from_feature_collection(
     feature_collection_reader: impl Read,
 ) -> impl Iterator<Item = Result<Feature>> {
@@ -338,6 +351,7 @@ pub fn deserialize_features_from_feature_collection(
 /// assert_eq!(my_struct.name, "Downtown");
 /// assert_eq!(my_struct.geometry.x(), 11.1);
 /// ```
+#[cfg(feature = "std")]
 pub fn deserialize_single_feature<'de, T>(feature_reader: impl Read) -> Result<T>
 where
     T: Deserialize<'de>,
@@ -356,12 +370,12 @@ where
 /// All other fields will be deserialized from `feature.properties`.
 ///
 /// # Examples
-#[cfg_attr(feature = "geo-types", doc = "```")]
-#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+#[cfg_attr(all(feature = "std", feature = "geo-types"), doc = "```")]
+#[cfg_attr(not(all(feature = "std", feature = "geo-types")), doc = "```ignore")]
 /// use serde::Deserialize;
 /// use geojson::Feature;
 /// use geojson::de::{from_feature, deserialize_geometry, deserialize_single_feature};
-/// use std::str::FromStr;
+/// use core::str::FromStr;
 ///
 /// #[derive(Deserialize)]
 /// struct MyStruct {
@@ -417,17 +431,17 @@ where
 {
     type Value = D;
 
-    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut Formatter) -> core::fmt::Result {
         write!(formatter, "a valid GeoJSON Feature object")
     }
 
-    fn visit_map<A>(self, mut map_access: A) -> std::result::Result<Self::Value, A::Error>
+    fn visit_map<A>(self, mut map_access: A) -> core::result::Result<Self::Value, A::Error>
     where
         A: serde::de::MapAccess<'de>,
     {
         let mut has_feature_type = false;
-        use std::collections::HashMap;
-        let mut hash_map: HashMap<String, JsonValue> = HashMap::new();
+        use alloc::collections::BTreeMap;
+        let mut hash_map: BTreeMap<String, JsonValue> = BTreeMap::new();
 
         while let Some((key, value)) = map_access.next_entry::<String, JsonValue>()? {
             if key == "type" {
@@ -482,11 +496,12 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "std", feature = "geo-types")))]
 pub(crate) mod tests {
+    #[cfg(feature = "std")]
     use super::*;
 
-    use crate::{JsonObject, JsonValue};
+    use crate::JsonValue;
 
     use serde_json::json;
 
@@ -521,6 +536,7 @@ pub(crate) mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_deserialize_feature_collection() {
         use crate::Feature;
 
@@ -545,7 +561,7 @@ pub(crate) mod tests {
         assert_eq!(second_age, 456);
     }
 
-    #[cfg(feature = "geo-types")]
+    #[cfg(all(feature = "std", feature = "geo-types"))]
     mod geo_types_tests {
         use super::*;
         use serde::Deserialize;
@@ -844,7 +860,7 @@ pub(crate) mod tests {
         }
     }
 
-    #[cfg(feature = "geo-types")]
+    #[cfg(all(feature = "std", feature = "geo-types"))]
     #[test]
     fn roundtrip() {
         use crate::ser::serialize_geometry;
@@ -871,7 +887,7 @@ pub(crate) mod tests {
         }
         let actual_output = crate::ser::to_feature_collection_string(&elements).unwrap();
 
-        use std::str::FromStr;
+        use core::str::FromStr;
         let actual_output_json = JsonValue::from_str(&actual_output).unwrap();
         let expected_output_json = json!({
             "type": "FeatureCollection",
@@ -904,9 +920,10 @@ pub(crate) mod tests {
         assert_eq!(actual_output_json, expected_output_json);
     }
 
-    #[cfg(feature = "geo-types")]
+    #[cfg(all(feature = "std", feature = "geo-types"))]
     #[test]
     fn all_props() {
+        use crate::JsonObject;
         use crate::ser::serialize_geometry;
         use serde::{Deserialize, Serialize};
 
@@ -944,7 +961,7 @@ pub(crate) mod tests {
         }
         let actual_output = crate::ser::to_feature_collection_string(&elements).unwrap();
 
-        use std::str::FromStr;
+        use core::str::FromStr;
         let actual_output_json = JsonValue::from_str(&actual_output).unwrap();
         let expected_output_json = json!({
             "type": "FeatureCollection",

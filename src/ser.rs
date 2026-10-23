@@ -97,11 +97,14 @@
 //! }
 //! ```
 use crate::{Feature, JsonObject, JsonValue, Result};
+use alloc::{format, string::String, vec::Vec};
 
 use serde::{Serialize, Serializer, ser::Error};
 
+use core::convert::TryInto;
 use serde::de::IntoDeserializer;
-use std::{convert::TryInto, io};
+#[cfg(feature = "std")]
+use std::io;
 
 /// Serialize a single data structure to a GeoJSON Feature string.
 ///
@@ -158,9 +161,7 @@ pub fn to_feature_byte_vec<T>(value: &T) -> Result<Vec<u8>>
 where
     T: Serialize,
 {
-    let mut writer = Vec::with_capacity(128);
-    to_feature_writer(&mut writer, value)?;
-    Ok(writer)
+    Ok(serde_json::to_vec(&FeatureWrapper::new(value))?)
 }
 
 /// Serialize elements to a GeoJSON FeatureCollection byte vector.
@@ -175,9 +176,7 @@ pub fn to_feature_collection_byte_vec<T>(values: &[T]) -> Result<Vec<u8>>
 where
     T: Serialize,
 {
-    let mut writer = Vec::with_capacity(128);
-    to_feature_collection_writer(&mut writer, values)?;
-    Ok(writer)
+    Ok(serde_json::to_vec(&FeatureCollectionWrapper(values))?)
 }
 
 /// Serialize a single data structure as a GeoJSON Feature into the IO stream.
@@ -188,6 +187,7 @@ where
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// fail, or if `T` contains a map with non-string keys.
+#[cfg(feature = "std")]
 pub fn to_feature_writer<W, T>(writer: W, value: &T) -> Result<()>
 where
     W: io::Write,
@@ -255,19 +255,34 @@ where
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// fail, or if `T` contains a map with non-string keys.
+#[cfg(feature = "std")]
 pub fn to_feature_collection_writer<W, T>(writer: W, features: &[T]) -> Result<()>
 where
     W: io::Write,
     T: Serialize,
 {
-    use serde::ser::SerializeMap;
-
     let mut ser = serde_json::Serializer::new(writer);
-    let mut map = ser.serialize_map(Some(2))?;
-    map.serialize_entry("type", "FeatureCollection")?;
-    map.serialize_entry("features", &Features::new(features))?;
-    map.end()?;
+    FeatureCollectionWrapper(features).serialize(&mut ser)?;
     Ok(())
+}
+
+struct FeatureCollectionWrapper<'a, T>(&'a [T]);
+
+impl<T> Serialize for FeatureCollectionWrapper<'_, T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeMap;
+
+        let mut map = serializer.serialize_map(Some(2))?;
+        map.serialize_entry("type", "FeatureCollection")?;
+        map.serialize_entry("features", &Features::new(self.0))?;
+        map.end()
+    }
 }
 
 /// [`serde::serialize_with`](https://serde.rs/field-attrs.html#serialize_with) helper to serialize a type like a
@@ -302,11 +317,11 @@ where
 ///
 /// assert!(geojson_string.contains(r#""geometry":{"coordinates":[11.1,22.2],"type":"Point"}"#));
 /// ```
-pub fn serialize_geometry<IG, S>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
+pub fn serialize_geometry<IG, S>(geometry: IG, ser: S) -> core::result::Result<S::Ok, S::Error>
 where
     IG: TryInto<crate::Geometry>,
     S: serde::Serializer,
-    <IG as TryInto<crate::Geometry>>::Error: std::fmt::Display,
+    <IG as TryInto<crate::Geometry>>::Error: core::fmt::Display,
 {
     geometry
         .try_into()
@@ -359,11 +374,11 @@ where
 pub fn serialize_optional_geometry<'a, IG, S>(
     geometry: &'a Option<IG>,
     ser: S,
-) -> std::result::Result<S::Ok, S::Error>
+) -> core::result::Result<S::Ok, S::Error>
 where
-    &'a IG: std::convert::TryInto<crate::Geometry>,
+    &'a IG: core::convert::TryInto<crate::Geometry>,
     S: serde::Serializer,
-    <&'a IG as TryInto<crate::Geometry>>::Error: std::fmt::Display,
+    <&'a IG as TryInto<crate::Geometry>>::Error: core::fmt::Display,
 {
     geometry
         .as_ref()
@@ -373,7 +388,7 @@ where
         .serialize(ser)
 }
 
-fn serialize_error_msg<S: Serializer>(error: impl std::fmt::Display) -> S::Error {
+fn serialize_error_msg<S: Serializer>(error: impl core::fmt::Display) -> S::Error {
     Error::custom(format!("failed to convert geometry to GeoJSON: {}", error))
 }
 
@@ -397,7 +412,7 @@ impl<T> serde::Serialize for Features<'_, T>
 where
     T: Serialize,
 {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -424,7 +439,7 @@ impl<T> Serialize for FeatureWrapper<'_, T>
 where
     T: Serialize,
 {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -482,7 +497,7 @@ mod tests {
 
     use serde_json::json;
 
-    use std::str::FromStr;
+    use core::str::FromStr;
 
     #[test]
     fn happy_path() {

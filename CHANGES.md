@@ -4,6 +4,10 @@
 
 * re-export `serde_json::Error` as `MalformedGeoJsonError`
   * <https://github.com/georust/geojson/pull/276>
+* Add `no_std` support (requires `alloc`). The new `std` feature, enabled by default, gates the
+  `std::io`-based APIs: `FeatureReader`, `FeatureWriter`, `GeoJson::from_reader`, the reader/writer
+  functions in `de` and `ser`, and `Error::Io`. Use `default-features = false` for `no_std`.
+  * <https://github.com/georust/geojson/pull/278>
 
 ## v1.0.0 - 2025-03-16
 

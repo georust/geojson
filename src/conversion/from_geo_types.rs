@@ -1,9 +1,10 @@
+use alloc::{vec, vec::Vec};
 use geo_types::{self, CoordFloat};
 
 use crate::{Feature, FeatureCollection, GeometryValue, Position};
 
 use crate::{LineStringType, PointType, PolygonType};
-use std::convert::From;
+use core::convert::From;
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> From<&geo_types::Point<T>> for GeometryValue
@@ -427,7 +428,7 @@ mod tests {
         let p2 = point!(x: 3.0, y: 4.0);
         let points = [p1, p2];
 
-        use std::iter::FromIterator;
+        use core::iter::FromIterator;
 
         let actual = GeoJson::from_iter(points.iter());
         let actual2 = points.iter().collect::<GeoJson>();

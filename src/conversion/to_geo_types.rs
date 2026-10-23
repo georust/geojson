@@ -1,10 +1,11 @@
+use alloc::{boxed::Box, vec, vec::Vec};
 use geo_types::{self, CoordFloat};
 
 use crate::GeometryValue;
 
 use crate::{Error, Result};
 use crate::{Feature, FeatureCollection, GeoJson, LineStringType, PointType, PolygonType};
-use std::convert::{TryFrom, TryInto};
+use core::convert::{TryFrom, TryInto};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "geo-types")))]
 impl<T> TryFrom<&GeometryValue> for geo_types::Point<T>
@@ -392,8 +393,8 @@ mod tests {
     use crate::{Geometry, GeometryValue};
     use serde_json::json;
 
+    use core::convert::TryInto;
     use geo_types::{coord, point};
-    use std::convert::TryInto;
 
     #[test]
     fn geojson_point_conversion_test() {
@@ -543,7 +544,7 @@ mod tests {
     #[test]
     fn geojson_mismatch_geometry_conversion_test() {
         let geojson_line_string = GeometryValue::new_line_string([[100.0, 0.2], [101.0, 1.0]]);
-        use std::convert::TryFrom;
+        use core::convert::TryFrom;
         let error = geo_types::Point::<f64>::try_from(geojson_line_string).unwrap_err();
         assert_eq!(
             "Expected type: `Point`, but found `LineString`",
@@ -583,7 +584,7 @@ mod tests {
         let mut geojson_feature_collection: crate::FeatureCollection = geojson.try_into().unwrap();
         let feature: crate::Feature = geojson_feature_collection.features.remove(0);
 
-        use std::convert::TryFrom;
+        use core::convert::TryFrom;
         let geo_geom = geo_types::Geometry::try_from(feature).unwrap();
 
         let expected =

@@ -14,17 +14,21 @@
 
 use crate::errors::{Error, Result};
 use crate::{Feature, FeatureCollection, Geometry};
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
+use core::convert::TryFrom;
+use core::fmt;
+use core::iter::FromIterator;
+use core::str::FromStr;
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
-use std::fmt;
-use std::iter::FromIterator;
-use std::str::FromStr;
 
 /// GeoJSON Objects
 ///
 /// ```
 /// use geojson::{Feature, FeatureCollection, GeoJson, Geometry};
-/// use std::convert::TryInto;
+/// use core::convert::TryInto;
 ///
 /// // Parsing a Geometry
 /// let geometry_str = r#"{
@@ -168,6 +172,7 @@ impl TryFrom<GeoJson> for FeatureCollection {
 
 impl GeoJson {
     // Deserialize a GeoJson object from an IO stream of JSON
+    #[cfg(feature = "std")]
     pub fn from_reader<R>(rdr: R) -> serde_json::Result<Self>
     where
         R: std::io::Read,
@@ -186,7 +191,7 @@ impl GeoJson {
 /// # Example
 ///```
 /// use geojson::GeoJson;
-/// use std::str::FromStr;
+/// use core::str::FromStr;
 ///
 /// let geojson_str = r#"{
 ///   "type": "FeatureCollection",
@@ -259,8 +264,9 @@ mod deserialize {
         Bbox, Error, Feature, FeatureCollection, GeoJson, Geometry, JsonObject,
         MalformedGeoJsonError, feature,
     };
+    use alloc::vec::Vec;
+    use core::convert::TryFrom;
     use serde::Deserialize;
-    use std::convert::TryFrom;
 
     #[derive(Debug, Clone, PartialEq, Deserialize)]
     enum GeoJsonType {
@@ -369,10 +375,11 @@ mod deserialize {
 #[cfg(test)]
 mod tests {
     use crate::{Error, Feature, FeatureCollection, GeoJson, Geometry};
+    use core::str::FromStr;
     use serde_json::json;
-    use std::str::FromStr;
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_geojson_from_reader() {
         let json_str = r#"{
             "type": "Feature",
