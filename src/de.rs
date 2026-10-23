@@ -23,8 +23,8 @@
 //! GeoJSON Feature.
 //!
 //! # Examples
-#![cfg_attr(feature = "geo-types", doc = "```")]
-#![cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+#![cfg_attr(all(feature = "std", feature = "geo-types"), doc = "```")]
+#![cfg_attr(not(all(feature = "std", feature = "geo-types")), doc = "```ignore")]
 //! use serde::Deserialize;
 //! use geojson::de::deserialize_geometry;
 //!
@@ -204,8 +204,8 @@ where
 /// [`geo_types`] Geometry.
 ///
 /// # Examples
-#[cfg_attr(feature = "geo-types", doc = "```")]
-#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+#[cfg_attr(all(feature = "std", feature = "geo-types"), doc = "```")]
+#[cfg_attr(not(all(feature = "std", feature = "geo-types")), doc = "```ignore")]
 /// use serde::Deserialize;
 /// use geojson::de::deserialize_geometry;
 ///
@@ -370,8 +370,8 @@ where
 /// All other fields will be deserialized from `feature.properties`.
 ///
 /// # Examples
-#[cfg_attr(feature = "geo-types", doc = "```")]
-#[cfg_attr(not(feature = "geo-types"), doc = "```ignore")]
+#[cfg_attr(all(feature = "std", feature = "geo-types"), doc = "```")]
+#[cfg_attr(not(all(feature = "std", feature = "geo-types")), doc = "```ignore")]
 /// use serde::Deserialize;
 /// use geojson::Feature;
 /// use geojson::de::{from_feature, deserialize_geometry, deserialize_single_feature};
@@ -496,11 +496,12 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "std", feature = "geo-types")))]
 pub(crate) mod tests {
+    #[cfg(feature = "std")]
     use super::*;
 
-    use crate::{JsonObject, JsonValue};
+    use crate::JsonValue;
 
     use serde_json::json;
 
@@ -560,7 +561,7 @@ pub(crate) mod tests {
         assert_eq!(second_age, 456);
     }
 
-    #[cfg(feature = "geo-types")]
+    #[cfg(all(feature = "std", feature = "geo-types"))]
     mod geo_types_tests {
         use super::*;
         use serde::Deserialize;
@@ -859,7 +860,7 @@ pub(crate) mod tests {
         }
     }
 
-    #[cfg(feature = "geo-types")]
+    #[cfg(all(feature = "std", feature = "geo-types"))]
     #[test]
     fn roundtrip() {
         use crate::ser::serialize_geometry;
@@ -919,9 +920,10 @@ pub(crate) mod tests {
         assert_eq!(actual_output_json, expected_output_json);
     }
 
-    #[cfg(feature = "geo-types")]
+    #[cfg(all(feature = "std", feature = "geo-types"))]
     #[test]
     fn all_props() {
+        use crate::JsonObject;
         use crate::ser::serialize_geometry;
         use serde::{Deserialize, Serialize};
 
