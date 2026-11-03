@@ -8,6 +8,17 @@ Library for serializing the [GeoJSON](http://geojson.org) vector GIS file format
 
 This library requires a minimum Rust version of 1.34 (released April 11 2019)
 
+## Features
+
+- `std` (default): enables the reader / writer APIs built on `std::io`.
+- `geo-types` (default): enables conversion to and from [`geo-types`](https://crates.io/crates/geo-types).
+
+With `default-features = false`, the crate is `no_std` + `alloc`: the GeoJSON types and string conversions remain available.
+
+```toml
+geojson = { version = "1", default-features = false }
+```
+
 ## Examples
 
 ### Reading

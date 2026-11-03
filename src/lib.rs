@@ -1,3 +1,4 @@
+#![cfg_attr(not(any(feature = "std", test)), no_std)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/georust/meta/master/logo/logo.png")]
 // Copyright 2014-2015 The GeoRust Developers
 //
@@ -76,7 +77,7 @@
 //!
 //! ```
 //! use geojson::{Feature, GeoJson, Geometry, GeometryValue};
-//! use std::convert::TryFrom;
+//! use core::convert::TryFrom;
 //!
 //! let geojson_str = r#"
 //! {
@@ -306,7 +307,7 @@
 //! // requires enabling the `geo-types` feature
 //! use geojson::FeatureCollection;
 //! use geo_types::{polygon, point, Geometry, GeometryCollection};
-//! use std::iter::FromIterator;
+//! use core::iter::FromIterator;
 //!
 //! let poly: Geometry<f64> = polygon![
 //!     (x: -111., y: 45.),
@@ -338,8 +339,8 @@
 //! // This example requires the `geo-types` feature
 //! use geo_types::Geometry;
 //! use geojson::GeoJson;
-//! use std::convert::TryFrom;
-//! use std::str::FromStr;
+//! use core::convert::TryFrom;
+//! use core::str::FromStr;
 //!
 //! let geojson_str = r#"
 //! {
@@ -396,6 +397,10 @@
 // the `docsrs` configuration attribute is defined
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+extern crate alloc;
+
+use alloc::{string::String, vec::Vec};
+
 /// Bounding Boxes
 ///
 /// [GeoJSON Format Specification § 5](https://tools.ietf.org/html/rfc7946#section-5)
@@ -424,7 +429,9 @@ pub use feature::Feature;
 mod feature_collection;
 pub use feature_collection::FeatureCollection;
 
+#[cfg(feature = "std")]
 mod feature_iterator;
+#[cfg(feature = "std")]
 #[allow(deprecated)]
 #[doc(hidden)]
 pub use feature_iterator::FeatureIterator;
@@ -441,10 +448,14 @@ pub mod de;
 /// Write your struct to GeoJSON using [`serde`]
 pub mod ser;
 
+#[cfg(feature = "std")]
 mod feature_reader;
+#[cfg(feature = "std")]
 pub use feature_reader::FeatureReader;
 
+#[cfg(feature = "std")]
 mod feature_writer;
+#[cfg(feature = "std")]
 pub use feature_writer::FeatureWriter;
 
 #[allow(deprecated)]

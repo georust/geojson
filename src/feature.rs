@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::str::FromStr;
+use alloc::{boxed::Box, string::String};
+use core::str::FromStr;
 
 use crate::errors::{Error, Result};
 use crate::{Bbox, Geometry, GeometryValue, feature};
@@ -232,7 +233,7 @@ impl Feature {
     /// Returns an iterator over all the properties
     pub fn properties_iter(&self) -> Box<dyn ExactSizeIterator<Item = (&String, &JsonValue)> + '_> {
         match self.properties.as_ref() {
-            None => Box::new(std::iter::empty()),
+            None => Box::new(core::iter::empty()),
             Some(props) => Box::new(props.iter()),
         }
     }
@@ -253,7 +254,7 @@ mod tests {
     use crate::{Error, Feature, GeoJson, Geometry, JsonObject, feature};
     use serde_json::json;
 
-    use std::str::FromStr;
+    use core::str::FromStr;
 
     fn feature_json_str() -> &'static str {
         "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.1,2.1]},\"properties\":{}}"

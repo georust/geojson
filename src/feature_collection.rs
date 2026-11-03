@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::iter::FromIterator;
-use std::str::FromStr;
+use alloc::{vec, vec::Vec};
+use core::iter::FromIterator;
+use core::str::FromStr;
 
 use crate::JsonObject;
 use crate::errors::{Error, Result};
@@ -150,7 +151,7 @@ mod deserialize {
 
 impl IntoIterator for FeatureCollection {
     type Item = Feature;
-    type IntoIter = std::vec::IntoIter<Feature>;
+    type IntoIter = alloc::vec::IntoIter<Feature>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.into_iter()
@@ -159,7 +160,7 @@ impl IntoIterator for FeatureCollection {
 
 impl<'a> IntoIterator for &'a FeatureCollection {
     type Item = &'a Feature;
-    type IntoIter = std::slice::Iter<'a, Feature>;
+    type IntoIter = core::slice::Iter<'a, Feature>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIterator::into_iter(&self.features)
@@ -180,7 +181,7 @@ impl FromStr for FeatureCollection {
 /// output has a bounding-box of the union of them.
 /// Otherwise, the output will not have a bounding-box.
 ///
-/// [`collect`]: std::iter::Iterator::collect
+/// [`collect`]: core::iter::Iterator::collect
 impl FromIterator<Feature> for FeatureCollection {
     fn from_iter<T: IntoIterator<Item = Feature>>(iter: T) -> Self {
         let mut bbox = Some(vec![]);
@@ -245,7 +246,7 @@ mod tests {
     use crate::{Feature, FeatureCollection, GeoJson, Geometry};
     use serde_json::json;
 
-    use std::str::FromStr;
+    use core::str::FromStr;
     #[test]
     fn test_fc_from_iterator() {
         let features: Vec<Feature> = vec![
