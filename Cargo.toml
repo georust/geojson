@@ -12,6 +12,7 @@ edition = "2024"
 
 [features]
 default = ["geo-types"]
+preserve_order = ["serde_json/preserve_order"]
 
 [dependencies]
 serde = { version="~1.0", features = ["derive"] }

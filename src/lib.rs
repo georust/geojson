@@ -24,6 +24,9 @@
 //! cargo add geojson
 //! ```
 //!
+//! Enable the `preserve_order` feature to keep insertion order in feature
+//! properties and foreign-member maps. By default their keys are sorted.
+//!
 //! # Types and crate structure
 //!
 //! This crate is structured around the GeoJSON spec ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)),
