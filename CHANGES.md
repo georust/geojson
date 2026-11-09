@@ -2,6 +2,8 @@
 
 ## UNRELEASED
 
+* Add the optional `preserve_order` feature for GeoJSON object maps.
+
 * re-export `serde_json::Error` as `MalformedGeoJsonError`
   * <https://github.com/georust/geojson/pull/276>
 

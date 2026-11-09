@@ -218,7 +218,7 @@ impl Feature {
     pub fn remove_property(&mut self, key: impl AsRef<str>) -> Option<JsonValue> {
         self.properties
             .as_mut()
-            .and_then(|props| props.remove(key.as_ref()))
+            .and_then(|props| crate::util::remove_member(props, key.as_ref()))
     }
 
     /// The number of properties
