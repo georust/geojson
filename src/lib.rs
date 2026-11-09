@@ -392,6 +392,20 @@
 //! ```
 //!
 //! See more in the [serialization](ser) and [deserialization](de) modules.
+//!
+//! # Optional features
+//!
+//! ## Floating-point parsing
+//!
+//! Enable the optional `float_roundtrip` Cargo feature to use
+//! `serde_json`'s more precise floating-point parsing.
+//! This allows serialized `f64` coordinates to round-trip without losing precision.
+//! The feature forwards to `serde_json/float_roundtrip` and is not enabled by default.
+//!
+//! ```toml
+//! geojson = { version = "1", features = ["float_roundtrip"] }
+//! ```
+//!
 // only enables the `doc_cfg` feature when
 // the `docsrs` configuration attribute is defined
 #![cfg_attr(docsrs, feature(doc_cfg))]
