@@ -2,6 +2,7 @@
 
 ## UNRELEASED
 
+* Add an opt-in `float_roundtrip` feature for precise floating-point parsing.
 * re-export `serde_json::Error` as `MalformedGeoJsonError`
   * <https://github.com/georust/geojson/pull/276>
 

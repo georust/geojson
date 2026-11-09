@@ -24,6 +24,17 @@
 //! cargo add geojson
 //! ```
 //!
+//! ## Floating-point parsing
+//!
+//! Enable the optional `float_roundtrip` Cargo feature to use
+//! `serde_json`'s more precise floating-point parsing.
+//! This allows serialized `f64` coordinates to round-trip without losing precision.
+//! The feature forwards to `serde_json/float_roundtrip` and is not enabled by default.
+//!
+//! ```toml
+//! geojson = { version = "1", features = ["float_roundtrip"] }
+//! ```
+//!
 //! # Types and crate structure
 //!
 //! This crate is structured around the GeoJSON spec ([IETF RFC 7946](https://tools.ietf.org/html/rfc7946)),
