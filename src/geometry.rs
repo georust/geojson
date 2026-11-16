@@ -502,6 +502,16 @@ pub(crate) mod deserialize {
         pub(crate) foreign_members: Option<JsonObject>,
     }
 
+    /// Positions must contain two or more elements.
+    ///
+    /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
+    fn check_positions<'a>(positions: impl IntoIterator<Item = &'a Position>) -> Result<()> {
+        match positions.into_iter().find(|position| position.len() < 2) {
+            Some(position) => Err(Error::PositionTooShort(position.len())),
+            None => Ok(()),
+        }
+    }
+
     impl TryFrom<RawGeometry> for Geometry {
         type Error = Error;
 
@@ -511,9 +521,7 @@ pub(crate) mod deserialize {
             let value = match (raw.r#type, raw.coordinates, raw.geometries) {
                 // Point: ZeroDimensional coordinates
                 (GeometryType::Point, Some(Coordinates::ZeroDimensional(coordinates)), None) => {
-                    if coordinates.len() < 2 {
-                        return Err(Error::PositionTooShort(coordinates.len()));
-                    }
+                    check_positions([&coordinates])?;
                     GeometryValue::Point { coordinates }
                 }
                 // Empty Point (coordinates: [] deserializes as OneDimensional([]))
@@ -528,10 +536,14 @@ pub(crate) mod deserialize {
                     GeometryType::LineString,
                     Some(Coordinates::OneDimensional(coordinates)),
                     None,
-                ) => GeometryValue::LineString { coordinates },
+                ) => {
+                    check_positions(&coordinates)?;
+                    GeometryValue::LineString { coordinates }
+                }
 
                 // Polygon: TwoDimensional coordinates
                 (GeometryType::Polygon, Some(Coordinates::TwoDimensional(coordinates)), None) => {
+                    check_positions(coordinates.iter().flatten())?;
                     GeometryValue::Polygon { coordinates }
                 }
                 // Empty Polygon (coordinates: [] deserializes as OneDimensional([]))
@@ -548,14 +560,20 @@ pub(crate) mod deserialize {
                     GeometryType::MultiPoint,
                     Some(Coordinates::OneDimensional(coordinates)),
                     None,
-                ) => GeometryValue::MultiPoint { coordinates },
+                ) => {
+                    check_positions(&coordinates)?;
+                    GeometryValue::MultiPoint { coordinates }
+                }
 
                 // MultiLineString: TwoDimensional coordinates
                 (
                     GeometryType::MultiLineString,
                     Some(Coordinates::TwoDimensional(coordinates)),
                     None,
-                ) => GeometryValue::MultiLineString { coordinates },
+                ) => {
+                    check_positions(coordinates.iter().flatten())?;
+                    GeometryValue::MultiLineString { coordinates }
+                }
                 // Empty MultiLineString (coordinates: [] deserializes as OneDimensional([]))
                 (
                     GeometryType::MultiLineString,
@@ -570,7 +588,10 @@ pub(crate) mod deserialize {
                     GeometryType::MultiPolygon,
                     Some(Coordinates::ThreeDimensional(coordinates)),
                     None,
-                ) => GeometryValue::MultiPolygon { coordinates },
+                ) => {
+                    check_positions(coordinates.iter().flatten().flatten())?;
+                    GeometryValue::MultiPolygon { coordinates }
+                }
                 // Empty MultiPolygon (coordinates: [] deserializes as OneDimensional([]))
                 (
                     GeometryType::MultiPolygon,
@@ -776,5 +797,24 @@ mod tests {
             err.to_string()
                 .contains("A position must contain two or more elements, but got `1`")
         );
+
+        for (geojson_str, len) in [
+            (r#"{"type": "LineString", "coordinates": [[1], [2, 3]]}"#, 1),
+            (r#"{"type": "LineString", "coordinates": [[1, 2], []]}"#, 0),
+            (r#"{"type": "Polygon", "coordinates": [[[1, 2], [3]]]}"#, 1),
+            (r#"{"type": "MultiPoint", "coordinates": [[1, 2], [3]]}"#, 1),
+            (
+                r#"{"type": "MultiLineString", "coordinates": [[[1, 2], [3]]]}"#,
+                1,
+            ),
+            (
+                r#"{"type": "MultiPolygon", "coordinates": [[[[1, 2], [3]]]]}"#,
+                1,
+            ),
+        ] {
+            let err = Geometry::from_str(geojson_str).unwrap_err();
+            let expected = format!("A position must contain two or more elements, but got `{len}`");
+            assert!(err.to_string().contains(&expected), "{geojson_str}: {err}");
+        }
     }
 }
