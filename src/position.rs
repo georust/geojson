@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use crate::errors::Error;
+use serde::{Deserialize, Deserializer, Serialize, de};
 use std::ops::{Index, IndexMut};
 use std::slice::SliceIndex;
 use tinyvec::TinyVec;
@@ -28,10 +29,18 @@ use tinyvec::TinyVec;
 /// let position_3d = Position::from(vec![1.0, 2.0, 3.0]);
 /// let z = position_3d[2];
 /// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize)]
 pub struct Position(TinyVec<[f64; 2]>);
 
 impl Position {
+    /// Positions must contain two or more elements.
+    pub(crate) fn checked<E: de::Error>(coords: TinyVec<[f64; 2]>) -> Result<Self, E> {
+        if coords.len() < 2 {
+            return Err(E::custom(Error::PositionTooShort(coords.len())));
+        }
+        Ok(Self(coords))
+    }
+
     pub fn as_slice(&self) -> &[f64] {
         &self.0
     }
@@ -46,6 +55,12 @@ impl Position {
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+}
+
+impl<'de> Deserialize<'de> for Position {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Self::checked(TinyVec::deserialize(deserializer)?)
     }
 }
 

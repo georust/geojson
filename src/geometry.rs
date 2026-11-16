@@ -433,7 +433,7 @@ pub(crate) mod deserialize {
                                     while let Some(next) = seq.next_element::<f64>()? {
                                         floats.push(next);
                                     }
-                                    Coordinates::ZeroDimensional(Position::from(floats))
+                                    Coordinates::ZeroDimensional(Position::checked(floats)?)
                                 }
                                 // First element is a sequence, collect the rest of the elements.
                                 Some(CoordsElement::Coords(coords)) => match coords {
@@ -502,16 +502,6 @@ pub(crate) mod deserialize {
         pub(crate) foreign_members: Option<JsonObject>,
     }
 
-    /// Positions must contain two or more elements.
-    ///
-    /// [GeoJSON Format Specification § 3.1.1](https://tools.ietf.org/html/rfc7946#section-3.1.1)
-    fn check_positions<'a>(positions: impl IntoIterator<Item = &'a Position>) -> Result<()> {
-        match positions.into_iter().find(|position| position.len() < 2) {
-            Some(position) => Err(Error::PositionTooShort(position.len())),
-            None => Ok(()),
-        }
-    }
-
     impl TryFrom<RawGeometry> for Geometry {
         type Error = Error;
 
@@ -521,7 +511,6 @@ pub(crate) mod deserialize {
             let value = match (raw.r#type, raw.coordinates, raw.geometries) {
                 // Point: ZeroDimensional coordinates
                 (GeometryType::Point, Some(Coordinates::ZeroDimensional(coordinates)), None) => {
-                    check_positions([&coordinates])?;
                     GeometryValue::Point { coordinates }
                 }
                 // Empty Point (coordinates: [] deserializes as OneDimensional([]))
@@ -536,14 +525,10 @@ pub(crate) mod deserialize {
                     GeometryType::LineString,
                     Some(Coordinates::OneDimensional(coordinates)),
                     None,
-                ) => {
-                    check_positions(&coordinates)?;
-                    GeometryValue::LineString { coordinates }
-                }
+                ) => GeometryValue::LineString { coordinates },
 
                 // Polygon: TwoDimensional coordinates
                 (GeometryType::Polygon, Some(Coordinates::TwoDimensional(coordinates)), None) => {
-                    check_positions(coordinates.iter().flatten())?;
                     GeometryValue::Polygon { coordinates }
                 }
                 // Empty Polygon (coordinates: [] deserializes as OneDimensional([]))
@@ -560,20 +545,14 @@ pub(crate) mod deserialize {
                     GeometryType::MultiPoint,
                     Some(Coordinates::OneDimensional(coordinates)),
                     None,
-                ) => {
-                    check_positions(&coordinates)?;
-                    GeometryValue::MultiPoint { coordinates }
-                }
+                ) => GeometryValue::MultiPoint { coordinates },
 
                 // MultiLineString: TwoDimensional coordinates
                 (
                     GeometryType::MultiLineString,
                     Some(Coordinates::TwoDimensional(coordinates)),
                     None,
-                ) => {
-                    check_positions(coordinates.iter().flatten())?;
-                    GeometryValue::MultiLineString { coordinates }
-                }
+                ) => GeometryValue::MultiLineString { coordinates },
                 // Empty MultiLineString (coordinates: [] deserializes as OneDimensional([]))
                 (
                     GeometryType::MultiLineString,
@@ -588,10 +567,7 @@ pub(crate) mod deserialize {
                     GeometryType::MultiPolygon,
                     Some(Coordinates::ThreeDimensional(coordinates)),
                     None,
-                ) => {
-                    check_positions(coordinates.iter().flatten().flatten())?;
-                    GeometryValue::MultiPolygon { coordinates }
-                }
+                ) => GeometryValue::MultiPolygon { coordinates },
                 // Empty MultiPolygon (coordinates: [] deserializes as OneDimensional([]))
                 (
                     GeometryType::MultiPolygon,
