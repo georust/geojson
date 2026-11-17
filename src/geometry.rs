@@ -433,7 +433,7 @@ pub(crate) mod deserialize {
                                     while let Some(next) = seq.next_element::<f64>()? {
                                         floats.push(next);
                                     }
-                                    Coordinates::ZeroDimensional(Position::from(floats))
+                                    Coordinates::ZeroDimensional(Position::checked(floats)?)
                                 }
                                 // First element is a sequence, collect the rest of the elements.
                                 Some(CoordsElement::Coords(coords)) => match coords {
@@ -511,9 +511,6 @@ pub(crate) mod deserialize {
             let value = match (raw.r#type, raw.coordinates, raw.geometries) {
                 // Point: ZeroDimensional coordinates
                 (GeometryType::Point, Some(Coordinates::ZeroDimensional(coordinates)), None) => {
-                    if coordinates.len() < 2 {
-                        return Err(Error::PositionTooShort(coordinates.len()));
-                    }
                     GeometryValue::Point { coordinates }
                 }
                 // Empty Point (coordinates: [] deserializes as OneDimensional([]))
@@ -776,5 +773,24 @@ mod tests {
             err.to_string()
                 .contains("A position must contain two or more elements, but got `1`")
         );
+
+        for (geojson_str, len) in [
+            (r#"{"type": "LineString", "coordinates": [[1], [2, 3]]}"#, 1),
+            (r#"{"type": "LineString", "coordinates": [[1, 2], []]}"#, 0),
+            (r#"{"type": "Polygon", "coordinates": [[[1, 2], [3]]]}"#, 1),
+            (r#"{"type": "MultiPoint", "coordinates": [[1, 2], [3]]}"#, 1),
+            (
+                r#"{"type": "MultiLineString", "coordinates": [[[1, 2], [3]]]}"#,
+                1,
+            ),
+            (
+                r#"{"type": "MultiPolygon", "coordinates": [[[[1, 2], [3]]]]}"#,
+                1,
+            ),
+        ] {
+            let err = Geometry::from_str(geojson_str).unwrap_err();
+            let expected = format!("A position must contain two or more elements, but got `{len}`");
+            assert!(err.to_string().contains(&expected), "{geojson_str}: {err}");
+        }
     }
 }
