@@ -552,6 +552,14 @@ mod tests {
     }
 
     #[test]
+    fn short_position_conversion_does_not_panic() {
+        let result = r#"{"type": "LineString", "coordinates": [[1], [2, 3]]}"#
+            .parse::<crate::GeoJson>()
+            .and_then(geo_types::Geometry::<f64>::try_from);
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn feature_collection_with_geom_collection() {
         let geojson_str = json!({
             "type": "FeatureCollection",
