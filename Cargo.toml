@@ -12,6 +12,7 @@ edition = "2024"
 
 [features]
 default = ["geo-types"]
+float_roundtrip = ["serde_json/float_roundtrip"]
 
 [dependencies]
 serde = { version="~1.0", features = ["derive"] }
