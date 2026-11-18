@@ -300,7 +300,11 @@ where
 ///
 /// let geojson_string = geojson::ser::to_feature_collection_string(&my_structs).unwrap();
 ///
-/// assert!(geojson_string.contains(r#""geometry":{"coordinates":[11.1,22.2],"type":"Point"}"#));
+/// let collection: serde_json::Value = serde_json::from_str(&geojson_string).unwrap();
+/// assert_eq!(
+///     collection["features"][0]["geometry"],
+///     serde_json::json!({ "type": "Point", "coordinates": [11.1, 22.2] })
+/// );
 /// ```
 pub fn serialize_geometry<IG, S>(geometry: IG, ser: S) -> std::result::Result<S::Ok, S::Error>
 where
@@ -461,14 +465,14 @@ where
             // printing a specific error message seems more likely to be helpful.
             return Err(S::Error::custom("missing `geometry` field"));
         }
-        let geometry = json_object.remove("geometry");
+        let geometry = crate::util::remove_member(&mut json_object, "geometry");
 
         use serde::ser::SerializeMap;
         let mut map = serializer.serialize_map(Some(3))?;
         map.serialize_entry("type", "Feature")?;
         map.serialize_entry("geometry", &geometry)?;
-        if json_object.contains_key("id") {
-            map.serialize_entry("id", &json_object.remove("id"))?;
+        if let Some(id) = crate::util::remove_member(&mut json_object, "id") {
+            map.serialize_entry("id", &id)?;
         }
         map.serialize_entry("properties", &json_object)?;
         map.end()

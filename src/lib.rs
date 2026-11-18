@@ -392,6 +392,14 @@
 //! ```
 //!
 //! See more in the [serialization](ser) and [deserialization](de) modules.
+//!
+//! # Optional features
+//!
+//! ## Preserving object key order
+//!
+//! Enable the `preserve_order` feature to keep insertion order in feature
+//! properties and foreign-member maps. By default their keys are sorted.
+//!
 // only enables the `doc_cfg` feature when
 // the `docsrs` configuration attribute is defined
 #![cfg_attr(docsrs, feature(doc_cfg))]

@@ -12,7 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::JsonObject;
+use crate::{JsonObject, JsonValue};
+
+pub(crate) fn remove_member(map: &mut JsonObject, key: &str) -> Option<JsonValue> {
+    #[cfg(feature = "preserve_order")]
+    {
+        map.shift_remove(key)
+    }
+    #[cfg(not(feature = "preserve_order"))]
+    {
+        map.remove(key)
+    }
+}
 
 // Treat an empty foreign_members map as None
 pub(crate) fn normalize_foreign_members(fm: &mut Option<JsonObject>) {
