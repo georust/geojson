@@ -44,27 +44,35 @@ fn precise_coordinates_from_str_and_reader() {
 
 #[test]
 #[cfg(not(feature = "float_roundtrip"))]
-fn coordinates_follow_serde_json_without_the_feature() {
-    // Cargo can unify serde_json/float_roundtrip through another dependency.
-    // Without our feature, follow that parser rather than assume it loses bits.
-    for (coordinate, _) in CASES {
+fn default_coordinates_from_str_and_reader() {
+    // Fixed default-parser results for the same inputs: (parsed, reserialized).
+    // Some values round again after serialization. A transitively enabled
+    // serde_json/float_roundtrip must fail this feature-off regression.
+    let expected_bits = [
+        (0x40499fc44f1b2f61_u64, 0x40499fc44f1b2f61_u64),
+        (0xc05753ed7e04693a_u64, 0xc05753ed7e04693a_u64),
+        (0xc0424978a9bad96f_u64, 0xc0424978a9bad96f_u64),
+        (0x0b777f245544ff82_u64, 0x0b777f245544ff83_u64),
+        (0x761717c13ccbd1b9_u64, 0x761717c13ccbd1ba_u64),
+        (0x0000000000000001_u64, 0x0000000000000001_u64),
+        (0x8000000000000001_u64, 0x8000000000000001_u64),
+        (0x0010000000000000_u64, 0x0010000000000000_u64),
+        (0x01a56e1fc2f8f359_u64, 0x01a56e1fc2f8f359_u64),
+        (0x7e37e43c8800759c_u64, 0x7e37e43c8800759c_u64),
+        (0x0000000000000000_u64, 0x0000000000000000_u64),
+        (0x8000000000000000_u64, 0x8000000000000000_u64),
+    ];
+    for ((coordinate, _), (expected, expected_reparsed)) in CASES.into_iter().zip(expected_bits) {
         let json = format!(r#"{{"type":"Point","coordinates":[{coordinate},0.0]}}"#);
-        let expected_str: serde_json::Value = serde_json::from_str(&json).unwrap();
-        let expected_reader: serde_json::Value = serde_json::from_reader(json.as_bytes()).unwrap();
         let from_str: GeoJson = json.parse().unwrap();
         let from_reader = GeoJson::from_reader(json.as_bytes()).unwrap();
-        for (parsed, expected) in [(from_str, expected_str), (from_reader, expected_reader)] {
-            assert_eq!(
-                coordinate_bits(&parsed),
-                expected["coordinates"][0].as_f64().unwrap().to_bits(),
-                "{coordinate}"
-            );
+        for parsed in [from_str, from_reader] {
+            assert_eq!(coordinate_bits(&parsed), expected, "{coordinate}");
             let serialized = parsed.to_string();
             let reparsed: GeoJson = serialized.parse().unwrap();
-            let expected: serde_json::Value = serde_json::from_str(&serialized).unwrap();
             assert_eq!(
                 coordinate_bits(&reparsed),
-                expected["coordinates"][0].as_f64().unwrap().to_bits(),
+                expected_reparsed,
                 "{serialized}"
             );
         }
