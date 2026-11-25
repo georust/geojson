@@ -9,6 +9,9 @@
 * Reject positions with fewer than two elements in every geometry type, not just `Point`,
   so converting parsed geometries to `geo_types` no longer panics
   * <https://github.com/georust/geojson/pull/282>
+* Return `Error::PositionTooShort` instead of panicking when converting a `GeometryValue`
+  that contains a position with fewer than two elements to a `geo_types` geometry
+  * <https://github.com/georust/geojson/issues/283>
 
 ## v1.0.0 - 2025-03-16
 

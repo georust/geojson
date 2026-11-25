@@ -15,7 +15,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::Point { coordinates } => Ok(create_geo_point(coordinates)),
+            GeometryValue::Point { coordinates } => create_geo_point(coordinates),
             other => Err(mismatch_geom_err("Point", other)),
         }
     }
@@ -31,12 +31,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::MultiPoint { coordinates } => Ok(geo_types::MultiPoint(
-                coordinates
-                    .iter()
-                    .map(|point_type| create_geo_point(point_type))
-                    .collect(),
-            )),
+            GeometryValue::MultiPoint { coordinates } => create_geo_multi_point(coordinates),
             other => Err(mismatch_geom_err("MultiPoint", other)),
         }
     }
@@ -52,7 +47,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::LineString { coordinates } => Ok(create_geo_line_string(coordinates)),
+            GeometryValue::LineString { coordinates } => create_geo_line_string(coordinates),
             other => Err(mismatch_geom_err("LineString", other)),
         }
     }
@@ -69,7 +64,7 @@ where
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
             GeometryValue::MultiLineString { coordinates } => {
-                Ok(create_geo_multi_line_string(coordinates))
+                create_geo_multi_line_string(coordinates)
             }
             other => Err(mismatch_geom_err("MultiLineString", other)),
         }
@@ -86,7 +81,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
-            GeometryValue::Polygon { coordinates } => Ok(create_geo_polygon(coordinates)),
+            GeometryValue::Polygon { coordinates } => create_geo_polygon(coordinates),
             other => Err(mismatch_geom_err("Polygon", other)),
         }
     }
@@ -102,9 +97,7 @@ where
 
     fn try_from(value: &GeometryValue) -> Result<geo_types::MultiPolygon<T>> {
         match value {
-            GeometryValue::MultiPolygon { coordinates } => {
-                Ok(create_geo_multi_polygon(coordinates))
-            }
+            GeometryValue::MultiPolygon { coordinates } => create_geo_multi_polygon(coordinates),
             other => Err(mismatch_geom_err("MultiPolygon", other)),
         }
     }
@@ -121,12 +114,8 @@ where
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match value {
             GeometryValue::GeometryCollection { geometries } => {
-                let geojson_geometries = geometries
-                    .iter()
-                    .map(|geometry| (&geometry.value).try_into().unwrap())
-                    .collect();
-
-                Ok(geo_types::GeometryCollection(geojson_geometries))
+                try_map_slice(geometries, |geometry| (&geometry.value).try_into())
+                    .map(geo_types::GeometryCollection)
             }
             other => Err(mismatch_geom_err("GeometryCollection", other)),
         }
@@ -144,28 +133,23 @@ where
     fn try_from(value: &GeometryValue) -> Result<Self> {
         match &value {
             GeometryValue::Point { coordinates } => {
-                Ok(geo_types::Geometry::Point(create_geo_point(coordinates)))
+                create_geo_point(coordinates).map(geo_types::Geometry::Point)
             }
             GeometryValue::MultiPoint { coordinates } => {
-                Ok(geo_types::Geometry::MultiPoint(geo_types::MultiPoint(
-                    coordinates
-                        .iter()
-                        .map(|point_type| create_geo_point(point_type))
-                        .collect(),
-                )))
+                create_geo_multi_point(coordinates).map(geo_types::Geometry::MultiPoint)
             }
-            GeometryValue::LineString { coordinates } => Ok(geo_types::Geometry::LineString(
-                create_geo_line_string(coordinates),
-            )),
-            GeometryValue::MultiLineString { coordinates } => Ok(
-                geo_types::Geometry::MultiLineString(create_geo_multi_line_string(coordinates)),
-            ),
-            GeometryValue::Polygon { coordinates } => Ok(geo_types::Geometry::Polygon(
-                create_geo_polygon(coordinates),
-            )),
-            GeometryValue::MultiPolygon { coordinates } => Ok(geo_types::Geometry::MultiPolygon(
-                create_geo_multi_polygon(coordinates),
-            )),
+            GeometryValue::LineString { coordinates } => {
+                create_geo_line_string(coordinates).map(geo_types::Geometry::LineString)
+            }
+            GeometryValue::MultiLineString { coordinates } => {
+                create_geo_multi_line_string(coordinates).map(geo_types::Geometry::MultiLineString)
+            }
+            GeometryValue::Polygon { coordinates } => {
+                create_geo_polygon(coordinates).map(geo_types::Geometry::Polygon)
+            }
+            GeometryValue::MultiPolygon { coordinates } => {
+                create_geo_multi_polygon(coordinates).map(geo_types::Geometry::MultiPolygon)
+            }
             GeometryValue::GeometryCollection { geometries } => {
                 let gc = geo_types::Geometry::GeometryCollection(geo_types::GeometryCollection(
                     geometries
@@ -301,83 +285,85 @@ where
     }
 }
 
-fn create_geo_coordinate<T>(point_type: &PointType) -> geo_types::Coord<T>
-where
-    T: CoordFloat,
-{
-    geo_types::Coord {
-        x: T::from(point_type[0]).unwrap(),
-        y: T::from(point_type[1]).unwrap(),
+/// Apply `f` to each item of `items` and stop at the first error.
+///
+/// The output `Vec` is allocated at its final length. Collecting into a `Result<Vec<_>>` does
+/// not do this: `collect` wraps the iterator in an adapter that can stop at the first error, so
+/// the size hint of the adapter has a lower bound of zero. The `Vec` then starts at a small
+/// capacity and grows.
+fn try_map_slice<I, O>(items: &[I], f: impl Fn(&I) -> Result<O>) -> Result<Vec<O>> {
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        out.push(f(item)?);
     }
+    Ok(out)
 }
 
-fn create_geo_point<T>(point_type: &PointType) -> geo_types::Point<T>
+fn create_geo_coordinate<T>(point_type: &PointType) -> Result<geo_types::Coord<T>>
 where
     T: CoordFloat,
 {
-    geo_types::Point::new(
-        T::from(point_type[0]).unwrap(),
-        T::from(point_type[1]).unwrap(),
-    )
+    let [x, y, ..] = point_type.as_slice() else {
+        return Err(Error::PositionTooShort(point_type.len()));
+    };
+    Ok(geo_types::Coord {
+        x: T::from(*x).unwrap(),
+        y: T::from(*y).unwrap(),
+    })
 }
 
-fn create_geo_line_string<T>(line_type: &LineStringType) -> geo_types::LineString<T>
+fn create_geo_point<T>(point_type: &PointType) -> Result<geo_types::Point<T>>
 where
     T: CoordFloat,
 {
-    geo_types::LineString(
-        line_type
-            .iter()
-            .map(|point_type| create_geo_coordinate(point_type))
-            .collect(),
-    )
+    create_geo_coordinate(point_type).map(geo_types::Point)
+}
+
+fn create_geo_multi_point<T>(multi_point_type: &[PointType]) -> Result<geo_types::MultiPoint<T>>
+where
+    T: CoordFloat,
+{
+    try_map_slice(multi_point_type, create_geo_point).map(geo_types::MultiPoint)
+}
+
+fn create_geo_line_string<T>(line_type: &LineStringType) -> Result<geo_types::LineString<T>>
+where
+    T: CoordFloat,
+{
+    try_map_slice(line_type, create_geo_coordinate).map(geo_types::LineString)
 }
 
 fn create_geo_multi_line_string<T>(
     multi_line_type: &[LineStringType],
-) -> geo_types::MultiLineString<T>
+) -> Result<geo_types::MultiLineString<T>>
 where
     T: CoordFloat,
 {
-    geo_types::MultiLineString(
-        multi_line_type
-            .iter()
-            .map(|point_type| create_geo_line_string(point_type))
-            .collect(),
-    )
+    try_map_slice(multi_line_type, create_geo_line_string).map(geo_types::MultiLineString)
 }
 
-fn create_geo_polygon<T>(polygon_type: &PolygonType) -> geo_types::Polygon<T>
+fn create_geo_polygon<T>(polygon_type: &PolygonType) -> Result<geo_types::Polygon<T>>
 where
     T: CoordFloat,
 {
-    let exterior = polygon_type
-        .first()
-        .map(|e| create_geo_line_string(e))
-        .unwrap_or_else(|| create_geo_line_string(&vec![]));
-
-    let interiors = if polygon_type.len() < 2 {
-        vec![]
-    } else {
-        polygon_type[1..]
-            .iter()
-            .map(|line_string_type| create_geo_line_string(line_string_type))
-            .collect()
+    let (exterior, interiors) = match polygon_type.split_first() {
+        Some((exterior, interiors)) => (
+            create_geo_line_string(exterior)?,
+            try_map_slice(interiors, create_geo_line_string)?,
+        ),
+        None => (geo_types::LineString(vec![]), vec![]),
     };
 
-    geo_types::Polygon::new(exterior, interiors)
+    Ok(geo_types::Polygon::new(exterior, interiors))
 }
 
-fn create_geo_multi_polygon<T>(multi_polygon_type: &[PolygonType]) -> geo_types::MultiPolygon<T>
+fn create_geo_multi_polygon<T>(
+    multi_polygon_type: &[PolygonType],
+) -> Result<geo_types::MultiPolygon<T>>
 where
     T: CoordFloat,
 {
-    geo_types::MultiPolygon(
-        multi_polygon_type
-            .iter()
-            .map(|polygon_type| create_geo_polygon(polygon_type))
-            .collect(),
-    )
+    try_map_slice(multi_polygon_type, create_geo_polygon).map(geo_types::MultiPolygon)
 }
 
 fn mismatch_geom_err(expected_type: &'static str, found: &GeometryValue) -> Error {
@@ -557,6 +543,85 @@ mod tests {
             .parse::<crate::GeoJson>()
             .and_then(geo_types::Geometry::<f64>::try_from);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn constructed_short_position_conversion_returns_error() {
+        use crate::{Error, Position};
+
+        let empty = || Position::from(vec![]);
+        let one = || Position::from(vec![1.0]);
+        let ok = || Position::from([1.0, 2.0]);
+
+        let cases = [
+            (
+                GeometryValue::Point {
+                    coordinates: empty(),
+                },
+                0,
+            ),
+            (GeometryValue::Point { coordinates: one() }, 1),
+            (
+                GeometryValue::MultiPoint {
+                    coordinates: vec![ok(), empty()],
+                },
+                0,
+            ),
+            (
+                GeometryValue::LineString {
+                    coordinates: vec![ok(), one()],
+                },
+                1,
+            ),
+            (
+                GeometryValue::MultiLineString {
+                    coordinates: vec![vec![ok(), ok()], vec![empty()]],
+                },
+                0,
+            ),
+            // The geometry from https://github.com/georust/geojson/issues/283
+            (
+                GeometryValue::Polygon {
+                    coordinates: vec![vec![empty(), empty(), empty(), empty(), empty()]],
+                },
+                0,
+            ),
+            // A short position in an interior ring
+            (
+                GeometryValue::Polygon {
+                    coordinates: vec![vec![ok(), ok(), ok(), ok()], vec![one()]],
+                },
+                1,
+            ),
+            (
+                GeometryValue::MultiPolygon {
+                    coordinates: vec![vec![vec![ok(), empty()]]],
+                },
+                0,
+            ),
+        ];
+
+        for (value, len) in cases {
+            let err = geo_types::Geometry::<f64>::try_from(&value).unwrap_err();
+            assert!(
+                matches!(err, Error::PositionTooShort(n) if n == len),
+                "{value:?}: {err}"
+            );
+
+            let collection = GeometryValue::GeometryCollection {
+                geometries: vec![Geometry::new(value)],
+            };
+            let err = geo_types::Geometry::<f64>::try_from(&collection).unwrap_err();
+            assert!(
+                matches!(err, Error::PositionTooShort(n) if n == len),
+                "{collection:?}: {err}"
+            );
+            let err = geo_types::GeometryCollection::<f64>::try_from(&collection).unwrap_err();
+            assert!(
+                matches!(err, Error::PositionTooShort(n) if n == len),
+                "{collection:?}: {err}"
+            );
+        }
     }
 
     #[test]
