@@ -227,7 +227,12 @@ impl<W: Write> FeatureWriter<W> {
                 self.write_prefix()?;
                 self.write_suffix()?;
             }
-            State::WritingFeatures | State::WritingForeignMembers => {
+            State::WritingForeignMembers => {
+                self.state = State::Finished;
+                self.write_str(r#" "features": ["#)?;
+                self.write_suffix()?;
+            }
+            State::WritingFeatures => {
                 self.state = State::Finished;
                 self.write_suffix()?;
             }
@@ -467,6 +472,43 @@ mod tests {
                     }
                 },
             ]
+        });
+
+        let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");
+        assert_eq!(actual_json, expected)
+    }
+
+    #[test]
+    fn write_foreign_members_without_features() {
+        let mut buffer: Vec<u8> = vec![];
+        {
+            let mut writer = FeatureWriter::from_writer(&mut buffer);
+            writer.write_foreign_member("extra", "string").unwrap();
+            writer.finish().unwrap();
+        }
+
+        let expected = json!({
+            "type": "FeatureCollection",
+            "extra": "string",
+            "features": []
+        });
+
+        let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");
+        assert_eq!(actual_json, expected)
+    }
+
+    #[test]
+    fn write_foreign_members_without_features_on_drop() {
+        let mut buffer: Vec<u8> = vec![];
+        {
+            let mut writer = FeatureWriter::from_writer(&mut buffer);
+            writer.write_foreign_member("extra", "string").unwrap();
+        }
+
+        let expected = json!({
+            "type": "FeatureCollection",
+            "extra": "string",
+            "features": []
         });
 
         let actual_json: JsonValue = serde_json::from_slice(&buffer).expect("valid json");

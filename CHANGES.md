@@ -9,6 +9,8 @@
 * Reject positions with fewer than two elements in every geometry type, not just `Point`,
   so converting parsed geometries to `geo_types` no longer panics
   * <https://github.com/georust/geojson/pull/282>
+* Fix `FeatureWriter` writing invalid JSON when it finishes after foreign members but no features
+  * <https://github.com/georust/geojson/pull/285>
 
 ## v1.0.0 - 2025-03-16
 
